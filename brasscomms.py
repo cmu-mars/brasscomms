@@ -16,8 +16,7 @@ def startChallengeProblem():
 
 @app.route('/phase1/power/initial_settings', methods=['POST'])
 def initalSettings():
-    ## do i need these asserts, or was that just boiler plate? can this def
-    ## get called by any thing other than a POST to the URL i specify?
+    assert request.path == '/phase1/power/initial_settings'
     assert request.method == 'POST'
 
     ## how to check that there's nothing else in the args?
@@ -49,7 +48,7 @@ def changePower():
     currentPower = request.args.get('current_battery','')
 
 @app.route('/phase1/power/add_obstacle', methods=['POST'])
-def changePower():
+def addObstacle():
     assert request.path == '/phase1/power/add_obstacle'
     assert request.method == 'POST'
 
