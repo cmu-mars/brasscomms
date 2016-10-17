@@ -22,9 +22,29 @@ def startChallengeProblem():
 def stopChallengeProblem():
     assert request.path == '/phase1/power/stop_challenge_problem'
     assert request.method == 'POST'
+
+    ## signal_shutdown("comms requested shutdown")
+
     return 'todo: make a ROS call here to stop the bot'
 
 
+## todo: return 400's with text for bad args. per
+## https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+
+## checks to see if a string represents an integer
+def isint(x):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
+
+
+## returns true iff the first argument is a digit inclusively between the
+## second two args. assumes that the second two are indeed digits, and that
+## the second is less than the third.
+def int_out_of_range(x,upper,lower) :
+    return not(isint(x) and x >= lower and x <= upper)
 
 
 ## subroutines for the rest of the full API
@@ -39,9 +59,24 @@ def initalSettings():
     ## todo: type check all these values. they're probably just strings,
     ## make sure they meet the spec or barf appropriately
     adaptions = request.args.get('enable_adaptions','')
+    if not (adaptions == 'true' or adaptions == 'false'):
+        flask.abort(400)
+
     startPercent = request.args.get('start_battery','')
+    if int_out_of_range (startPercent, 0, 100):
+        flask.abort(400)
+
+    # assume that the locations are strings "x,y".
     obsLoc = request.args.get('obstacle_location','')
+    [obsLoc_x , obsLoc_y] = obsLoc.split(',')
+    if not (isint(obsLoc_x) and isint(obsLoc_y)):
+        flask.abort(400)
+
     adaptPercent = request.args.get('minimum_battery','')
+    if int_out_of_range(adaptPercent, 0, 100) or adaptPercent >= startPercent:
+        flask.abort(400)
+
+    return "todo: make a call here now that the data's all checked"
 
 @app.route('/phase1/power/get_robot_location', methods=['GET'])
 def location():
