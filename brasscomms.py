@@ -1,6 +1,8 @@
 from flask import Flask , request
 app = Flask(__name__)
 
+## subroutines for the first deliverable
+
 @app.route('/logs/status/DASSTATUS', methods=['GET'])
 def status():
     assert request.path == '/logs/status/DASSTATUS'
@@ -13,6 +15,16 @@ def startChallengeProblem():
     assert request.method == 'POST'
     return 'todo: make a ROS call here to start the bot\n you posted' + (str (request.form))
 
+@app.route('/phase1/power/stop_challenge_problem', methods=['POST'])
+def stopChallengeProblem():
+    assert request.path == '/phase1/power/stop_challenge_problem'
+    assert request.method == 'POST'
+    return 'todo: make a ROS call here to stop the bot'
+
+
+
+
+## subroutines for the rest of the full API
 
 @app.route('/phase1/power/initial_settings', methods=['POST'])
 def initalSettings():
@@ -38,7 +50,7 @@ def location():
 def battery():
     assert request.path == '/phase1/power/get_battery_level'
     assert request.method == 'GET'
-    return 'todo: make a ROS call here to determine battery level'
+    return 'todo: make a ROS/gazebo extension call here to determine battery level.'
 
 @app.route('/phase1/power/change_power', methods=['POST'])
 def changePower():
@@ -47,18 +59,51 @@ def changePower():
 
     currentPower = request.args.get('current_battery','')
 
+    return 'todo: make a call here to change the power'
+
 @app.route('/phase1/power/add_obstacle', methods=['POST'])
 def addObstacle():
     assert request.path == '/phase1/power/add_obstacle'
     assert request.method == 'POST'
 
-    currentPower = request.args.get('obstacle_location','')
+    obs_loc = request.args.get('obstacle_location','')
 
-@app.route('/phase1/power/stop_challenge_problem', methods=['POST'])
-def stopChallengeProblem():
-    assert request.path == '/phase1/power/stop_challenge_problem'
+    return 'todo: make a call to add the obstactle here'
+
+@app.route('/phase1/power/remove_obstacle', methods=['POST'])
+def addObstacle():
+    assert request.path == '/phase1/power/remove_obstacle'
     assert request.method == 'POST'
-    return 'todo: make a ROS call here to stop the bot'
+
+    return 'todo: make a call to remove the obstacle here'
+
+## these are under the recalibration heading rather than power; the APIs
+## seem less-well defined, so while they're still stubbed in, it's not
+## totally clear what they will do.
+
+@app.route('/phase1/recalibration/start_challenge_problem', methods=['POST'])
+def recal_start():
+    assert request.path == '/phase1/recalibration/start_challenge_problem'
+    assert request.method == 'POST'
+
+    return 'todo: make a call to start navigation through map for CP2'
+
+@app.route('/phase1/recalibration/initial_settings', methods=['POST'])
+def recal_init():
+    assert request.path == '/phase1/recalibration/initial_settings'
+    assert request.method == 'POST'
+
+    ## enable_adaptations=ADAPTATIONS&kinect_dx=INITIAL_X&kinect_dy=INITIAL_Y&kinect_dz=INITIAL_Z&kinect_dr=INITIAL_ROLL&kinect_dp=INITIAL_PITCH&kinect_dw=INITIAL_YAW
+
+    return 'todo: make a call here; what is this supposed to do, exactly? no spec given'
+
+@app.route('/phase1/recalibration/change_settings', methods=['POST'])
+def recal_init():
+    assert request.path == '/phase1/recalibration/change_settings'
+    assert request.method == 'POST'
+
+
+
 
 
 
