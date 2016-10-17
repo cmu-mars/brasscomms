@@ -93,7 +93,14 @@ def recal_init():
     assert request.path == '/phase1/recalibration/initial_settings'
     assert request.method == 'POST'
 
-    ## enable_adaptations=ADAPTATIONS&kinect_dx=INITIAL_X&kinect_dy=INITIAL_Y&kinect_dz=INITIAL_Z&kinect_dr=INITIAL_ROLL&kinect_dp=INITIAL_PITCH&kinect_dw=INITIAL_YAW
+    ## todo: check taht each of these produces something and that it's in range
+    adaptions = request.args.get('enable_adaptions','')
+    kinect_dx = request.args.get('kinect_dx','')
+    kinect_dy = request.args.get('kinect_dy','')
+    kinect_dz = request.args.get('kinect_dz','')
+    kinect_dr = request.args.get('kinect_dr','')
+    kinect_dp = request.args.get('kinect_dp','')
+    kinect_dq = request.args.get('kinect_dw','')
 
     return 'todo: make a call here; what is this supposed to do, exactly? no spec given'
 
@@ -102,7 +109,27 @@ def recal_init():
     assert request.path == '/phase1/recalibration/change_settings'
     assert request.method == 'POST'
 
+    ## todo: check taht each of these produces something and that it's in range
+    kinect_dx = request.args.get('kinect_dx','')
+    kinect_dy = request.args.get('kinect_dy','')
+    kinect_dz = request.args.get('kinect_dz','')
+    kinect_dr = request.args.get('kinect_dr','')
+    kinect_dp = request.args.get('kinect_dp','')
+    kinect_dq = request.args.get('kinect_dw','')
 
+    return 'todo: make a call here'
+
+@app.route('/phase1/power/get_current_state', methods=['GET'])
+def status():
+    assert request.path == '/phase1/power/get_current_state'
+    assert request.method == 'GET'
+    return 'todo: make a ROS call here to determine status. specify output format.'
+
+@app.route('/phase1/recalibration/stop_challenge_problem', methods=['GET'])
+def status():
+    assert request.path == '/phase1/recalibration/stop_challenge_problem'
+    assert request.method == 'GET'
+    return 'todo: make a ROS call to stop the challenge problem'
 
 
 
