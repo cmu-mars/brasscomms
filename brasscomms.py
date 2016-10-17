@@ -27,10 +27,6 @@ def stopChallengeProblem():
 
     return 'todo: make a ROS call here to stop the bot'
 
-
-## todo: return 400's with text for bad args. per
-## https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
-
 ## checks to see if a string represents an integer
 def isint(x):
     try:
