@@ -1,5 +1,8 @@
 from flask import Flask , request
+from enum import Enum
 app = Flask(__name__)
+
+status = Enum ('Status', 'Starting Operational Adapting ShuttingDown Completed ')
 
 ## subroutines for the first deliverable
 
@@ -71,7 +74,7 @@ def addObstacle():
     return 'todo: make a call to add the obstactle here'
 
 @app.route('/phase1/power/remove_obstacle', methods=['POST'])
-def addObstacle():
+def removeObstacle():
     assert request.path == '/phase1/power/remove_obstacle'
     assert request.method == 'POST'
 
@@ -105,7 +108,7 @@ def recal_init():
     return 'todo: make a call here; what is this supposed to do, exactly? no spec given'
 
 @app.route('/phase1/recalibration/change_settings', methods=['POST'])
-def recal_init():
+def recal_change():
     assert request.path == '/phase1/recalibration/change_settings'
     assert request.method == 'POST'
 
@@ -120,13 +123,13 @@ def recal_init():
     return 'todo: make a call here'
 
 @app.route('/phase1/power/get_current_state', methods=['GET'])
-def status():
+def recal_state():
     assert request.path == '/phase1/power/get_current_state'
     assert request.method == 'GET'
     return 'todo: make a ROS call here to determine status. specify output format.'
 
 @app.route('/phase1/recalibration/stop_challenge_problem', methods=['GET'])
-def status():
+def recal_stop():
     assert request.path == '/phase1/recalibration/stop_challenge_problem'
     assert request.method == 'GET'
     return 'todo: make a ROS call to stop the challenge problem'
