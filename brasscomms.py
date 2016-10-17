@@ -42,7 +42,6 @@ def isint(x):
 def int_out_of_range(x,upper,lower) :
     return not(isint(x) and x >= lower and x <= upper)
 
-
 ## subroutines for the rest of the full API
 
 @app.route('/phase1/power/initial_settings', methods=['POST'])
