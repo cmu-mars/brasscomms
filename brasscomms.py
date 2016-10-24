@@ -140,7 +140,7 @@ def recal_init():
     assert request.path == '/phase1/recalibration/initial_settings'
     assert request.method == 'POST'
 
-    ## todo: check taht each of these produces something and that it's in range
+    ## todo: check that each of these produces something and that it's in range
     adaptions = request.args.get('enable_adaptions','')
     kinect_dx = request.args.get('kinect_dx','')
     kinect_dy = request.args.get('kinect_dy','')
@@ -156,7 +156,7 @@ def recal_change():
     assert request.path == '/phase1/recalibration/change_settings'
     assert request.method == 'POST'
 
-    ## todo: check taht each of these produces something and that it's in range
+    ## todo: check that each of these produces something and that it's in range
     kinect_dx = request.args.get('kinect_dx','')
     kinect_dy = request.args.get('kinect_dy','')
     kinect_dz = request.args.get('kinect_dz','')
