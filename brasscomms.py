@@ -1,4 +1,4 @@
-from flask import Flask , request
+from flask import Flask , request , abort
 from enum import Enum
 app = Flask(__name__)
 
@@ -55,24 +55,24 @@ def initalSettings():
     ## make sure they meet the spec or barf appropriately
     adaptions = request.args.get('enable_adaptions','')
     if not (adaptions == 'true' or adaptions == 'false'):
-        flask.abort(400)
+        abort(400)
 
     startPercent = request.args.get('start_battery','')
     if int_out_of_range (startPercent, 0, 100):
-        flask.abort(400)
+        abort(400)
 
     # assume that the locations are strings "x,y".
     obsLoc = request.args.get('obstacle_location','')
     [obsLoc_x , obsLoc_y] = obsLoc.split(',')
     if not (isint(obsLoc_x) and isint(obsLoc_y)):
-        flask.abort(400)
+        abort(400)
 
         # todo: the API doesn't specify that these have to be within the
         # map bounds. should it?
 
     adaptPercent = request.args.get('minimum_battery','')
     if int_out_of_range(adaptPercent, 0, 100) or adaptPercent >= startPercent:
-        flask.abort(400)
+        abort(400)
 
     return "todo: make a call here now that the data's all checked"
 
@@ -95,7 +95,7 @@ def changePower():
 
     currentPower = request.args.get('current_battery','')
     if int_out_of_range(currentPower, 0, 100):
-        flask.abort(400)
+        abort(400)
 
     # todo: per API, this also needs to check that currentPower <
     # START_PERCENTAGE. that means that there has to be state somewhere. i
@@ -113,7 +113,7 @@ def addObstacle():
 
     [obsLoc_x , obsLoc_y] = obs_loc.split(',')
     if not (isint(obsLoc_x) and isint(obsLoc_y)):
-        flask.abort(400)
+        abort(400)
 
     return 'todo: make a call to add the obstactle here'
 
