@@ -55,24 +55,24 @@ def initalSettings():
     ## make sure they meet the spec or barf appropriately
     adaptions = request.args.get('enable_adaptions','')
     if not (adaptions == 'true' or adaptions == 'false'):
-        abort(400)
+        abort(400, 'adaptations must be either "true" or "false"')
 
     startPercent = request.args.get('start_battery','')
     if int_out_of_range (startPercent, 0, 100):
-        abort(400)
+        abort(400, 'start percentage out of range, must be between 0 and 100 inclusive')
 
     # assume that the locations are strings "x,y".
     obsLoc = request.args.get('obstacle_location','')
     [obsLoc_x , obsLoc_y] = obsLoc.split(',')
     if not (isint(obsLoc_x) and isint(obsLoc_y)):
-        abort(400)
+        abort(400, 'object location is malformed. must of the form "int,int"')
 
         # todo: the API doesn't specify that these have to be within the
         # map bounds. should it?
 
     adaptPercent = request.args.get('minimum_battery','')
     if int_out_of_range(adaptPercent, 0, 100) or adaptPercent >= startPercent:
-        abort(400)
+        abort(400, 'adapt percentage out of range, must be between 0 and 100 inclusive')
 
     return "todo: make a call here now that the data's all checked"
 
@@ -95,7 +95,7 @@ def changePower():
 
     currentPower = request.args.get('current_battery','')
     if int_out_of_range(currentPower, 0, 100):
-        abort(400)
+        abort(400, 'current battery out of range, must be between 0 and 100 inclusive')
 
     # todo: per API, this also needs to check that currentPower <
     # START_PERCENTAGE. that means that there has to be state somewhere. i
@@ -113,7 +113,7 @@ def addObstacle():
 
     [obsLoc_x , obsLoc_y] = obs_loc.split(',')
     if not (isint(obsLoc_x) and isint(obsLoc_y)):
-        abort(400)
+        abort(400, 'object location malformed. must be of the form "int,int".')
 
     return 'todo: make a call to add the obstactle here'
 
