@@ -4,6 +4,9 @@ app = Flask(__name__)
 
 status = Enum ('Status', 'Starting Operational Adapting ShuttingDown Completed ')
 
+## this could be a horrible concurrency bug; i don't know yet
+start_percentage = -1
+
 ## subroutines for the first deliverable
 
 @app.route('/logs/status/DASSTATUS', methods=['GET'])
@@ -61,6 +64,11 @@ def initalSettings():
     if int_out_of_range (startPercent, 0, 100):
         abort(400, 'start percentage out of range, must be between 0 and 100 inclusive')
 
+    # if we're going to use it, set the global as well. this could be a
+    # horrible concurrency bug.
+    global start_percentage
+    start_percentage = startPercent
+
     # assume that the locations are strings "x,y".
     obsLoc = request.args.get('obstacle_location','')
     [obsLoc_x , obsLoc_y] = obsLoc.split(',')
@@ -93,14 +101,19 @@ def changePower():
     assert request.path == '/phase1/power/change_power'
     assert request.method == 'POST'
 
+    ## this could be a horrible concurrency bug.
+    global start_percentage
+
+    ## todo: technically, this is not part of the spec given in the API.
+    if(start_percentage == -1):
+        abort(400, 'tried to change power before setting initial settings')
+
     currentPower = request.args.get('current_battery','')
-    if int_out_of_range(currentPower, 0, 100):
+    if int_out_of_range(currentPower, 0, start_percentage):
         abort(400, 'current battery out of range, must be between 0 and 100 inclusive')
 
-    # todo: per API, this also needs to check that currentPower <
-    # START_PERCENTAGE. that means that there has to be state somewhere. i
-    # don't know how to do that in a reentrant way in this framework. what
-    # will happen with global variables?
+    if currentPower >= start_percentage :
+        abort(400, 'current battery larger than the original battery setting. batteries only lose power')
 
     return 'todo: make a call here to change the power'
 
@@ -140,7 +153,7 @@ def recal_init():
     assert request.path == '/phase1/recalibration/initial_settings'
     assert request.method == 'POST'
 
-    ## todo: check that each of these produces something and that it's in range
+    ## todo: check that each of these produces something and that it's in range?
     adaptions = request.args.get('enable_adaptions','')
     kinect_dx = request.args.get('kinect_dx','')
     kinect_dy = request.args.get('kinect_dy','')
