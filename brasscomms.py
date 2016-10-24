@@ -67,6 +67,9 @@ def initalSettings():
     if not (isint(obsLoc_x) and isint(obsLoc_y)):
         flask.abort(400)
 
+        # todo: the API doesn't specify that these have to be within the
+        # map bounds. should it?
+
     adaptPercent = request.args.get('minimum_battery','')
     if int_out_of_range(adaptPercent, 0, 100) or adaptPercent >= startPercent:
         flask.abort(400)
@@ -91,6 +94,13 @@ def changePower():
     assert request.method == 'POST'
 
     currentPower = request.args.get('current_battery','')
+    if int_out_of_range(currentPower, 0, 100):
+        flask.abort(400)
+
+    # todo: per API, this also needs to check that currentPower <
+    # START_PERCENTAGE. that means that there has to be state somewhere. i
+    # don't know how to do that in a reentrant way in this framework. what
+    # will happen with global variables?
 
     return 'todo: make a call here to change the power'
 
@@ -100,6 +110,10 @@ def addObstacle():
     assert request.method == 'POST'
 
     obs_loc = request.args.get('obstacle_location','')
+
+    [obsLoc_x , obsLoc_y] = obs_loc.split(',')
+    if not (isint(obsLoc_x) and isint(obsLoc_y)):
+        flask.abort(400)
 
     return 'todo: make a call to add the obstactle here'
 
