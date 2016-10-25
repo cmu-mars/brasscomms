@@ -36,34 +36,41 @@ def int_out_of_range(x,upper,lower) :
 
 ## todo: this could be a horrible concurrency bug; i don't know yet.
 start_percentage = -1
+bot_status = Status.Starting
 
-## subroutines for the first deliverable
+## callbacks to change the status
+def done_cb(terminal, result):
+    global bot_status
+    bot_status = Status.Completed
+
+def active_cb():
+    global bot_status
+    bot_status = Status.Operational
+
+
+#### subroutines for the first deliverable
 
 @app.route('/logs/status/DASSTATUS', methods=['GET'])
 def status():
     assert request.path == '/logs/status/DASSTATUS'
     assert request.method == 'GET'
 
-    # querying against (global) client by means of subscribing to result events. call back should set a flag or something. check out the wait for result.
-
-    return 'todo: make a ROS call here to determine status'
+    global bot_status
+    return bot_status
 
 @app.route('/phase1/power/start_challenge_problem', methods=['POST'])
 def startChallengeProblem():
     assert request.path == '/phase1/power/start_challenge_problem'
     assert request.method == 'POST'
 
-    # probably needs to be global, so that it's possible to stop
-    client = actionlib.SimpleActionClient("ig_action_server", ig_action_msgs.msg.InstructionGraphAction)
-    client.wait_for_server()
-
     try:
         igfile = open('/home/vagrant/catkin_ws/src/cp1_gazebo/instructions/newnav.ig', "r")
         igcode = igfile.read()
         goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
-        client.send_goal(goal)
-        #client.wait_for_result()
-        rospy.loginfo('Result: %s' % (client.get_result()))
+
+        global client
+        client.send_goal( goal = goal, done_cb = done_cb, active_cb = active_cb)
+
     except Exception as e:
         print e
         print "Could not open newnav for reading!"
@@ -75,11 +82,14 @@ def stopChallengeProblem():
     assert request.path == '/phase1/power/stop_challenge_problem'
     assert request.method == 'POST'
 
-    ## signal_shutdown("comms requested shutdown")
+    global client
+    client.cancel_all_goals()
 
-    return 'todo: make a ROS call here to stop the bot'
+    return 'killed challenge problem'
 
-## subroutines for the rest of the full API
+
+
+#### subroutines for the rest of the full API; STUBS BELOW HERE
 
 @app.route('/phase1/power/initial_settings', methods=['POST'])
 def initalSettings():
@@ -253,14 +263,18 @@ def recal_stop():
 
 
 # if you run this script from the command line directly, this causes it to
-# actually launch the little web server
+# actually launch the little web server and the node
+#
+# the host parameter above make the server visible externally to any
+# machine on the network, rather than just this one. in the context of
+# the simulator, this combined with configured port-forwarding in the
+# Vagrant file means that you can run curl commands against the guest
+# machine from the host. for debugging, this may be unsafe depending
+# on your machine configuration and network attachements.
 if __name__ == "__main__":
     app.run( host='0.0.0.0' )
+    ## start up the ros node and make an action server
     rospy.init_node("brasscomms")
-
-## the host parameter above make the server visible externally to any
-## machine on the network, rather than just this one. in the context of the
-## simulator, this combined with configured port-forwarding in the Vagrant
-## file means that you can run curl commands against the guest machine from
-## the host. for debugging, this may be unsafe depending on your machine
-## configuration and network attachements.
+    client = actionlib.SimpleActionClient("ig_action_server", ig_action_msgs.msg.InstructionGraphAction)
+    client.wait_for_server()
+    
