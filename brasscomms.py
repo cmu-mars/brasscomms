@@ -230,4 +230,11 @@ def recal_stop():
 # if you run this script from the command line directly, this causes it to
 # actually launch the little web server
 if __name__ == "__main__":
-    app.run()
+    app.run( host='0.0.0.0' )
+
+## the host parameter above make the server visible externally to any
+## machine on the network, rather than just this one. in the context of the
+## simulator, this combined with configured port-forwarding in the Vagrant
+## file means that you can run curl commands against the guest machine from
+## the host. for debugging, this may be unsafe depending on your machine
+## configuration and network attachements.
