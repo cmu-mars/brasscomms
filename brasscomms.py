@@ -1,7 +1,10 @@
 #! /usr/bin/env python
 
-import roslib  ##; roslib.load_manifest('ig_action_msgs') ## this is maybe not needed any more for modern versions of ros?
+import roslib
 import rospy
+import actionlib
+import ig_action_msgs.msg
+import sys
 
 from flask import Flask , request , abort
 from enum import Enum
@@ -40,13 +43,32 @@ start_percentage = -1
 def status():
     assert request.path == '/logs/status/DASSTATUS'
     assert request.method == 'GET'
+
+    # querying against (global) client by means of subscribing to result events. call back should set a flag or something. check out the wait for result.
+
     return 'todo: make a ROS call here to determine status'
 
 @app.route('/phase1/power/start_challenge_problem', methods=['POST'])
 def startChallengeProblem():
     assert request.path == '/phase1/power/start_challenge_problem'
     assert request.method == 'POST'
-    return 'todo: make a ROS call here to start the bot\n you posted' + (str (request.form))
+
+    # probably needs to be global, so that it's possible to stop
+    client = actionlib.SimpleActionClient("ig_action_server", ig_action_msgs.msg.InstructionGraphAction)
+    client.wait_for_server()
+
+    try:
+        igfile = open('/home/vagrant/catkin_ws/src/cp1_gazebo/instructions/newnav.ig', "r")
+        igcode = igfile.read()
+        goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
+        client.send_goal(goal)
+        #client.wait_for_result()
+        rospy.loginfo('Result: %s' % (client.get_result()))
+    except Exception as e:
+        print e
+        print "Could not open newnav for reading!"
+
+    return 'starting challenge problem'
 
 @app.route('/phase1/power/stop_challenge_problem', methods=['POST'])
 def stopChallengeProblem():
@@ -234,6 +256,7 @@ def recal_stop():
 # actually launch the little web server
 if __name__ == "__main__":
     app.run( host='0.0.0.0' )
+    rospy.init_node("brasscomms")
 
 ## the host parameter above make the server visible externally to any
 ## machine on the network, rather than just this one. in the context of the
