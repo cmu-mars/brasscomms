@@ -11,7 +11,13 @@ from enum import Enum
 app = Flask(__name__)
 
 ## some definitions and helper functions
-status = Enum ('Status', 'Starting Operational Adapting ShuttingDown Completed ')
+# status = Enum ('Status', 'Starting Operational Adapting ShuttingDown Completed ')
+class Status(Enum):
+    Starting     = 1
+    Operational  = 2
+    Adapting     = 3
+    ShuttingDown = 4
+    Completed    = 5
 
 ## checks to see if a string represents an integer
 def isint(x):
