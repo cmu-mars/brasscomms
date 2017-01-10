@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-##xx
 
 import roslib
 import rospy
