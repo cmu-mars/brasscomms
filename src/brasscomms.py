@@ -92,18 +92,6 @@ def startChallengeProblem():
 
     return 'starting challenge problem'
 
-@app.route('/phase1/power/stop_challenge_problem', methods=['POST'])
-def stopChallengeProblem():
-    assert request.path == '/phase1/power/stop_challenge_problem'
-    assert request.method == 'POST'
-
-    global client
-    client.cancel_all_goals()
-    global bot_status
-    bot_status = Status.Completed
-    return 'killed challenge problem'
-
-
 
 #### subroutines for the rest of the full API; STUBS BELOW HERE
 
