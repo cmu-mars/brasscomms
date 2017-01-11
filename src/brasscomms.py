@@ -66,15 +66,6 @@ def active_cb():
 
 #### subroutines for the first deliverable
 
-@app.route('/logs/status/DASSTATUS', methods=['GET'])
-def status():
-    assert request.path == '/logs/status/DASSTATUS'
-    assert request.method == 'GET'
-
-    global bot_status
-    ret_status = status_name(bot_status)
-    return "{{status : \"{}\" }}".format(ret_status)
-
 @app.route('/phase1/power/start_challenge_problem', methods=['POST'])
 def startChallengeProblem():
     assert request.path == '/phase1/power/start_challenge_problem'
