@@ -41,25 +41,15 @@ def isbool(x):
         return True
     return False
 
-
 ## returns true iff the first argument is a digit inclusively between the
 ## second two args. assumes that the second two are indeed digits, and that
 ## the second is less than the third.
 def int_out_of_range(x,upper,lower) :
     return not(isint(x) and x >= lower and x <= upper)
 
-
 ## todo: this could be a horrible concurrency bug; i don't know yet.
 start_percentage = -1
 bot_status = Status.Starting
-
-def status_name (s): ## todo
-    if (s == 1): return "Starting"
-    if (s == 2): return "Operational"
-    if (s == 3): return "Adapting"
-    if (s == 4): return "ShuttingDown"
-    if (s == 5): return "Completed"
-    return "Unknown"
 
 ## callbacks to change the status
 def done_cb(terminal, result):
