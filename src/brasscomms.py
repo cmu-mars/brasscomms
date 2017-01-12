@@ -11,13 +11,22 @@ from enum import Enum
 app = Flask(__name__)
 
 ## some definitions and helper functions
-# status = Enum ('Status', 'Starting Operational Adapting ShuttingDown Completed ')
 class Status(Enum):
-    Starting     = 1
-    Operational  = 2
-    Adapting     = 3
-    ShuttingDown = 4
-    Completed    = 5
+    PERTURBATION_DETECTED  = 1
+    MISSION_SUSPENDED = 2
+    MISSION_RESUMED = 3
+    MISSION_HALTED = 4
+    MISSION_ABORTED = 5
+    ADAPTATION_INITIATED = 6
+    ADAPTATION_COMPLETED = 7
+    ADAPTATION_STOPPED = 8
+    ERROR = 9
+
+class Error(Enum):
+    TEST_DATA_URI_ERROR  = 1
+    TEST_DATA_FORMAT_ERROR = 2
+    DAS_LOG_URI_ERROR = 3
+    DAS_ERROR = 4
 
 ## checks to see if a string represents an integer
 def isint(x):
@@ -64,13 +73,15 @@ def active_cb():
     print "brasscoms received notification that goal is active"
 
 
-#### subroutines for the first deliverable
+### subroutines per URL in API wiki page order
 
-@app.route('/phase1/power/start_challenge_problem', methods=['POST'])
-def startChallengeProblem():
-    assert request.path == '/phase1/power/start_challenge_problem'
+@app.route('/action/start', methods=['POST'])
+def action_start():
+    assert request.path == '/action/start'
     assert request.method == 'POST'
-    print "Processing start_challeng_problem"
+    # todo: post error if these asserts fail
+
+    print "starting challenge problem"
     try:
         igfile = open('/home/vagrant/catkin_ws/src/cp1_gazebo/instructions/newnav.ig', "r")
         igcode = igfile.read()
@@ -78,13 +89,43 @@ def startChallengeProblem():
         global client
         client.send_goal( goal = goal, done_cb = done_cb, active_cb = active_cb)
     except Exception as e:
+        ## todo: here post the error to the relevant location in brass-th
         print e
         print "Could not send the goal!"
 
-    return 'starting challenge problem'
+    return 'starting challenge problem' ## todo
+
+@app.route('/action/map', methods=['GET'])
+def action_map(arg):
+    assert request.path == '/action/map'
+    assert request.method == 'GET'
+
+    return "this is a stub"
+
+@app.route('/action/observe', methods=['GET'])
+def action_map(arg):
+    assert request.path == '/action/observe'
+    assert request.method == 'GET'
+
+    return "this is a stub"
+
+@app.route('/action/place_obstacle', methods=['POST'])
+def action_map(arg):
+    assert request.path == '/action/place_obstacle'
+    assert request.method == 'POST'
+
+    return "this is a stub"
+
+@app.route('/action/remove_obstacle', methods=['POST'])
+def action_map(arg):
+    assert request.path == '/action/remove_obstacle'
+    assert request.method == 'POST'
+
+    return "this is a stub"
 
 
-#### subroutines for the rest of the full API; STUBS BELOW HERE
+
+
 
 @app.route('/phase1/power/initial_settings', methods=['POST'])
 def initalSettings():
