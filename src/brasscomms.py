@@ -1,14 +1,23 @@
 #! /usr/bin/env python
-
+from __future__ import with_statement
 import roslib
 import rospy
 import actionlib
 import ig_action_msgs.msg
 import sys
+import tf
+
+
+from threading import Lock
+
+import datetime
 
 from flask import Flask , request , abort
 from enum import Enum
 app = Flask(__name__)
+
+shared_var_lock = Lock ()
+
 
 ## some definitions and helper functions
 class Status(Enum):
@@ -62,6 +71,18 @@ def active_cb():
     bot_status = Status.Operational
     print "brasscoms received notification that goal is active"
 
+### subroutines for forming API results
+def formActionResult(arguments):
+    now = datetime.datetime.now()
+    ACTION_RESULT = {TIME : now.isoformat (), 
+			ARGUMENTS: arguments}
+    return ACTION_RESULT
+
+def th_error():
+    return Response(status=400)
+
+def action_result(body):
+    return Response(flask.jsonify(**body),status=200, mimetype='application/json')
 
 ### subroutines per URL in API wiki page order
 
@@ -85,6 +106,7 @@ def action_start():
 
     return 'starting challenge problem' ## todo
 
+# TODO: Remove this API
 @app.route('/action/map', methods=['GET'])
 def action_map(arg):
     assert request.path == '/action/map'
@@ -97,7 +119,17 @@ def action_map(arg):
     assert request.path == '/action/observe'
     assert request.method == 'GET'
 
-    return "this is a stub"
+    global gazebo
+
+    try:
+    	x, y, w = gazebo.get_turtlebot_state()
+	observation = {x : x, y : y, w : w,
+		       v : -1, # How to calculate velocity
+		       voltage: -1 # Need to work this out
+		      }
+	return action_result(observation)
+    except:
+	return th_error()
 
 @app.route('/action/set_battery', methods=['POST'])
 def action_map(arg):
@@ -106,21 +138,49 @@ def action_map(arg):
 
     return "this is a stub"
 
+quarternion = tf.quaternion_from_euler(0, 0, 0) # Zero twist obstacle
+
 @app.route('/action/place_obstacle', methods=['POST'])
 def action_map(arg):
     assert request.path == '/action/place_obstacle'
     assert request.method == 'POST'
+    assert request.headers['Content-Type'] == "application/json"
+    
+    params = request.get_json(silent=True)
+    assert 'x' in params.keys()
+    assert 'y' in params.keys()
+    global gazebo
 
-    return "this is a stub"
+    obs_name = gazebo.place_new_obstacle(params[x], params[y])
+    if obs_name is not None:
+	ARGUMENTS = {obstacle_id : obs_name};
+        ACTION_RESULT = createActionResult(ARGUMENTS)
+        return action_result(ACTION_RESULT)
+    else:
+	return th_error()
+
+
+
 
 @app.route('/action/remove_obstacle', methods=['POST'])
 def action_map(arg):
     assert request.path == '/action/remove_obstacle'
     assert request.method == 'POST'
+    assert request.headers['Content-Type'] == "application/json"
+    
+    params = request.get_json(silent=True)
+    assert 'obstacle_id' in params.keys()
 
-    return "this is a stub"
+    obstacle_id = params[obstacle_id]
 
-
+    global gazebo
+    success = gazebo.delete_obstacle(obstacle_id)
+    if success:
+	ACTION_RESULT = createActionResult({})
+	return action_result(ACTION_RESULT)
+    else:
+	return th_error()
+ 
 
 
 
@@ -309,5 +369,6 @@ if __name__ == "__main__":
     rospy.init_node("brasscomms")
     client = actionlib.SimpleActionClient("ig_action_server", ig_action_msgs.msg.InstructionGraphAction)
     client.wait_for_server()
+    gazebo = GazeboInterface()
     app.run (host="0.0.0.0")
     
