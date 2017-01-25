@@ -1,4 +1,6 @@
 #! /usr/bin/env python
+
+### imports
 from __future__ import with_statement
 import roslib
 import rospy
@@ -7,19 +9,22 @@ import ig_action_msgs.msg
 import sys
 import tf
 
-
 from threading import Lock
 
 import datetime
 
 from flask import Flask , request , abort
 from enum import Enum
-app = Flask(__name__)
 
+### some globals
+app = Flask(__name__)
 shared_var_lock = Lock ()
 
+# todo: this could be a horrible concurrency bug; i don't know yet.
+start_percentage = -1
+bot_status = Status.Starting
 
-## some definitions and helper functions
+### some definitions and helper functions
 class Status(Enum):
     PERTURBATION_DETECTED  = 1
     MISSION_SUSPENDED = 2
@@ -37,7 +42,6 @@ class Error(Enum):
     DAS_LOG_URI_ERROR = 3
     DAS_ERROR = 4
 
-## checks to see if a string represents an integer
 def isint(x):
     try:
         int(s)
@@ -50,25 +54,21 @@ def isbool(x):
         return True
     return False
 
-## returns true iff the first argument is a digit inclusively between the
-## second two args. assumes that the second two are indeed digits, and that
-## the second is less than the third.
+# returns true iff the first argument is a digit inclusively between the
+# second two args. assumes that the second two are indeed digits, and that
+# the second is less than the third.
 def int_out_of_range(x,upper,lower) :
     return not(isint(x) and x >= lower and x <= upper)
-
-## todo: this could be a horrible concurrency bug; i don't know yet.
-start_percentage = -1
-bot_status = Status.Starting
 
 ## callbacks to change the status
 def done_cb(terminal, result):
     global bot_status
-    bot_status = Status.Completed
+    bot_status = Status.Completed # todo: busted
     print "brasscomms received successful result from plan: %d" %(terminal)
 
 def active_cb():
     global bot_status
-    bot_status = Status.Operational
+    bot_status = Status.Operational #todo: busted
     print "brasscoms received notification that goal is active"
 
 ### subroutines for forming API results
@@ -84,7 +84,8 @@ def th_error():
 def action_result(body):
     return Response(flask.jsonify(**body),status=200, mimetype='application/json')
 
-### subroutines per URL in API wiki page order
+
+### subroutines per endpoint URL in API wiki page order
 
 @app.route('/action/start', methods=['POST'])
 def action_start():
@@ -94,6 +95,7 @@ def action_start():
 
     print "starting challenge problem"
     try:
+        # todo: pick ig based on start and end point, rather than hard coded
         igfile = open('/home/vagrant/catkin_ws/src/cp1_gazebo/instructions/newnav.ig', "r")
         igcode = igfile.read()
         goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
@@ -105,14 +107,6 @@ def action_start():
         print "Could not send the goal!"
 
     return 'starting challenge problem' ## todo
-
-# TODO: Remove this API
-@app.route('/action/map', methods=['GET'])
-def action_map(arg):
-    assert request.path == '/action/map'
-    assert request.method == 'GET'
-
-    return "this is a stub"
 
 @app.route('/action/observe', methods=['GET'])
 def action_map(arg):
@@ -138,8 +132,6 @@ def action_map(arg):
 
     return "this is a stub"
 
-quarternion = tf.quaternion_from_euler(0, 0, 0) # Zero twist obstacle
-
 @app.route('/action/place_obstacle', methods=['POST'])
 def action_map(arg):
     assert request.path == '/action/place_obstacle'
@@ -159,9 +151,6 @@ def action_map(arg):
     else:
 	return th_error()
 
-
-
-
 @app.route('/action/remove_obstacle', methods=['POST'])
 def action_map(arg):
     assert request.path == '/action/remove_obstacle'
@@ -180,8 +169,6 @@ def action_map(arg):
 	return action_result(ACTION_RESULT)
     else:
 	return th_error()
-
-
 
 # if you run this script from the command line directly, this causes it to
 # actually launch the little web server and the node
