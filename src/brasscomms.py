@@ -71,6 +71,10 @@ shared_var_lock = Lock ()
 start_percentage = -1      # default value
 bot_status = Status.ERROR  # default value
 
+def parseConfigFile():
+    # check if file exists, and can be read, TEST_DATA_FILE_ERROR DAS_ERROR otw
+    # parse into dict, TEST_DATA_FORMAT_ERROR DAS_ERROR otw
+    return 5
 
 ### subroutines for forming API results
 def formActionResult(arguments):
@@ -90,9 +94,9 @@ def action_result(body):
 
 @app.route('/action/start', methods=['POST'])
 def action_start():
+    # todo: post DAS_ERROR DAS_OTHER_ERROR
     assert request.path == '/action/start'
     assert request.method == 'POST'
-    # todo: post error if these asserts fail
 
     print "starting challenge problem"
     try:
@@ -110,7 +114,8 @@ def action_start():
     return 'starting challenge problem' ## todo
 
 @app.route('/action/observe', methods=['GET'])
-def action_map(arg):
+def action_observe(arg):
+    # todo: post DAS_ERROR DAS_OTHER_ERROR
     assert request.path == '/action/observe'
     assert request.method == 'GET'
 
@@ -127,16 +132,20 @@ def action_map(arg):
 	return th_error()
 
 @app.route('/action/set_battery', methods=['POST'])
-def action_map(arg):
+def action_set_battery(arg):
+    # todo: post DAS_ERROR DAS_OTHER_ERROR
     assert request.path == '/action/set_battery'
     assert request.method == 'POST'
 
     return "this is a stub"
 
 @app.route('/action/place_obstacle', methods=['POST'])
-def action_map(arg):
+def action_place_obstacle(arg):
+    # todo: post DAS_ERROR DAS_OTHER_ERROR
     assert request.path == '/action/place_obstacle'
     assert request.method == 'POST'
+
+    # todo: post DAS_ERROR, which one? maybe DAS_OTHER_ERROR
     assert request.headers['Content-Type'] == "application/json"
 
     params = request.get_json(silent=True)
@@ -153,9 +162,12 @@ def action_map(arg):
 	return th_error()
 
 @app.route('/action/remove_obstacle', methods=['POST'])
-def action_map(arg):
+def action_remove_obstacle(arg):
+    # todo: post DAS_ERROR DAS_OTHER_ERROR
     assert request.path == '/action/remove_obstacle'
     assert request.method == 'POST'
+
+    # todo: post DAS_ERROR, maybe DAS_OTHER_ERROR
     assert request.headers['Content-Type'] == "application/json"
 
     params = request.get_json(silent=True)
@@ -170,6 +182,8 @@ def action_map(arg):
 	return action_result(ACTION_RESULT)
     else:
 	return th_error()
+
+
 
 # if you run this script from the command line directly, this causes it to
 # actually launch the little web server and the node
