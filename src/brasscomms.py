@@ -16,14 +16,6 @@ import datetime
 from flask import Flask , request , abort
 from enum import Enum
 
-### some globals
-app = Flask(__name__)
-shared_var_lock = Lock ()
-
-# todo: this could be a horrible concurrency bug; i don't know yet.
-start_percentage = -1
-bot_status = Status.Starting
-
 ### some definitions and helper functions
 class Status(Enum):
     PERTURBATION_DETECTED  = 1
@@ -63,13 +55,22 @@ def int_out_of_range(x,upper,lower) :
 ## callbacks to change the status
 def done_cb(terminal, result):
     global bot_status
-    bot_status = Status.Completed # todo: busted
+    bot_status = Status.ADAPTATION_COMPLETED # todo: right enum?
     print "brasscomms received successful result from plan: %d" %(terminal)
 
 def active_cb():
     global bot_status
-    bot_status = Status.Operational #todo: busted
+    bot_status = Status.Operational #todo: what to say here?
     print "brasscoms received notification that goal is active"
+
+### some globals
+app = Flask(__name__)
+shared_var_lock = Lock ()
+
+# todo: this could be a horrible concurrency bug; i don't know yet.
+start_percentage = -1      # default value
+bot_status = Status.ERROR  # default value
+
 
 ### subroutines for forming API results
 def formActionResult(arguments):
@@ -95,7 +96,7 @@ def action_start():
 
     print "starting challenge problem"
     try:
-        # todo: pick ig based on start and end point, rather than hard coded
+        # todo: pick ig based on start and end point, rather than hard coded (RR2)
         igfile = open('/home/vagrant/catkin_ws/src/cp1_gazebo/instructions/newnav.ig', "r")
         igcode = igfile.read()
         goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
