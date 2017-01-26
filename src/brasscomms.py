@@ -103,6 +103,8 @@ def parse_config_file():
     # initial_obstacle_location
     # sensor_perturbation
 
+    # we silently ignore anything else that might be present.
+
     return data
 
 ### subroutines for forming API results
