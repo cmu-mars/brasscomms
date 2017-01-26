@@ -76,7 +76,8 @@ bot_status = Status.ERROR  # default value
 
 th_url = "http://brass-th"
 
-def parseConfigFile():
+## todo
+def parse_config_file():
     # check if file exists, and can be read, TEST_DATA_FILE_ERROR DAS_ERROR otw
     # parse into dict, TEST_DATA_FORMAT_ERROR DAS_ERROR otw
     return 5
@@ -94,13 +95,18 @@ def th_error():
 def action_result(body):
     return Response(flask.jsonify(**body),status=200, mimetype='application/json')
 
-### subroutines for forming TH messages
+### subroutines for forming and sending messages to the TH
 def th_das_error(err,msg):
     now = datetime.datetime.now()
     error_contents = {TIME : now.isoformat (),
                       ERROR : str(err),
                       MESSAGE : str(msg)}
-    r = requests.post(th_url,data = json.dumps(error_contents))
+    r = requests.post(th_url+'/error', data = json.dumps(error_contents))
+
+def das_ready():
+    now = datetime.datetime.now()
+    contents = {TIME : now.isoformat (),
+    r = requests.post(th_url+'/ready', data = json.dumps(contents))
 
 ### subroutines per endpoint URL in API wiki page order
 
@@ -134,8 +140,8 @@ def action_observe(arg):
     try:
     	x, y, w = gazebo.get_turtlebot_state()
 	observation = {x : x, y : y, w : w,
-		       v : -1, # How to calculate velocity
-		       voltage: -1 # Need to work this out
+		       v : -1,      # How to calculate velocity
+                       voltage: -1  # Need to work this out
 		      }
 	return action_result(observation)
     except:
@@ -150,7 +156,6 @@ def action_set_battery(arg):
 
 @app.route('/action/place_obstacle', methods=['POST'])
 def action_place_obstacle(arg):
-    # todo: post DAS_ERROR DAS_OTHER_ERROR
     if(request.path != '/action/place_obstacle' or asser request.method != 'POST'):
         th_das_error(DAS_OTHER_ERROR,'internal fault: action_place_obstacle called improperly')
 
@@ -209,3 +214,5 @@ if __name__ == "__main__":
     client.wait_for_server()
     gazebo = GazeboInterface()
     app.run (host="0.0.0.0")
+    parse_config_file()
+    das_ready()
