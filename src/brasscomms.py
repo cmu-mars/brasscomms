@@ -16,6 +16,9 @@ import datetime
 from flask import Flask , request , abort
 from enum import Enum
 
+import requests
+import json
+
 ### some definitions and helper functions
 class Status(Enum):
     PERTURBATION_DETECTED  = 1
@@ -32,7 +35,7 @@ class Error(Enum):
     TEST_DATA_URI_ERROR  = 1
     TEST_DATA_FORMAT_ERROR = 2
     DAS_LOG_URI_ERROR = 3
-    DAS_ERROR = 4
+    DAS_OTHER_ERROR = 4
 
 def isint(x):
     try:
@@ -71,6 +74,8 @@ shared_var_lock = Lock ()
 start_percentage = -1      # default value
 bot_status = Status.ERROR  # default value
 
+th_url = "http://brass-th"
+
 def parseConfigFile():
     # check if file exists, and can be read, TEST_DATA_FILE_ERROR DAS_ERROR otw
     # parse into dict, TEST_DATA_FORMAT_ERROR DAS_ERROR otw
@@ -80,7 +85,7 @@ def parseConfigFile():
 def formActionResult(arguments):
     now = datetime.datetime.now()
     ACTION_RESULT = {TIME : now.isoformat (),
-			ARGUMENTS: arguments}
+		     ARGUMENTS: arguments}
     return ACTION_RESULT
 
 def th_error():
@@ -89,14 +94,20 @@ def th_error():
 def action_result(body):
     return Response(flask.jsonify(**body),status=200, mimetype='application/json')
 
+### subroutines for forming TH messages
+def th_das_error(err,msg):
+    now = datetime.datetime.now()
+    error_contents = {TIME : now.isoformat (),
+                      ERROR : str(err),
+                      MESSAGE : str(msg)}
+    r = requests.post(th_url,data = json.dumps(error_contents))
 
 ### subroutines per endpoint URL in API wiki page order
 
 @app.route('/action/start', methods=['POST'])
 def action_start():
-    # todo: post DAS_ERROR DAS_OTHER_ERROR
-    assert request.path == '/action/start'
-    assert request.method == 'POST'
+    if(request.path != '/action/start' or request.method != 'POST'):
+        th_das_error(DAS_OTHER_ERROR,'internal fault: action_start called improperly')
 
     print "starting challenge problem"
     try:
@@ -115,9 +126,8 @@ def action_start():
 
 @app.route('/action/observe', methods=['GET'])
 def action_observe(arg):
-    # todo: post DAS_ERROR DAS_OTHER_ERROR
-    assert request.path == '/action/observe'
-    assert request.method == 'GET'
+    if(request.path != '/action/observe' or request.method != 'GET'):
+        th_das_error(DAS_OTHER_ERROR,'internal fault: action_observe called improperly')
 
     global gazebo
 
@@ -133,20 +143,19 @@ def action_observe(arg):
 
 @app.route('/action/set_battery', methods=['POST'])
 def action_set_battery(arg):
-    # todo: post DAS_ERROR DAS_OTHER_ERROR
-    assert request.path == '/action/set_battery'
-    assert request.method == 'POST'
+    if(request.path != '/action/set_battery' or request.method != 'POST'):
+        th_das_error(DAS_OTHER_ERROR,'internal fault: action_set_battery called improperly')
 
     return "this is a stub"
 
 @app.route('/action/place_obstacle', methods=['POST'])
 def action_place_obstacle(arg):
     # todo: post DAS_ERROR DAS_OTHER_ERROR
-    assert request.path == '/action/place_obstacle'
-    assert request.method == 'POST'
+    if(request.path != '/action/place_obstacle' or asser request.method != 'POST'):
+        th_das_error(DAS_OTHER_ERROR,'internal fault: action_place_obstacle called improperly')
 
-    # todo: post DAS_ERROR, which one? maybe DAS_OTHER_ERROR
-    assert request.headers['Content-Type'] == "application/json"
+    if(request.headers['Content-Type'] != "application/json"):
+        th_das_error(DAS_OTHER_ERROR,'action/place_obstacle recieved post without json header')
 
     params = request.get_json(silent=True)
     assert 'x' in params.keys()
@@ -163,12 +172,11 @@ def action_place_obstacle(arg):
 
 @app.route('/action/remove_obstacle', methods=['POST'])
 def action_remove_obstacle(arg):
-    # todo: post DAS_ERROR DAS_OTHER_ERROR
-    assert request.path == '/action/remove_obstacle'
-    assert request.method == 'POST'
+    if(request.path != '/action/remove_obstacle' or  request.method != 'POST'):
+        th_das_error(DAS_OTHER_ERROR,'internal fault: action_observe called improperly')
 
-    # todo: post DAS_ERROR, maybe DAS_OTHER_ERROR
-    assert request.headers['Content-Type'] == "application/json"
+    if( request.headers['Content-Type'] != "application/json"):
+        th_das_error(DAS_OTHER_ERROR,'action/remove_obstacle recieved post without json header')
 
     params = request.get_json(silent=True)
     assert 'obstacle_id' in params.keys()
