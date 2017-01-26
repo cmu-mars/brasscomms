@@ -18,6 +18,8 @@ from enum import Enum
 
 import requests
 import json
+import os.path
+import os.access
 
 ### some definitions and helper functions
 class Status(Enum):
@@ -32,7 +34,7 @@ class Status(Enum):
     ERROR = 9
 
 class Error(Enum):
-    TEST_DATA_URI_ERROR  = 1
+    TEST_DATA_FILE_ERROR  = 1
     TEST_DATA_FORMAT_ERROR = 2
     DAS_LOG_URI_ERROR = 3
     DAS_OTHER_ERROR = 4
@@ -78,9 +80,30 @@ th_url = "http://brass-th"
 
 ## todo
 def parse_config_file():
+    config_file_path = '/test/data'
     # check if file exists, and can be read, TEST_DATA_FILE_ERROR DAS_ERROR otw
     # parse into dict, TEST_DATA_FORMAT_ERROR DAS_ERROR otw
-    return 5
+
+    if not (os.path.exists(config_file_path)
+            and os.path.isfile(config_file_path)
+            and os.access(config_file_path,os.R_OK)):
+        th_das_error(TEST_DATA_FILE_ERROR,'config file either does not exist, is not a file, or has wrong permissions')
+
+    with open(config_file_path) as config_file:
+        data = json.load(config_file)
+
+    # check to make sure each field is as in the spec ..
+
+    # start_loc
+    # start_yaw
+    # target_loc
+    # enable_adaptation
+    # initial_voltage
+    # initial_obstacle
+    # initial_obstacle_location
+    # sensor_perturbation
+
+    return data
 
 ### subroutines for forming API results
 def formActionResult(arguments):
@@ -97,6 +120,7 @@ def action_result(body):
 
 ### subroutines for forming and sending messages to the TH
 def th_das_error(err,msg):
+    global th_url
     now = datetime.datetime.now()
     error_contents = {TIME : now.isoformat (),
                       ERROR : str(err),
@@ -104,6 +128,7 @@ def th_das_error(err,msg):
     r = requests.post(th_url+'/error', data = json.dumps(error_contents))
 
 def das_ready():
+    global th_url
     now = datetime.datetime.now()
     contents = {TIME : now.isoformat (),
     r = requests.post(th_url+'/ready', data = json.dumps(contents))
@@ -214,5 +239,5 @@ if __name__ == "__main__":
     client.wait_for_server()
     gazebo = GazeboInterface()
     app.run (host="0.0.0.0")
-    parse_config_file()
+    parse_config_file() ## todo: if this fails, will the whole thing stop?
     das_ready()
