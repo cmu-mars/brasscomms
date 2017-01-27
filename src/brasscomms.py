@@ -119,7 +119,7 @@ def th_error():
 
 def action_result(body):    
     with_time = formActionResult(body)
-    return Response(jsonify(**with_time),status=200, mimetype='application/json')
+    return Response(json.dumps(with_time),status=200, mimetype='application/json')
 
 ### subroutines for forming and sending messages to the TH
 def th_das_error(err,msg):
@@ -149,7 +149,7 @@ def action_start():
 
     print "starting challenge problem"
     try:
-        igfile = open('/home/vagrant/catkin_ws/src/cp_gazebo/instructions/' + config[start_loc] + '_' + config[target_loc] + '.ig', "r")
+        igfile = open('/home/vagrant/catkin_ws/src/cp_gazebo/instructions/' + config["start_loc"] + '_' + config["target_loc"] + '.ig', "r")
         igcode = igfile.read()
         # todo: when is it safe to close this file? does the 'with' pragma do this more cleanly?
         goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
@@ -200,7 +200,7 @@ def action_place_obstacle():
     assert 'y' in params.keys()
     global gazebo
 
-    obs_name = gazebo.place_new_obstacle(params[x], params[y])
+    obs_name = gazebo.place_new_obstacle(params["x"], params["y"])
     if obs_name is not None:
 	ARGUMENTS = {"obstacle_id" : obs_name};
         return action_result(ARGUMENTS)
@@ -218,7 +218,7 @@ def action_remove_obstacle():
     params = request.get_json(silent=True)
     assert 'obstacle_id' in params.keys()
 
-    obstacle_id = params[obstacle_id]
+    obstacle_id = params["obstacle_id"]
 
     global gazebo
     success = gazebo.delete_obstacle(obstacle_id)
