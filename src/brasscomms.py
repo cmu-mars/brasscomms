@@ -19,7 +19,8 @@ from enum import Enum
 import requests
 import json
 import os.path
-import os.access
+
+from gazebo_interface import *
 
 ### some definitions and helper functions
 class Status(Enum):
