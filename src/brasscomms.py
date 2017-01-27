@@ -149,6 +149,7 @@ def action_start():
     try:
         igfile = open('/home/vagrant/catkin_ws/src/cp_gazebo/instructions/' + config[start_loc] + '_' + config[target_loc] + '.ig', "r")
         igcode = igfile.read()
+        # todo: when is it safe to close this file? does the 'with' pragma do this more cleanly?
         goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
         global client
         client.send_goal( goal = goal, done_cb = done_cb, active_cb = active_cb)
