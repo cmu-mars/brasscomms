@@ -9,7 +9,7 @@ import tf.transformations as tf
 import rospy
 
 # This is the model for the obstacle
-OBS_MODEL = os.path.expanduser('~/catkin_ws/src/cp1_gazebo/models/box.sdf')
+OBS_MODEL = os.path.expanduser('~/catkin_ws/src/cp_gazebo/models/box.sdf')
 
 # These are translation coordinates between the map and gazebo 
 # The two things should really be syncrhonized
