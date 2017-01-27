@@ -110,30 +110,31 @@ def parse_config_file():
 ### subroutines for forming API results
 def formActionResult(arguments):
     now = datetime.datetime.now()
-    ACTION_RESULT = {TIME : now.isoformat (),
-		     ARGUMENTS: arguments}
+    ACTION_RESULT = {"TIME" : now.isoformat (),
+		     "ARGUMENTS": arguments}
     return ACTION_RESULT
 
 def th_error():
     return Response(status=400)
 
-def action_result(body):
-    return Response(flask.jsonify(**body),status=200, mimetype='application/json')
+def action_result(body):    
+    with_time = formActionResult(body)
+    return Response(jsonify(**with_time),status=200, mimetype='application/json')
 
 ### subroutines for forming and sending messages to the TH
 def th_das_error(err,msg):
     global th_url
     now = datetime.datetime.now()
-    error_contents = {TIME : now.isoformat (),
-                      ERROR : str(err),
-                      MESSAGE : str(msg)}
+    error_contents = {"TIME" : now.isoformat (),
+                      "ERROR" : str(err),
+                      "MESSAGE" : str(msg)}
     # todo: this r should be th_ack or th_err; do we care?
     r = requests.post(th_url+'/error', data = json.dumps(error_contents))
 
 def das_ready():
     global th_url
     now = datetime.datetime.now()
-    contents = {TIME : now.isoformat ()}
+    contents = {"TIME" : now.isoformat ()}
     # todo: this r should be th_ack or th_err; do we care?
     r = requests.post(th_url+'/ready', data = json.dumps(contents))
 
@@ -170,9 +171,9 @@ def action_observe():
 
     try:
     	x, y, w = gazebo.get_turtlebot_state()
-	observation = {x : x, y : y, w : w,
-		       v : -1,      # todo: How to calculate velocity
-                       voltage: -1  # todo: Need to work this out
+	observation = {"x" : x, "y" : y, "w" : w,
+		       "v" : -1,       # todo: How to calculate velocity
+                       "voltage" : -1  # todo: Need to work this out
 		      }
 	return action_result(observation)
     except:
@@ -201,9 +202,8 @@ def action_place_obstacle():
 
     obs_name = gazebo.place_new_obstacle(params[x], params[y])
     if obs_name is not None:
-	ARGUMENTS = {obstacle_id : obs_name};
-        ACTION_RESULT = createActionResult(ARGUMENTS)
-        return action_result(ACTION_RESULT)
+	ARGUMENTS = {"obstacle_id" : obs_name};
+        return action_result(ARGUMENTS)
     else:
 	return th_error()
 
@@ -223,8 +223,7 @@ def action_remove_obstacle():
     global gazebo
     success = gazebo.delete_obstacle(obstacle_id)
     if success:
-	ACTION_RESULT = createActionResult({})
-	return action_result(ACTION_RESULT)
+	return action_result({})
     else:
 	return th_error()
 
