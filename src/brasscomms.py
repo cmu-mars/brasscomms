@@ -21,6 +21,7 @@ import json
 import os.path
 
 from gazebo_interface import *
+import pprint
 
 ### some definitions and helper functions
 class Status(Enum):
@@ -65,8 +66,9 @@ def done_cb(terminal, result):
     print "brasscomms received successful result from plan: %d" %(terminal)
 
 def active_cb():
-    global bot_status
-    bot_status = Status.Operational #todo: what to say here?
+    #### todo
+    # global bot_status
+    # bot_status = Status.Operational #todo: what to say here?
     print "brasscoms received notification that goal is active"
 
 ### some globals
@@ -74,7 +76,6 @@ app = Flask(__name__)
 shared_var_lock = Lock ()
 
 # todo: this could be a horrible concurrency bug; i don't know yet.
-start_percentage = -1      # default value
 bot_status = Status.ERROR  # default value
 
 th_url = "http://brass-th"
@@ -90,6 +91,7 @@ def parse_config_file():
     else:
         with open(config_file_path) as config_file:
             data = json.load(config_file)
+        print data
 
         # todo: check to make sure each field is as in the spec ..
 
@@ -136,7 +138,10 @@ def das_ready():
     now = datetime.datetime.now()
     contents = {"TIME" : now.isoformat ()}
     # todo: this r should be th_ack or th_err; do we care?
-    r = requests.post(th_url+'/ready', data = json.dumps(contents))
+    try:
+        r = requests.post(th_url+'/ready', data = json.dumps(contents))
+    except Exception as e:
+        print "Fatal: couldn't connect to TH at " + th_url+"/ready"
 
 ### subroutines per endpoint URL in API wiki page order
 
@@ -149,7 +154,8 @@ def action_start():
 
     print "starting challenge problem"
     try:
-        igfile = open('/home/vagrant/catkin_ws/src/cp_gazebo/instructions/' + config["start_loc"] + '_' + config["target_loc"] + '.ig', "r")
+        ig_path = '/home/vagrant/catkin_ws/src/cp_gazebo/instructions/' + config["start_loc"] + '_to_' + config["target_loc"] + '.ig'
+        igfile = open(ig_path, "r")
         igcode = igfile.read()
         # todo: when is it safe to close this file? does the 'with' pragma do this more cleanly?
         goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
@@ -244,6 +250,6 @@ if __name__ == "__main__":
     client = actionlib.SimpleActionClient("ig_action_server", ig_action_msgs.msg.InstructionGraphAction)
     client.wait_for_server()
     gazebo = GazeboInterface()
-    app.run (host="0.0.0.0")
     config = parse_config_file()
     das_ready()
+    app.run (host="0.0.0.0")
