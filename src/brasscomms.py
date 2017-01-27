@@ -13,7 +13,7 @@ from threading import Lock
 
 import datetime
 
-from flask import Flask , request , abort
+from flask import *
 from enum import Enum
 
 import requests
@@ -162,7 +162,7 @@ def action_start():
     return action_result({})  # todo: this includes time as well; is that out of spec?
 
 @app.route('/action/observe', methods=['GET'])
-def action_observe(arg):
+def action_observe():
     if(request.path != '/action/observe' or request.method != 'GET'):
         th_das_error(DAS_OTHER_ERROR,'internal fault: action_observe called improperly')
 
@@ -179,14 +179,14 @@ def action_observe(arg):
 	return th_error()
 
 @app.route('/action/set_battery', methods=['POST'])
-def action_set_battery(arg):
+def action_set_battery():
     if(request.path != '/action/set_battery' or request.method != 'POST'):
         th_das_error(DAS_OTHER_ERROR,'internal fault: action_set_battery called improperly')
 
     return action_result({})
 
 @app.route('/action/place_obstacle', methods=['POST'])
-def action_place_obstacle(arg):
+def action_place_obstacle():
     if(request.path != '/action/place_obstacle' or  request.method != 'POST'):
         th_das_error(DAS_OTHER_ERROR,'internal fault: action_place_obstacle called improperly')
 
@@ -208,7 +208,7 @@ def action_place_obstacle(arg):
 	return th_error()
 
 @app.route('/action/remove_obstacle', methods=['POST'])
-def action_remove_obstacle(arg):
+def action_remove_obstacle():
     if(request.path != '/action/remove_obstacle' or  request.method != 'POST'):
         th_das_error(DAS_OTHER_ERROR,'internal fault: action_observe called improperly')
 
