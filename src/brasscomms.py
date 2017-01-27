@@ -21,7 +21,6 @@ import json
 import os.path
 
 from gazebo_interface import *
-import pprint
 
 ### some definitions and helper functions
 class Status(Enum):
@@ -91,7 +90,6 @@ def parse_config_file():
     else:
         with open(config_file_path) as config_file:
             data = json.load(config_file)
-        print data
 
         # todo: check to make sure each field is as in the spec ..
 
@@ -251,5 +249,5 @@ if __name__ == "__main__":
     client.wait_for_server()
     gazebo = GazeboInterface()
     config = parse_config_file()
-    das_ready()
+    das_ready() ## todo: this happens too early
     app.run (host="0.0.0.0")
