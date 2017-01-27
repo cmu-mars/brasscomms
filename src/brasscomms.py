@@ -132,7 +132,7 @@ def th_das_error(err,msg):
 def das_ready():
     global th_url
     now = datetime.datetime.now()
-    contents = {TIME : now.isoformat (),
+    contents = {TIME : now.isoformat ()}
     # todo: this r should be th_ack or th_err; do we care?
     r = requests.post(th_url+'/ready', data = json.dumps(contents))
 
