@@ -81,30 +81,29 @@ th_url = "http://brass-th"
 ## todo
 def parse_config_file():
     config_file_path = '/test/data'
-    # check if file exists, and can be read, TEST_DATA_FILE_ERROR DAS_ERROR otw
-    # parse into dict, TEST_DATA_FORMAT_ERROR DAS_ERROR otw
 
     if not (os.path.exists(config_file_path)
             and os.path.isfile(config_file_path)
             and os.access(config_file_path,os.R_OK)):
-        th_das_error(TEST_DATA_FILE_ERROR,'config file either does not exist, is not a file, or has wrong permissions')
+        th_das_error(TEST_DATA_FILE_ERROR,'config file at ' + config_file_path + ' either does not exist, is not a file, is not readable')
+    else:
+        with open(config_file_path) as config_file:
+            data = json.load(config_file)
 
-    with open(config_file_path) as config_file:
-        data = json.load(config_file)
+        # todo: check to make sure each field is as in the spec ..
 
-    # check to make sure each field is as in the spec ..
+        # start_loc
+        # start_yaw
+        # target_loc
+        # enable_adaptation
+        # initial_voltage
+        # initial_obstacle
+        # initial_obstacle_location
+        # sensor_perturbation
 
-    # start_loc
-    # start_yaw
-    # target_loc
-    # enable_adaptation
-    # initial_voltage
-    # initial_obstacle
-    # initial_obstacle_location
-    # sensor_perturbation
+        # todo: stop the world if the file doesn't parse
 
     # we silently ignore anything else that might be present.
-
     return data
 
 ### subroutines for forming API results
@@ -127,12 +126,14 @@ def th_das_error(err,msg):
     error_contents = {TIME : now.isoformat (),
                       ERROR : str(err),
                       MESSAGE : str(msg)}
+    # todo: this r should be th_ack or th_err; do we care?
     r = requests.post(th_url+'/error', data = json.dumps(error_contents))
 
 def das_ready():
     global th_url
     now = datetime.datetime.now()
     contents = {TIME : now.isoformat (),
+    # todo: this r should be th_ack or th_err; do we care?
     r = requests.post(th_url+'/ready', data = json.dumps(contents))
 
 ### subroutines per endpoint URL in API wiki page order
@@ -142,10 +143,11 @@ def action_start():
     if(request.path != '/action/start' or request.method != 'POST'):
         th_das_error(DAS_OTHER_ERROR,'internal fault: action_start called improperly')
 
+    global config
+
     print "starting challenge problem"
     try:
-        # todo: pick ig based on start and end point, rather than hard coded (RR2)
-        igfile = open('/home/vagrant/catkin_ws/src/cp1_gazebo/instructions/newnav.ig', "r")
+        igfile = open('/home/vagrant/catkin_ws/src/cp_gazebo/instructions/' + config[start_loc] + '_' + config[target_loc] + '.ig', "r")
         igcode = igfile.read()
         goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
         global client
@@ -155,7 +157,7 @@ def action_start():
         print e
         print "Could not send the goal!"
 
-    return 'starting challenge problem' ## todo
+    return action_result({})  # todo: this includes time as well; is that out of spec?
 
 @app.route('/action/observe', methods=['GET'])
 def action_observe(arg):
@@ -167,8 +169,8 @@ def action_observe(arg):
     try:
     	x, y, w = gazebo.get_turtlebot_state()
 	observation = {x : x, y : y, w : w,
-		       v : -1,      # How to calculate velocity
-                       voltage: -1  # Need to work this out
+		       v : -1,      # todo: How to calculate velocity
+                       voltage: -1  # todo: Need to work this out
 		      }
 	return action_result(observation)
     except:
@@ -179,17 +181,18 @@ def action_set_battery(arg):
     if(request.path != '/action/set_battery' or request.method != 'POST'):
         th_das_error(DAS_OTHER_ERROR,'internal fault: action_set_battery called improperly')
 
-    return "this is a stub"
+    return action_result({})
 
 @app.route('/action/place_obstacle', methods=['POST'])
 def action_place_obstacle(arg):
-    if(request.path != '/action/place_obstacle' or asser request.method != 'POST'):
+    if(request.path != '/action/place_obstacle' or  request.method != 'POST'):
         th_das_error(DAS_OTHER_ERROR,'internal fault: action_place_obstacle called improperly')
 
     if(request.headers['Content-Type'] != "application/json"):
         th_das_error(DAS_OTHER_ERROR,'action/place_obstacle recieved post without json header')
 
     params = request.get_json(silent=True)
+    # todo: change these asserts to post error to th if they fail
     assert 'x' in params.keys()
     assert 'y' in params.keys()
     global gazebo
@@ -241,5 +244,5 @@ if __name__ == "__main__":
     client.wait_for_server()
     gazebo = GazeboInterface()
     app.run (host="0.0.0.0")
-    parse_config_file() ## todo: if this fails, will the whole thing stop?
+    config = parse_config_file()
     das_ready()
