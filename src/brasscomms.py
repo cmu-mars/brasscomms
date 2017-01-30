@@ -108,10 +108,10 @@ def parse_config_file():
     return data
 
 ### subroutines for forming API results
-def formActionResult(arguments):
+def formActionResult(result):
     now = datetime.datetime.now()
     ACTION_RESULT = {"TIME" : now.isoformat (),
-                     "ARGUMENTS": arguments}
+                     "RESULT": result}
     return ACTION_RESULT
 
 def th_error():
@@ -139,14 +139,17 @@ def das_ready():
     try:
         r = requests.post(th_url+'/ready', data = json.dumps(contents))
     except Exception as e:
+        #todo: do something else if das_ready doesn't work?
         print "Fatal: couldn't connect to TH at " + th_url+"/ready"
 
 ### subroutines per endpoint URL in API wiki page order
 
 @app.route('/action/start', methods=['POST'])
 def action_start():
-    if(request.path != '/action/start' or request.method != 'POST'):
+    if(request.path != '/action/start') 
         th_das_error(DAS_OTHER_ERROR,'internal fault: action_start called improperly')
+    if(request.method != 'POST'):
+        th_das_error(DAS_OTHER_ERROR,'action_start called with wrong HTTP method')
 
     global config
 
@@ -160,16 +163,19 @@ def action_start():
         global client
         client.send_goal( goal = goal, done_cb = done_cb, active_cb = active_cb)
     except Exception as e:
-        ## todo: here post the error to the relevant location in brass-th
+        ## todo: put these in the log file
         print e
         print "Could not send the goal!"
+        return th_error()
 
     return action_result({})  # todo: this includes time as well; is that out of spec?
 
 @app.route('/action/observe', methods=['GET'])
 def action_observe():
-    if(request.path != '/action/observe' or request.method != 'GET'):
+    if(request.path != '/action/observe') 
         th_das_error(DAS_OTHER_ERROR,'internal fault: action_observe called improperly')
+    if(request.method != 'GET'):
+        th_das_error(DAS_OTHER_ERROR,'action_observe called with wrong HTTP method')
 
     global gazebo
 
@@ -181,12 +187,15 @@ def action_observe():
                       }
         return action_result(observation)
     except:
-        return th_error()
+        return th_error
+        #th_das_error(DAS_OTHER_ERROR,'internal fault: observation failed')
 
 @app.route('/action/set_battery', methods=['POST'])
 def action_set_battery():
-    if(request.path != '/action/set_battery' or request.method != 'POST'):
+    if(request.path != '/action/set_battery') 
         th_das_error(DAS_OTHER_ERROR,'internal fault: action_set_battery called improperly')
+    if(request.method != 'POST'):
+        th_das_error(DAS_OTHER_ERROR,'action_set_battery called with wrong HTTP method')
 
     ## todo: for RR2 make sure this is valid and doesn't crash
     ## todo : implement real stuff here when we have the battery model
@@ -195,16 +204,19 @@ def action_set_battery():
 
 @app.route('/action/place_obstacle', methods=['POST'])
 def action_place_obstacle():
-    if(request.path != '/action/place_obstacle' or  request.method != 'POST'):
+    if(request.path != '/action/place_obstacle') 
         th_das_error(DAS_OTHER_ERROR,'internal fault: action_place_obstacle called improperly')
+    if(request.method != 'POST'):
+        th_das_error(DAS_OTHER_ERROR,'action_place_obstacle called with wrong HTTP method')
 
     if(request.headers['Content-Type'] != "application/json"):
         th_das_error(DAS_OTHER_ERROR,'action/place_obstacle recieved post without json header')
 
     params = request.get_json(silent=True)
-    # todo: change these asserts to post error to th if they fail
-    assert 'x' in params.keys()
-    assert 'y' in params.keys()
+    if (not ('x' in params.keys() and 'y' in params.keys())) :
+        #todo: log this problem
+        return th_error()
+
     global gazebo
 
     obs_name = gazebo.place_new_obstacle(params["x"], params["y"])
@@ -213,28 +225,31 @@ def action_place_obstacle():
         return action_result(ARGUMENTS)
     else:
         return th_error()
+        #th_das_error(DAS_OTHER_ERROR,'internal fault: obstacle could not be added')
 
 @app.route('/action/remove_obstacle', methods=['POST'])
 def action_remove_obstacle():
-    if(request.path != '/action/remove_obstacle' or  request.method != 'POST'):
-        th_das_error(DAS_OTHER_ERROR,'internal fault: action_observe called improperly')
+    if(request.path != '/action/remove_obstacle') 
+        th_das_error(DAS_OTHER_ERROR,'internal fault: action_remove_obstace called improperly')
+    if(request.method != 'POST'):
+        th_das_error(DAS_OTHER_ERROR,'action_remove_obstacle called with wrong HTTP method')
 
     if( request.headers['Content-Type'] != "application/json"):
-        th_das_error(DAS_OTHER_ERROR,'action/remove_obstacle recieved post without json header')
+        th_das_error(DAS_OTHER_ERROR,'action_remove_obstacle recieved post without json header')
 
     params = request.get_json(silent=True)
-    assert 'obstacle_id' in params.keys()
-
-    obstacle_id = params["obstacle_id"]
+    if (not 'obstacle_id' in params.keys()) :
+        #todo: log this problem
+        return th_error()
 
     global gazebo
-    success = gazebo.delete_obstacle(obstacle_id)
+    success = gazebo.delete_obstacle(params["obstacle_id"])
     if success:
         #todo: check for RR2 that this is good enough
         return action_result({})
     else:
-        #todo: das error instead of th_error
         return th_error()
+        #th_das_error(DAS_OTHER_ERROR,'internal fault: obstacle could not be removed')
 
 
 
