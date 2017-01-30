@@ -111,13 +111,13 @@ def parse_config_file():
 def formActionResult(arguments):
     now = datetime.datetime.now()
     ACTION_RESULT = {"TIME" : now.isoformat (),
-		     "ARGUMENTS": arguments}
+                     "ARGUMENTS": arguments}
     return ACTION_RESULT
 
 def th_error():
     return Response(status=400)
 
-def action_result(body):    
+def action_result(body):
     with_time = formActionResult(body)
     return Response(json.dumps(with_time),status=200, mimetype='application/json')
 
@@ -174,19 +174,22 @@ def action_observe():
     global gazebo
 
     try:
-    	x, y, w = gazebo.get_turtlebot_state()
-	observation = {"x" : x, "y" : y, "w" : w,
-		       "v" : -1,       # todo: How to calculate velocity
+        x, y, w = gazebo.get_turtlebot_state()
+        observation = {"x" : x, "y" : y, "w" : w,
+                       "v" : -1,       # todo: How to calculate velocity
                        "voltage" : -1  # todo: Need to work this out
-		      }
-	return action_result(observation)
+                      }
+        return action_result(observation)
     except:
-	return th_error()
+        return th_error()
 
 @app.route('/action/set_battery', methods=['POST'])
 def action_set_battery():
     if(request.path != '/action/set_battery' or request.method != 'POST'):
         th_das_error(DAS_OTHER_ERROR,'internal fault: action_set_battery called improperly')
+
+    ## todo: for RR2 make sure this is valid and doesn't crash
+    ## todo : implement real stuff here when we have the battery model
 
     return action_result({})
 
@@ -206,10 +209,10 @@ def action_place_obstacle():
 
     obs_name = gazebo.place_new_obstacle(params["x"], params["y"])
     if obs_name is not None:
-	ARGUMENTS = {"obstacle_id" : obs_name};
+        ARGUMENTS = {"obstacle_id" : obs_name};
         return action_result(ARGUMENTS)
     else:
-	return th_error()
+        return th_error()
 
 @app.route('/action/remove_obstacle', methods=['POST'])
 def action_remove_obstacle():
@@ -227,9 +230,11 @@ def action_remove_obstacle():
     global gazebo
     success = gazebo.delete_obstacle(obstacle_id)
     if success:
-	return action_result({})
+        #todo: check for RR2 that this is good enough
+        return action_result({})
     else:
-	return th_error()
+        #todo: das error instead of th_error
+        return th_error()
 
 
 
