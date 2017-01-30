@@ -21,6 +21,7 @@ import json
 import os.path
 
 from gazebo_interface import *
+from nav_msgs.msg import Odometry
 
 ### some definitions and helper functions
 class Status(Enum):
@@ -146,7 +147,7 @@ def das_ready():
 
 @app.route('/action/start', methods=['POST'])
 def action_start():
-    if(request.path != '/action/start') 
+    if(request.path != '/action/start'):
         th_das_error(DAS_OTHER_ERROR,'internal fault: action_start called improperly')
     if(request.method != 'POST'):
         th_das_error(DAS_OTHER_ERROR,'action_start called with wrong HTTP method')
@@ -172,7 +173,7 @@ def action_start():
 
 @app.route('/action/observe', methods=['GET'])
 def action_observe():
-    if(request.path != '/action/observe') 
+    if(request.path != '/action/observe'):
         th_das_error(DAS_OTHER_ERROR,'internal fault: action_observe called improperly')
     if(request.method != 'GET'):
         th_das_error(DAS_OTHER_ERROR,'action_observe called with wrong HTTP method')
@@ -192,7 +193,7 @@ def action_observe():
 
 @app.route('/action/set_battery', methods=['POST'])
 def action_set_battery():
-    if(request.path != '/action/set_battery') 
+    if(request.path != '/action/set_battery'):
         th_das_error(DAS_OTHER_ERROR,'internal fault: action_set_battery called improperly')
     if(request.method != 'POST'):
         th_das_error(DAS_OTHER_ERROR,'action_set_battery called with wrong HTTP method')
@@ -204,7 +205,7 @@ def action_set_battery():
 
 @app.route('/action/place_obstacle', methods=['POST'])
 def action_place_obstacle():
-    if(request.path != '/action/place_obstacle') 
+    if(request.path != '/action/place_obstacle'):
         th_das_error(DAS_OTHER_ERROR,'internal fault: action_place_obstacle called improperly')
     if(request.method != 'POST'):
         th_das_error(DAS_OTHER_ERROR,'action_place_obstacle called with wrong HTTP method')
@@ -229,7 +230,7 @@ def action_place_obstacle():
 
 @app.route('/action/remove_obstacle', methods=['POST'])
 def action_remove_obstacle():
-    if(request.path != '/action/remove_obstacle') 
+    if(request.path != '/action/remove_obstacle'):
         th_das_error(DAS_OTHER_ERROR,'internal fault: action_remove_obstace called improperly')
     if(request.method != 'POST'):
         th_das_error(DAS_OTHER_ERROR,'action_remove_obstacle called with wrong HTTP method')
@@ -252,6 +253,9 @@ def action_remove_obstacle():
         #th_das_error(DAS_OTHER_ERROR,'internal fault: obstacle could not be removed')
 
 
+def sub_cb(data):
+    #print "odom recieved message"
+    return
 
 # if you run this script from the command line directly, this causes it to
 # actually launch the little web server and the node
@@ -269,5 +273,7 @@ if __name__ == "__main__":
     client.wait_for_server()
     gazebo = GazeboInterface()
     config = parse_config_file()
+    rospy.Subscriber("odom", Odometry, sub_cb)
+    ## todo: call bradley's stuff to teleport the robot to the place it's actully starting not l1
     das_ready() ## todo: this happens too early
     app.run (host="0.0.0.0")
