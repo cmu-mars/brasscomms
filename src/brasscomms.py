@@ -61,22 +61,14 @@ def int_out_of_range(x,upper,lower) :
 
 ## callbacks to change the status
 def done_cb(terminal, result):
-    global bot_status
-    bot_status = Status.ADAPTATION_COMPLETED # todo: right enum?
     print "brasscomms received successful result from plan: %d" %(terminal)
 
 def active_cb():
-    #### todo
-    # global bot_status
-    # bot_status = Status.Operational #todo: what to say here?
     print "brasscoms received notification that goal is active"
 
 ### some globals
 app = Flask(__name__)
 shared_var_lock = Lock ()
-
-# todo: this could be a horrible concurrency bug; i don't know yet.
-bot_status = Status.ERROR  # default value
 
 th_url = "http://brass-th"
 
