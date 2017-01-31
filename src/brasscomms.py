@@ -207,11 +207,11 @@ def action_query_path():
     if(request.method != 'GET'):
         th_das_error(DAS_OTHER_ERROR,'query_path called with wrong HTTP method')
 
-    # todo: make this not hard coded
-    with open('/home/vagrant/catkin_ws/src/cp_gazebo/instructions/'+ 'path_ex.json') as config_file:
+    global config
+
+    with open('/home/vagrant/catkin_ws/src/cp_gazebo/instructions/' + config["start_loc"] + '_to_' + config["target_loc"] + '.json') as config_file:
         data = json.load(config_file)
 
-    # todo: send one of the precomputed JSON objects
     return action_result({ 'path' : data['path'] })
 
 @app.route('/action/observe', methods=['GET'])
