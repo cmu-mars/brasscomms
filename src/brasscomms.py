@@ -177,9 +177,13 @@ def das_ready():
 @app.route('/action/start', methods=['POST'])
 def action_start():
     if(request.path != '/action/start'):
-        th_das_error(DAS_OTHER_ERROR,'internal fault: action_start called improperly')
+        ## todo: log
+        # th_das_error(DAS_OTHER_ERROR,'internal fault: action_start called improperly')
+        return th_error()
     if(request.method != 'POST'):
-        th_das_error(DAS_OTHER_ERROR,'action_start called with wrong HTTP method')
+        ## todo: log
+        # th_das_error(DAS_OTHER_ERROR,'action_start called with wrong HTTP method')
+        return th_error()
 
     global config
 
@@ -203,23 +207,29 @@ def action_start():
 @app.route('/action/query_path', methods=['GET'])
 def action_query_path():
     if(request.path != '/action/query_path'):
-        th_das_error(DAS_OTHER_ERROR,'internal fault: query_path called improperly')
+        ## todo: log
+        # th_das_error(DAS_OTHER_ERROR,'internal fault: query_path called improperly')
+        return th_error()
     if(request.method != 'GET'):
-        th_das_error(DAS_OTHER_ERROR,'query_path called with wrong HTTP method')
+        ## todo: log
+        #th_das_error(DAS_OTHER_ERROR,'query_path called with wrong HTTP method')
+        return th_error()
 
     global config
 
     with open('/home/vagrant/catkin_ws/src/cp_gazebo/instructions/' + config["start_loc"] + '_to_' + config["target_loc"] + '.json') as config_file:
         data = json.load(config_file)
-
-    return action_result({ 'path' : data['path'] })
+        return action_result({ 'path' : data['path'] })
 
 @app.route('/action/observe', methods=['GET'])
 def action_observe():
     if(request.path != '/action/observe'):
-        th_das_error(DAS_OTHER_ERROR,'internal fault: action_observe called improperly')
+        ## todo; log
+        # th_das_error(DAS_OTHER_ERROR,'internal fault: action_observe called improperly')
     if(request.method != 'GET'):
-        th_das_error(DAS_OTHER_ERROR,'action_observe called with wrong HTTP method')
+        ## todo: log
+        # th_das_error(DAS_OTHER_ERROR,'action_observe called with wrong HTTP method')
+        return th_error()
 
     global gazebo
 
@@ -236,9 +246,13 @@ def action_observe():
 @app.route('/action/set_battery', methods=['POST'])
 def action_set_battery():
     if(request.path != '/action/set_battery'):
-        th_das_error(DAS_OTHER_ERROR,'internal fault: action_set_battery called improperly')
+        ## todo: log
+        # th_das_error(DAS_OTHER_ERROR,'internal fault: action_set_battery called improperly')
+        return th_error()
     if(request.method != 'POST'):
-        th_das_error(DAS_OTHER_ERROR,'action_set_battery called with wrong HTTP method')
+        ## todo: log
+        # th_das_error(DAS_OTHER_ERROR,'action_set_battery called with wrong HTTP method')
+        return th_error()
 
     ## todo: make sure this is in range or else th_error()
     ## todo: for RR2 make sure this is valid and doesn't crash
@@ -251,17 +265,22 @@ def action_set_battery():
 @app.route('/action/place_obstacle', methods=['POST'])
 def action_place_obstacle():
     if(request.path != '/action/place_obstacle'):
-        th_das_error(DAS_OTHER_ERROR,'internal fault: action_place_obstacle called improperly')
+        ## todo: log
+        # th_das_error(DAS_OTHER_ERROR,'internal fault: action_place_obstacle called improperly')
+        return th_error()
     if(request.method != 'POST'):
-        th_das_error(DAS_OTHER_ERROR,'action_place_obstacle called with wrong HTTP method')
+        ## todo: log
+        # th_das_error(DAS_OTHER_ERROR,'action_place_obstacle called with wrong HTTP method')
+        return th_error()
 
-    ## todo this is also supposed to be a TH error
     if(request.headers['Content-Type'] != "application/json"):
-        th_das_error(DAS_OTHER_ERROR,'action/place_obstacle recieved post without json header')
+        ## todo: log
+        # th_das_error(DAS_OTHER_ERROR,'action/place_obstacle recieved post without json header')
+        return th_error()
 
     params = request.get_json(silent=True)
     if (not ('x' in params.keys() and 'y' in params.keys())) :
-        #todo: log this problem
+        ##todo: log
         return th_error()
 
     global gazebo
@@ -276,14 +295,18 @@ def action_place_obstacle():
 @app.route('/action/remove_obstacle', methods=['POST'])
 def action_remove_obstacle():
     if(request.path != '/action/remove_obstacle'):
-        th_das_error(DAS_OTHER_ERROR,'internal fault: action_remove_obstace called improperly')
+        ## todo: log
+        # th_das_error(DAS_OTHER_ERROR,'internal fault: action_remove_obstace called improperly')
+        return th_error()
     if(request.method != 'POST'):
-        th_das_error(DAS_OTHER_ERROR,'action_remove_obstacle called with wrong HTTP method')
+        ## todo: log
+        #th_das_error(DAS_OTHER_ERROR,'action_remove_obstacle called with wrong HTTP method')
+        return th_error()
 
-
-    ## th error
     if( request.headers['Content-Type'] != "application/json"):
-        th_das_error(DAS_OTHER_ERROR,'action_remove_obstacle recieved post without json header')
+        ## todo: log
+        # th_das_error(DAS_OTHER_ERROR,'action_remove_obstacle recieved post without json header')
+        return th_error()
 
     params = request.get_json(silent=True)
     if (not 'obstacle_id' in params.keys()) :
