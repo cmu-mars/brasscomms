@@ -186,13 +186,15 @@ def action_start():
 
     return action_result({})  # todo: this includes time as well; is that out of spec?
 
-
 @app.route('action/query_path', methods=['GET'])
 def action_query_path():
     if(request.path != '/action/query_path'):
         th_das_error(DAS_OTHER_ERROR,'internal fault: query_path called improperly')
     if(request.method != 'GET'):
-        th_das_error(DAS_OTHER_ERROR,'action_observe called with wrong HTTP method')
+        th_das_error(DAS_OTHER_ERROR,'query_path called with wrong HTTP method')
+
+    # todo: send one of the precomputed JSON objects
+    return action_result({}}
 
 @app.route('/action/observe', methods=['GET'])
 def action_observe():
@@ -204,9 +206,9 @@ def action_observe():
     global gazebo
 
     try:
-        x, y, w = gazebo.get_turtlebot_state()
+        x, y, w , vel = gazebo.get_turtlebot_state()
         observation = {"x" : x, "y" : y, "w" : w,
-                       "v" : -1,       # todo: How to calculate velocity
+                       "v" : vel ,
                        "voltage" : -1  # todo: Need to work this out
                       }
         return action_result(observation)
