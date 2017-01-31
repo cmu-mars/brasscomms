@@ -24,6 +24,8 @@ import os.path
 from gazebo_interface import *
 from map_util import *
 
+from move_base_msgs.msg import MoveBaseAction
+
 ### some definitions and helper functions
 class Status(Enum):
     PERTURBATION_DETECTED  = 1
@@ -112,7 +114,7 @@ def parse_config_file():
             th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain initial_voltage')
         if (not (isinstance(data['initial_voltage'], int))):
             th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for initial_voltage is not an integer')
-        if (data['initial_voltage'] < 104 or data['initial_voltage'] > 106):
+        if (data['initial_voltage'] < 104 or data['initial_voltage'] > 166):
             th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for initial_voltage is out of range')
 
         # initial_obstacle
