@@ -186,6 +186,14 @@ def action_start():
 
     return action_result({})  # todo: this includes time as well; is that out of spec?
 
+
+@app.route('action/query_path', methods=['GET'])
+def action_query_path():
+    if(request.path != '/action/query_path'):
+        th_das_error(DAS_OTHER_ERROR,'internal fault: query_path called improperly')
+    if(request.method != 'GET'):
+        th_das_error(DAS_OTHER_ERROR,'action_observe called with wrong HTTP method')
+
 @app.route('/action/observe', methods=['GET'])
 def action_observe():
     if(request.path != '/action/observe'):
