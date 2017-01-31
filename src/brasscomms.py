@@ -22,6 +22,7 @@ import json
 import os.path
 
 from gazebo_interface import *
+from map_util import *
 
 ### some definitions and helper functions
 class Status(Enum):
@@ -45,7 +46,7 @@ class Error(Enum):
 # second two args. assumes that the second two are indeed digits, and that
 # the second is less than the third.
 def int_out_of_range(x,upper,lower) :
-    return not(isinstance(x,int) and x >= lower and x <= upper
+    return not(isinstance(x,int) and x >= lower and x <= upper)
 
 ## callbacks to change the status
 def done_cb(terminal, result):
@@ -77,7 +78,7 @@ def parse_config_file():
         # start_loc
         if (not ('start_loc' in data.keys())):
             th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain start_loc')
-        if(not (isinstance(data['start_loc'],str))):
+        if(not (isinstance(data['start_loc'],unicode))):
             th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for start_loc is not a string')
         if(not (isWaypoint(data['start_loc']))):
             th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for start_loc is not a waypoint id')
@@ -93,7 +94,7 @@ def parse_config_file():
         # target_loc
         if (not ('target_loc' in data.keys())):
             th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain target_loc')
-        if(not (isinstance(data['target_loc'],str))):
+        if(not (isinstance(data['target_loc'],unicode))):
             th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for target_loc is not a string')
         if(not (isWaypoint(data['target_loc']))):
             th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for target_loc is not a waypoint id')
@@ -101,7 +102,7 @@ def parse_config_file():
         # enable_adaptation
         if (not ('enable_adaptation' in data.keys())):
             th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain enable_adaptation')
-        if (not (isinstance(data['enable_adaptation'], str))):
+        if (not (isinstance(data['enable_adaptation'], unicode))):
             th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for enable_adaptation is not a string')
         if (not data['enable_adaptation'] in ["CP1_NoAdaptation", "CP2_NoAdaptation", "CP1_Adaptation", "CP2_Adaptation"]):
             th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for enable_adaptation is not one of the enumerated forms')
@@ -197,7 +198,7 @@ def action_start():
 
     return action_result({})  # todo: this includes time as well; is that out of spec?
 
-@app.route('action/query_path', methods=['GET'])
+@app.route('/action/query_path', methods=['GET'])
 def action_query_path():
     if(request.path != '/action/query_path'):
         th_das_error(DAS_OTHER_ERROR,'internal fault: query_path called improperly')
@@ -205,7 +206,7 @@ def action_query_path():
         th_das_error(DAS_OTHER_ERROR,'query_path called with wrong HTTP method')
 
     # todo: send one of the precomputed JSON objects
-    return action_result({}}
+    return action_result({})
 
 @app.route('/action/observe', methods=['GET'])
 def action_observe():
