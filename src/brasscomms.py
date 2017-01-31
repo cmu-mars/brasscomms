@@ -72,7 +72,6 @@ shared_var_lock = Lock ()
 
 th_url = "http://brass-th"
 
-## todo
 def parse_config_file():
     config_file_path = '/test/data'
 
@@ -117,7 +116,6 @@ def parse_config_file():
         # sensor_perturbation
         if (not ('sensor_perturbation' in data.keys())):
             th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain sensor_perturbation')
-
 
 
         # todo: stop the world if the file doesn't parse
@@ -206,7 +204,6 @@ def action_observe():
         return action_result(observation)
     except:
         return th_error
-        #th_das_error(DAS_OTHER_ERROR,'internal fault: observation failed')
 
 @app.route('/action/set_battery', methods=['POST'])
 def action_set_battery():
@@ -243,7 +240,6 @@ def action_place_obstacle():
         return action_result(ARGUMENTS)
     else:
         return th_error()
-        #th_das_error(DAS_OTHER_ERROR,'internal fault: obstacle could not be added')
 
 @app.route('/action/remove_obstacle', methods=['POST'])
 def action_remove_obstacle():
@@ -267,7 +263,6 @@ def action_remove_obstacle():
         return action_result({})
     else:
         return th_error()
-        #th_das_error(DAS_OTHER_ERROR,'internal fault: obstacle could not be removed')
 
 
 def sub_cb(data):
