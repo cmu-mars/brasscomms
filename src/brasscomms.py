@@ -87,7 +87,7 @@ def parse_config_file():
     if not (os.path.exists(config_file_path)
             and os.path.isfile(config_file_path)
             and os.access(config_file_path,os.R_OK)):
-        th_das_error(TEST_DATA_FILE_ERROR,'config file at ' + config_file_path + ' either does not exist, is not a file, is not readable')
+        th_das_error(Error.TEST_DATA_FILE_ERROR,'config file at ' + config_file_path + ' either does not exist, is not a file, is not readable')
     else:
         with open(config_file_path) as config_file:
             data = json.load(config_file)
@@ -95,13 +95,38 @@ def parse_config_file():
         # todo: check to make sure each field is as in the spec ..
 
         # start_loc
+        if (not ('start_loc' in data.keys())):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain start_loc')
+
         # start_yaw
+        if (not ('start_yaw' in data.keys())):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain start_yaw')
+
         # target_loc
+        if (not ('target_loc' in data.keys())):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain target_loc')
+
         # enable_adaptation
+        if (not ('enable_adaptation' in data.keys())):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain enable_adaptation')
+
         # initial_voltage
+        if (not ('initial_voltage' in data.keys())):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain initial_voltage')
+
         # initial_obstacle
+        if (not ('initial_obstacle' in data.keys())):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain inital_obstacle')
+
         # initial_obstacle_location
+        if (not ('initial_obstacle_location' in data.keys())):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain initial_obstacle_location')
+
         # sensor_perturbation
+        if (not ('sensor_perturbation' in data.keys())):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain sensor_perturbation')
+
+
 
         # todo: stop the world if the file doesn't parse
 
