@@ -7,6 +7,7 @@ from gazebo_msgs.msg import *
 from geometry_msgs.msg import *
 import tf.transformations as tf
 import rospy
+import math
 
 # This is the model for the obstacle
 OBS_MODEL = os.path.expanduser('~/catkin_ws/src/cp_gazebo/models/box.sdf')
@@ -34,6 +35,7 @@ class GazeboInterface:
 
 		# Services to gazebo
 		self.get_model_state = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
+		self.set_model_state = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
 		self.spawn_model = rospy.ServiceProxy('/gazebo/spawn_sdf_model', SpawnModel)
 		self.delete_model = rospy.ServiceProxy('/gazebo/delete_model', DeleteModel)
 		rospy.wait_for_service('/gazebo/get_model_state')
@@ -53,6 +55,66 @@ class GazeboInterface:
 	    # :return x, y in map
 		return gx + X_MAP_TO_GAZEBO_TRANSLATION, gy + Y_MAP_TO_GAZEBO_TRANSLATION
 
+	def set_turtlebot_position(self, mx, my, w):
+		# Sets the position of the turtlebot in gazebo and AMCL
+		# :param mx: x ccoordinate of the robot according to the map
+		# :param my: y coordinate of the robot according to the map
+		# :param w: rotation of the robot
+		try:
+			# Start by getting the current state of the robot
+			tb = self.get_model_state('mobile_base', '')
+			# Check to see if robot is moving. If it is, return an error
+			#if (tb.twist.linear.x != 0 or tb.twist.linear.y != 0 or
+			#	tb.twist.linear.z != 0 or tb.twist.angular.x!= 0 or
+			#	tb.twist.angular.y!= 0 or tb.twist.angular.z != 0):
+			#	rospy.logerr('Cannot set the robot position while it is moving')
+			#	return False	
+			
+			# Set the position to the new position
+			tb.pose.position.x, tb.pose.position.y = self.translateMapToGazebo(mx, my)
+			q = (tb.pose.orientation.x,
+			    tb.pose.orientation.y,
+			    tb.pose.orientation.z,
+			    tb.pose.orientation.w)
+			# Set the angular rotation
+			eu = tf.euler_from_quaternion(q)
+			eu = eu[0], eu[1], w
+			q = tf.quaternion_from_euler(eu[0], eu[1], eu[2])
+			tb.pose.orientation.x = q[0]
+			tb.pose.orientation.y = q[1]
+			tb.pose.orientation.z = q[2]
+			tb.pose.orientation.w = q[3]
+
+			# Create the new position message
+			ms = ModelState()
+			ms.model_name='mobile_base'
+			ms.pose = tb.pose
+			ms.twist = tb.twist
+			res = self.set_model_state(ms)
+			if (res.success):
+				# Tell the map where it is
+				amcl = rospy.Publisher('initialpose', PoseWithCovarianceStamped, queue_size=1, latch=True)
+				ip = PoseWithCovarianceStamped()
+				ip.header.stamp = rospy.Time.now()
+				ip.header.frame_id = 'map'
+				ip.pose.pose.position.x = mx
+				ip.pose.pose.position.y = my
+				ip.pose.pose.position.z = 0
+				ip.pose.pose.orientation.x = tb.pose.orientation.x
+				ip.pose.pose.orientation.y = tb.pose.orientation.y
+				ip.pose.pose.orientation.z = tb.pose.orientation.z
+				ip.pose.pose.orientation.w = tb.pose.orientation.w
+				ip.pose.covariance = [0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.06853891945200942]
+				print ('Publishing amcl location')
+				amcl.publish(ip)
+				return True
+			else:
+				rospy.logerr("Failed to set gazebo robot position")
+				return False
+		except rospy.ServiceException, e:
+			rospy.logerr ("Could not set the position of the robot")
+			return False
+
 	def get_turtlebot_state(self):
 	    # Queries gazebo to get the current state of the turtlebot
 	    # :return x,y in map coordinates; w as the yaw
@@ -63,10 +125,12 @@ class GazeboInterface:
 			    tb.pose.orientation.z,
 			    tb.pose.orientation.w)
 			w = tf.euler_from_quaternion(q)[2]
+			v = math.sqrt(tb.twist.linear.x**2+ tb.twist.linear.y**2)
+			#print ("accelaration is %s, %s, %s" %(tb.twist.linear.x,tb.twist.linear.y,tb.twist.linear.z))
 			x, y =  self.translateGazeboToMap (tb.pose.position.x, tb.pose.position.y)
-			return x, y, w
+			return x, y, w, v
 		except rospy.ServiceException, e:
-			rospy.logerror("Could not get state of robot: %s"%e)
+			rospy.logerr("Could not get state of robot: %s"%e)
 			return None, None, None
 
 	def place_new_obstacle(self,x,y):
@@ -105,10 +169,10 @@ class GazeboInterface:
 					self.obstacle_names.append(obs_name)
 				return obs_name
 			else:
-				rospy.logerror("Could not place obstacle. Message: %s" %res.status_message)
+				rospy.logerr("Could not place obstacle. Message: %s" %res.status_message)
 				return None
 		except rospy.ServiceException, e:
-			rospy.logerror("Could not place obstacle. Message %s" %e)
+			rospy.logerr("Could not place obstacle. Message %s" %e)
 			return None
 			
 	def delete_obstacle(self, obs_name):
@@ -116,7 +180,7 @@ class GazeboInterface:
 
 		with self.lock:
 			if obs_name not in self.obstacle_names:
-				rospy.logerror("Nonexistent obstacle [%s]"%obs_name)
+				rospy.logerr("Nonexistent obstacle [%s]"%obs_name)
 				return False
 		req = DeleteModel()
 		req.model_name = obs_name
@@ -128,10 +192,10 @@ class GazeboInterface:
 					self.obstacle_names.remove(obs_name)
 				return True
 			else:
-				rospy.logerror("Could not place obstacle. Message: %s" %res.status_message)
+				rospy.logerr("Could not place obstacle. Message: %s" %res.status_message)
 				return False
 		except rospy.ServiceException, e:
-			rospy.logerror("Could not place obstacle. Message %s"%e)
+			rospy.logerr("Could not place obstacle. Message %s"%e)
 			return False
           
 # This is just for testing  
@@ -140,8 +204,15 @@ if __name__ == "__main__":
 	rospy.init_node("gazebo_interface_test")
 	gazebo = GazeboInterface() 
 
-	x,y,w = gazebo.get_turtlebot_state()
-        print("Turtlebot is at (%s, %s), facing %s" %(str(x),str(y),str(w)))
+	
+	success = gazebo.set_turtlebot_position(19.8,58.8,0)
+	if success:
+		print ("set position!")
+	else:
+		print ('did not set position')
+	x,y,w,v = gazebo.get_turtlebot_state()
+	print("Turtlebot is at (%s, %s), facing %s and going %s ms" %(str(x),str(y),str(w),str(v)))
+
 
 	new_obs = gazebo.place_new_obstacle(19.5, 58.5)
 	
