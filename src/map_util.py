@@ -1,4 +1,5 @@
 ### imports
+from __future__ import with_statement
 import sys
 import json
 import os.path
@@ -16,11 +17,10 @@ def isWaypoint(waypointID):
         raise ValueError('There is more than one waypoint with the same identifier in the waypoint locations config file')
     return len(waypointList) == 1
 
-
 def loadWaypointListFromFile(waypointID):
     waypoint_locations_path = '/home/vagrant/catkin_ws/src/cp_gazebo/maps/Wean-entire-floor4-waypoint-locations.json'
-    waypoint_locations_file = open(ig_path, "r")
-    map_dict = json.load(waypoint_locations_file)
-    waypoint_list = map_dict["map"]
-    return filter(waypoint_list, lambda waypoint: waypoint["node-id"] == waypointID)
+    with open(waypoint_locations_path) as waypoints_file:
+        data = json.load(waypoints_file)
+        waypoint_list = data["map"]
+        return filter(lambda waypoint: waypoint["node-id"] == waypointID, waypoint_list)
 
