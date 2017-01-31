@@ -265,10 +265,6 @@ def action_remove_obstacle():
         return th_error()
 
 
-def sub_cb(data):
-    #print "odom recieved message"
-    return
-
 # if you run this script from the command line directly, this causes it to
 # actually launch the little web server and the node
 #
@@ -283,9 +279,23 @@ if __name__ == "__main__":
     rospy.init_node("brasscomms")
     client = actionlib.SimpleActionClient("ig_action_server", ig_action_msgs.msg.InstructionGraphAction)
     client.wait_for_server()
+
+    # make an interface into Gazebo
     gazebo = GazeboInterface()
+
+    # parse the config file
+    # todo: this posts errors to the TH, but we should stop the world when that happens
     config = parse_config_file()
-    rospy.Subscriber("odom", Odometry, sub_cb)
+
+    # this should block until the navigation stack is ready to recieve goals
+    move_base = actionlib.SimpleActionClient("move_base", MoveBaseAction)
+    move_base.wait_for_server()
+
     ## todo: call bradley's stuff to teleport the robot to the place it's actully starting not l1
-    das_ready() ## todo: this happens too early
+    ## todo: this posts errors to the TH, but we should stop the world when that happens
+    ## todo: this may happen too early
+    das_ready()
+
+    ## actually start up the flask service. this never returns, so it must
+    ## be the last thing in the file
     app.run (host="0.0.0.0")
