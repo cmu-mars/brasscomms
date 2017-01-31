@@ -236,6 +236,7 @@ def action_set_battery():
     if(request.method != 'POST'):
         th_das_error(DAS_OTHER_ERROR,'action_set_battery called with wrong HTTP method')
 
+    ## todo: make sure this is in range or else th_error()
     ## todo: for RR2 make sure this is valid and doesn't crash
     ## todo : implement real stuff here when we have the battery model
 
@@ -250,6 +251,7 @@ def action_place_obstacle():
     if(request.method != 'POST'):
         th_das_error(DAS_OTHER_ERROR,'action_place_obstacle called with wrong HTTP method')
 
+    ## todo this is also supposed to be a TH error
     if(request.headers['Content-Type'] != "application/json"):
         th_das_error(DAS_OTHER_ERROR,'action/place_obstacle recieved post without json header')
 
@@ -274,6 +276,8 @@ def action_remove_obstacle():
     if(request.method != 'POST'):
         th_das_error(DAS_OTHER_ERROR,'action_remove_obstacle called with wrong HTTP method')
 
+
+    ## th error
     if( request.headers['Content-Type'] != "application/json"):
         th_das_error(DAS_OTHER_ERROR,'action_remove_obstacle recieved post without json header')
 
