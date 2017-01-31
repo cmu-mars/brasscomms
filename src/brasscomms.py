@@ -8,6 +8,7 @@ import actionlib
 import ig_action_msgs.msg
 import sys
 import tf
+import math
 
 from threading import Lock
 
@@ -21,7 +22,6 @@ import json
 import os.path
 
 from gazebo_interface import *
-from nav_msgs.msg import Odometry
 
 ### some definitions and helper functions
 class Status(Enum):
@@ -41,23 +41,11 @@ class Error(Enum):
     DAS_LOG_URI_ERROR = 3
     DAS_OTHER_ERROR = 4
 
-def isint(x):
-    try:
-        int(s)
-        return True
-    except ValueError:
-        return False
-
-def isbool(x):
-    if (x == 'true' or x == 'false'):
-        return True
-    return False
-
 # returns true iff the first argument is a digit inclusively between the
 # second two args. assumes that the second two are indeed digits, and that
 # the second is less than the third.
 def int_out_of_range(x,upper,lower) :
-    return not(isint(x) and x >= lower and x <= upper)
+    return not(isinstance(x,int) and x >= lower and x <= upper
 
 ## callbacks to change the status
 def done_cb(terminal, result):
@@ -69,7 +57,6 @@ def active_cb():
 ### some globals
 app = Flask(__name__)
 shared_var_lock = Lock ()
-
 th_url = "http://brass-th"
 
 def parse_config_file():
@@ -88,22 +75,42 @@ def parse_config_file():
         # start_loc
         if (not ('start_loc' in data.keys())):
             th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain start_loc')
+        if(not (isinstance(data['start_loc'],str))):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for start_loc is not a string')
+        if(not (isWaypoint(data['start_loc']))):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for start_loc is not a waypoint id')
 
         # start_yaw
         if (not ('start_yaw' in data.keys())):
             th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain start_yaw')
+        if(not (isinstance(data['start_yaw'],float))):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for start_yaw is not a float')
+        if(data['start_yaw'] < 0 or data['start_yaw'] > (2*math.pi)):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for start_yaw is not in the range 0..2pi')
 
         # target_loc
         if (not ('target_loc' in data.keys())):
             th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain target_loc')
+        if(not (isinstance(data['target_loc'],str))):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for target_loc is not a string')
+        if(not (isWaypoint(data['target_loc']))):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for target_loc is not a waypoint id')
 
         # enable_adaptation
         if (not ('enable_adaptation' in data.keys())):
             th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain enable_adaptation')
+        if (not (isinstance(data['enable_adaptation'], str))):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for enable_adaptation is not a string')
+        if (not data['enable_adaptation'] in ["CP1_NoAdaptation", "CP2_NoAdaptation", "CP1_Adaptation", "CP2_Adaptation"]):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for enable_adaptation is not one of the enumerated forms')
 
         # initial_voltage
         if (not ('initial_voltage' in data.keys())):
             th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain initial_voltage')
+        if (not (isinstance(data['initial_voltage'], int))):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for initial_voltage is not an integer')
+        if (data['initial_voltage'] < 104 or data['initial_voltage'] > 106):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for initial_voltage is out of range')
 
         # initial_obstacle
         if (not ('initial_obstacle' in data.keys())):
@@ -224,6 +231,8 @@ def action_set_battery():
 
     ## todo: for RR2 make sure this is valid and doesn't crash
     ## todo : implement real stuff here when we have the battery model
+
+    ## todo: check that the voltage is included in the post and is in range, th error otherwise
 
     return action_result({})
 
