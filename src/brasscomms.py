@@ -141,7 +141,7 @@ def parse_config_file():
 def formActionResult(result):
     now = datetime.datetime.now()
     ACTION_RESULT = {"TIME" : now.isoformat (),
-                     "RESULT": result}
+                     "ARGUMENTS": result}
     return ACTION_RESULT
 
 def th_error():
