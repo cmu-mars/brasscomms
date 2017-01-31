@@ -8,7 +8,7 @@ def waypointToCoords(waypointID):
         raise KeyError('The specified waypointID does not exist')
     waypointList = loadWaypointListFromFile(waypointID) 
     waypoint = waypointList[0]
-    return {'x': waypoint['coord']['x'], 'y': waypoint['coord']['y']}
+    return {waypoint['coord']}
 
 def isWaypoint(waypointID):
     waypointList =loadWaypointListFromFile(waypointID)
