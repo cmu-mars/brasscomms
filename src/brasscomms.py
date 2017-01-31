@@ -115,6 +115,8 @@ def parse_config_file():
         # initial_obstacle
         if (not ('initial_obstacle' in data.keys())):
             th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain inital_obstacle')
+        if (not (isinstance(data['initial_obstacle'],bool))):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for initial_obstacle is not a bool')
 
         # initial_obstacle_location
         if (not ('initial_obstacle_location' in data.keys())):
