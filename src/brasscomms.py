@@ -49,9 +49,11 @@ def int_out_of_range(x,upper,lower) :
 
 ## callbacks to change the status
 def done_cb(terminal, result):
+    # todo: log this instead of printing it
     print "brasscomms received successful result from plan: %d" %(terminal)
 
 def active_cb():
+    # todo: log this instead of printing it
     print "brasscoms received notification that goal is active"
 
 ### some globals
@@ -222,7 +224,7 @@ def action_observe():
                       }
         return action_result(observation)
     except:
-        return th_error
+        return th_error()
 
 @app.route('/action/set_battery', methods=['POST'])
 def action_set_battery():
