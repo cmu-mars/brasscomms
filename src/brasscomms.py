@@ -63,6 +63,7 @@ def active_cb():
 app = Flask(__name__)
 shared_var_lock = Lock ()
 th_url = "http://brass-th"
+deadline = datetime.datetime.now() ## this is a default value; the result of observe will be well formed but wrong unless they call start first
 
 def parse_config_file():
     config_file_path = '/test/data'
@@ -194,7 +195,7 @@ def th_das_error(err,msg):
     global th_url
     now = datetime.datetime.now()
     error_contents = {"TIME" : now.isoformat(),
-                      "ERROR" : str(err),
+                      "ERROR" : err.name,
                       "MESSAGE" : msg}
     # todo: this r should be th_ack or th_err; do we care?
     r = requests.post(th_url+'/error', data = json.dumps(error_contents))
@@ -249,6 +250,7 @@ def action_start():
         return th_error()
 
     global config
+    global deadline
 
     print "starting challenge problem"
     try:
@@ -259,6 +261,12 @@ def action_start():
         goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
         global client
         client.send_goal( goal = goal, done_cb = done_cb, active_cb = active_cb)
+
+        # update the deadline to be now + the amount of time for the path given in the json file
+        with open('/home/vagrant/catkin_ws/src/cp_gazebo/instructions/' + config["start_loc"] + '_to_' + config["target_loc"] + '.json') as config_file:
+            data = json.load(config_file)
+            deadline = datetime.datetime.now() + data['time']
+
     except Exception as e:
         ## todo: put these in the log file
         print e
@@ -284,12 +292,14 @@ def action_observe():
         return th_error()
 
     global gazebo
+    global deadline
 
     try:
         x, y, w , vel = gazebo.get_turtlebot_state()
         observation = {"x" : x, "y" : y, "w" : w,
                        "v" : vel ,
                        "voltage" : -1  # todo: Need to work this out
+                       "deadline" : deadline
                       }
         return action_result(observation)
     except:
