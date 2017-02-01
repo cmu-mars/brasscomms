@@ -69,6 +69,7 @@ shared_var_lock = Lock ()
 th_url = "http://brass-th"
 deadline = datetime.datetime.now() ## this is a default value; the result of observe will be well formed but wrong unless they call start first
 
+
 def parse_config_file():
     config_file_path = '/test/data'
 
@@ -212,7 +213,7 @@ def log_das_error(error, msg):
             data = json.dumps(error_contents)
             log_file.write(data + "\n")
     except StandardError as e:
-        th_das_error(Error.DAS_LOG_FILE_ERROR,'log file at ' + config_file_path + ' could not be accessed')
+        th_das_error(Error.DAS_LOG_FILE_ERROR,'log file at ' + log_file_path + ' could not be accessed')
 
 def das_ready():
     global th_url
@@ -307,6 +308,16 @@ def action_set_battery():
     if (not isValidActionCall(request, '/action/set_battery', 'POST')) :
         return th_error()
 
+    if(request.headers['Content-Type'] != "application/json"):
+        log_das_error(LogError.RUNTIME_ERROR, 'action/set_battery recieved post without json header')
+        return th_error()
+
+    params = request.get_json(silent=True)
+    if (not ('x' in params.keys() and 'y' in params.keys())) :
+        log_das_error(LogError.RUNTIME_ERROR, 'action/place_obstacle got a post without both and x and y')
+        return th_error()
+
+
     ## todo: make sure this is in range or else th_error()
     ## todo: for RR2 make sure this is valid and doesn't crash
     ## todo : implement real stuff here when we have the battery model
@@ -324,6 +335,7 @@ def action_place_obstacle():
         log_das_error(LogError.RUNTIME_ERROR, 'action/place_obstacle recieved post without json header')
         return th_error()
 
+    # todo: is this right? params should not have x and y at the top level
     params = request.get_json(silent=True)
     if (not ('x' in params.keys() and 'y' in params.keys())) :
         log_das_error(LogError.RUNTIME_ERROR, 'action/place_obstacle got a post without both and x and y')
@@ -371,6 +383,7 @@ def action_perturb_sensor():
         log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor recieved post without json header')
         return th_error()
 
+    params = request.get_json(silent=True)
     if(not ('bump' in params.keys())):
         log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor recieved post without bump in the JSON object')
         return th_error()
