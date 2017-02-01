@@ -226,7 +226,7 @@ def log_das_error(error, msg):
     except StandardError as e:
         #todo: send das_error test control message with "error" : "DAS_LOG_FILE_ERROR"
         #      if log file cannot be created, accesssed, or write to
-
+        return
 
 ### helperfunctions for test actions
 
@@ -296,7 +296,7 @@ def action_observe():
         x, y, w , vel = gazebo.get_turtlebot_state()
         observation = {"x" : x, "y" : y, "w" : w,
                        "v" : vel ,
-                       "voltage" : -1  # todo: Need to work this out
+                       "voltage" : -1,  # todo: Need to work this out
                        "deadline" : deadline
                       }
         return action_result(observation)
@@ -364,7 +364,7 @@ def action_remove_obstacle():
         return th_error()
 
 @app.route('/action/perturb_sensor', methods=['POST'])
-def action_remove_obstacle():
+def action_perturb_sensor():
     if (not isValidActionCall(request, '/action/perturb_sensor', 'POST')) :
         return th_error()
 
