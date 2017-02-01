@@ -204,7 +204,6 @@ def th_das_error(err,msg):
     try:
         r = requests.post(th_url+'/error', data = json.dumps(error_contents))
     except Exception as e:
-        # print "Fatal: couldn't connect to TH at " + th_url + "/error: " + str(e)
         log_das_error(LogError.STARTUP_ERROR, "Fatal: couldn't connect to TH at " + th_url + "/error: " + str(e))
 
 def log_das_error(error, msg):
@@ -218,7 +217,6 @@ def log_das_error(error, msg):
             data = json.dumps(error_contents)
             log_file.write(data + "\n")
     except StandardError as e:
-        # print "log file can't be opened: " + str(e)
         th_das_error(Error.DAS_LOG_FILE_ERROR,'log file at ' + log_file_path + ' could not be accessed')
 
 def das_ready():
@@ -233,7 +231,7 @@ def das_ready():
 
 ### helperfunctions for test actions
 
-#also logs invalid action calls
+# also logs invalid action calls
 def isValidActionCall(request, path, method) :
     if(request.path != path):
         log_das_error(LogError.RUNTIME_ERROR,'internal fault: '+ path + ' called improperly')
@@ -253,8 +251,8 @@ def action_query_path():
     global config
 
     try:
-        with open('/home/vagrant/catkin_ws/src/cp_gazebo/instructions/' + config["start_loc"] + '_to_' + config["target_loc"] + '.json') as config_file:
-            data = json.load(config_file)
+        with open('/home/vagrant/catkin_ws/src/cp_gazebo/instructions/' + config["start_loc"] + '_to_' + config["target_loc"] + '.json') as path_file:
+            data = json.load(path_file)
             return action_result({ 'path' : data['path'] })
     except Exception as e:
         log_das_error(LogError.RUNTIME_ERROR, "error in reading the files for query_path: " + str(e))
