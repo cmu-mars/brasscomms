@@ -168,9 +168,7 @@ def parse_config_file():
         if(int_out_of_range(data['sensor_perturbation']['r'], -6 , 6)):
             th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for sensor_perturbation r is not an in-range integer')
 
-
-
-        # todo: stop the world if the file doesn't parse
+        # todo: stop the world if the file doesn't parse?
 
     # nb: we silently ignore anything extra information that might be
     # present at any level of the config.
@@ -212,7 +210,7 @@ def das_ready():
         print "Fatal: couldn't connect to TH at " + th_url+"/ready"
 
 def log_das_error(error, msg):
-    
+
     #todo: create log file if it doesn't exits
     #todo: send das_error test control message with "error" : "DAS_LOG_FILE_ERROR"
     #      if log file cannot be created, accesssed, or write to
@@ -225,10 +223,10 @@ def log_das_error(error, msg):
                           "MESSAGE" : msg}
             data = json.dumps(error_contents)
             log_file.write(data + "\n")
-    except StandardError as e: 
+    except StandardError as e:
         #todo: send das_error test control message with "error" : "DAS_LOG_FILE_ERROR"
         #      if log file cannot be created, accesssed, or write to
-        
+
 
 ### helperfunctions for test actions
 
@@ -244,6 +242,17 @@ def isValidActionCall(request, path, method) :
         return True
 
 ### subroutines per endpoint URL in API wiki page order
+@app.route('/action/query_path', methods=['GET'])
+def action_query_path():
+    if (not isValidActionCall(request, '/action/query_path', 'GET')) :
+        return th_error()
+
+    global config
+
+    with open('/home/vagrant/catkin_ws/src/cp_gazebo/instructions/' + config["start_loc"] + '_to_' + config["target_loc"] + '.json') as config_file:
+        data = json.load(config_file)
+        return action_result({ 'path' : data['path'] })
+
 @app.route('/action/start', methods=['POST'])
 def action_start():
     if (not isValidActionCall(request, '/action/start', 'POST')) :
@@ -274,17 +283,6 @@ def action_start():
         return th_error()
 
     return action_result({})  # todo: this includes time as well; is that out of spec?
-
-@app.route('/action/query_path', methods=['GET'])
-def action_query_path():
-    if (not isValidActionCall(request, '/action/query_path', 'GET')) :
-        return th_error()
-
-    global config
-
-    with open('/home/vagrant/catkin_ws/src/cp_gazebo/instructions/' + config["start_loc"] + '_to_' + config["target_loc"] + '.json') as config_file:
-        data = json.load(config_file)
-        return action_result({ 'path' : data['path'] })
 
 @app.route('/action/observe', methods=['GET'])
 def action_observe():
@@ -364,6 +362,15 @@ def action_remove_obstacle():
         return action_result({})
     else:
         return th_error()
+
+@app.route('/action/perturb_sensor', methods=['POST'])
+def action_remove_obstacle():
+    if (not isValidActionCall(request, '/action/perturb_sensor', 'POST')) :
+        return th_error()
+
+    ## this is a stub
+
+    return th_error()
 
 
 # if you run this script from the command line directly, this causes it to
