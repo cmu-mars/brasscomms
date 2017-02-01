@@ -211,14 +211,23 @@ def das_ready():
         print "Fatal: couldn't connect to TH at " + th_url+"/ready"
 
 def log_das_error(error, msg):
+    
     #todo: create log file if it doesn't exits
     #todo: send das_error test control message with "error" : "DAS_LOG_FILE_ERROR"
     #      if log file cannot be created, accesssed, or write to
     #todo: open and write to log file
-    error_contents = {"TIME" : now.isoformat(),
-                      "ERROR" : error,
-                      "MESSAGE" : msg}
-    data = json.dumps(error_contents)
+    log_file_path = '/test/log'
+    try:
+        with open(log_file_path, 'a') as log_file :
+            error_contents = {"TIME" : now.isoformat(),
+                          "ERROR" : error,
+                          "MESSAGE" : msg}
+            data = json.dumps(error_contents)
+            log_file.write(data + "\n")
+    except StandardError as e: 
+        #todo: send das_error test control message with "error" : "DAS_LOG_FILE_ERROR"
+        #      if log file cannot be created, accesssed, or write to
+        
 
 ### helperfunctions for test actions
 
