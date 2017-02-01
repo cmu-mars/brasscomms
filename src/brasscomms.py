@@ -47,7 +47,7 @@ class Error(Enum):
 # returns true iff the first argument is a digit inclusively between the
 # second two args. assumes that the second two are indeed digits, and that
 # the second is less than the third.
-def int_out_of_range(x,upper,lower) :
+def int_out_of_range(x,lower,upper) :
     return not(isinstance(x,int) and x >= lower and x <= upper)
 
 ## callbacks to change the status
@@ -74,8 +74,6 @@ def parse_config_file():
     else:
         with open(config_file_path) as config_file:
             data = json.load(config_file)
-
-        # todo: check to make sure each field is as in the spec ..
 
         # start_loc
         if (not ('start_loc' in data.keys())):
@@ -126,15 +124,55 @@ def parse_config_file():
         # initial_obstacle_location
         if (not ('initial_obstacle_location' in data.keys())):
             th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain initial_obstacle_location')
+        if (not (isinstance(data['initial_obstacle_location'], dict))):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for initial_obstacle_location is not a dict')
+        # ... initial_obstacle_location[x]
+        if (not ('x' in data['initial_obstacle_location'].keys())):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain initial_obstacle_location x coordinate')
+        if (not (isinstance(data['initial_obstacle_location']['x'], float))):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for initial_obstacle_location x coordinate is not a float')
+        if (data['initial_obstacle_location']['x'] < -1 or data['initial_obstacle_location']['x'] > 24):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for initial_obstacle_location x coordinate is out of range')
+        # ... initial_obstacle_location[y]
+        if (not ('y' in data['initial_obstacle_location'].keys())):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain initial_obstacle_location y coordinate')
+        if (not (isinstance(data['initial_obstacle_location']['y'], float))):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for initial_obstacle_location y coordinate is not a float')
+        if (data['initial_obstacle_location']['y'] < -1 or data['initial_obstacle_location']['y'] > 24):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for initial_obstacle_location y coordinate is out of range')
 
         # sensor_perturbation
         if (not ('sensor_perturbation' in data.keys())):
             th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain sensor_perturbation')
+        if (not (isinstance(data['sensor_perturbation'], dict))):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for sensor_perturbation is not a dict')
+        if (not (set(['x', 'y', 'z', 'p', 'w', 'r']).issubset(data['sensor_perturbation'].keys()))):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for sensor_perturbation does not include all of: x,y,z,p,w,r')
+        # .. sensor_perturbation[x]
+        if(int_out_of_range(data['sensor_perturbation']['x'], -3, 3)):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for sensor_perturbation x is not an in-range integer')
+        # .. sensor_perturbation[y]
+        if(int_out_of_range(data['sensor_perturbation']['y'], -3, 3)):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for sensor_perturbation y is not an in-range integer')
+        # .. sensor_perturbation[z]
+        if(int_out_of_range(data['sensor_perturbation']['z'], -3, 3)):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for sensor_perturbation z is not an in-range integer')
+        # .. sensor_perturbation[p]
+        if(int_out_of_range(data['sensor_perturbation']['p'], -6, 6)):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for sensor_perturbation p is not an in-range integer')
+        # .. sensor_perturbation[w]
+        if(int_out_of_range(data['sensor_perturbation']['w'], -6, 6)):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for sensor_perturbation w is not an in-range integer')
+        # .. sensor_perturbation[r]
+        if(int_out_of_range(data['sensor_perturbation']['r'], -6 , 6)):
+            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for sensor_perturbation r is not an in-range integer')
+
 
 
         # todo: stop the world if the file doesn't parse
 
-    # we silently ignore anything else that might be present.
+    # nb: we silently ignore anything extra information that might be
+    # present at any level of the config.
     return data
 
 ### subroutines for forming API results
