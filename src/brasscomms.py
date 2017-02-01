@@ -382,14 +382,21 @@ def action_remove_obstacle():
         return th_error()
 
     params = request.get_json(silent=True)
-    if (not 'obstacle_id' in params.keys()) :
+    if (not ('ARGUMENTS' in params.keys())):
+        log_das_error(LogError.RUNTIME_ERROR, 'action/remove_obstacle got a post without ARGUMENTS')
+        return th_error()
+
+    if (not (isinstance(params['ARGUMENTS'], dict))):
+        log_das_error(LogError.RUNTIME_ERROR, 'action/remove_obstacle got a post where ARGUMENTS is not a dict')
+        return th_error()
+
+    if (not 'obstacle_id' in params['ARGUMENTS'].keys()) :
         log_das_error(LogError.RUNTIME_ERROR, 'action/remove_obstacle recieved post with bogus obstacle id')
         return th_error()
 
     global gazebo
-    success = gazebo.delete_obstacle(params["obstacle_id"])
+    success = gazebo.delete_obstacle(params['ARGUMENTS']["obstacle_id"])
     if success:
-        #todo: check for RR2 that this is good enough
         return action_result({})
     else:
         log_das_error(LogError.RUNTIME_ERROR, 'action/remove_obstacle gazebo call failed')
