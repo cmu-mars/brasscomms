@@ -172,17 +172,33 @@ def das_ready():
         #todo: do something else if das_ready doesn't work?
         print "Fatal: couldn't connect to TH at " + th_url+"/ready"
 
-### subroutines per endpoint URL in API wiki page order
+def log_das_error(err, msg):
+    #todo: create log file if it doesn't exits
+    #todo: send das_error test control message with "error" : "DAS_LOG_FILE_ERROR" 
+    #      if log file cannot be created, accesssed, or writte to 
+    #todo: open and write to log file
+    error_contents = {"TIME" : now.isoformat (),
+                      "ERROR" : str(err),
+                      "MESSAGE" : str(msg)}
+    data = json.dumps(error_contents))
 
+### helperfunctions for test actions
+
+#also logs invalid action calls 
+def isValidActionCall(request, path, method) :
+    if(request.path != path):
+        log_das_error('RUNTIME_ERROR','internal fault: '+ path + ' called improperly')
+        return False
+    elif(request.method != method):
+        log_das_error('RUNTIME_ERROR', path + ' called with wrong HTTP method')
+        return False
+    else:
+        return True
+
+### subroutines per endpoint URL in API wiki page order
 @app.route('/action/start', methods=['POST'])
 def action_start():
-    if(request.path != '/action/start'):
-        ## todo: log
-        # th_das_error(DAS_OTHER_ERROR,'internal fault: action_start called improperly')
-        return th_error()
-    if(request.method != 'POST'):
-        ## todo: log
-        # th_das_error(DAS_OTHER_ERROR,'action_start called with wrong HTTP method')
+    if (not isValidActionCall(request, '/action/start', 'POST')) :
         return th_error()
 
     global config
@@ -206,13 +222,7 @@ def action_start():
 
 @app.route('/action/query_path', methods=['GET'])
 def action_query_path():
-    if(request.path != '/action/query_path'):
-        ## todo: log
-        # th_das_error(DAS_OTHER_ERROR,'internal fault: query_path called improperly')
-        return th_error()
-    if(request.method != 'GET'):
-        ## todo: log
-        #th_das_error(DAS_OTHER_ERROR,'query_path called with wrong HTTP method')
+    if (not isValidActionCall(request, '/action/query_path', 'GET')) :
         return th_error()
 
     global config
@@ -223,12 +233,7 @@ def action_query_path():
 
 @app.route('/action/observe', methods=['GET'])
 def action_observe():
-    if(request.path != '/action/observe'):
-        ## todo; log
-        # th_das_error(DAS_OTHER_ERROR,'internal fault: action_observe called improperly')
-    if(request.method != 'GET'):
-        ## todo: log
-        # th_das_error(DAS_OTHER_ERROR,'action_observe called with wrong HTTP method')
+    if (not isValidActionCall(request, '/action/observe', 'GET')) :
         return th_error()
 
     global gazebo
@@ -245,13 +250,7 @@ def action_observe():
 
 @app.route('/action/set_battery', methods=['POST'])
 def action_set_battery():
-    if(request.path != '/action/set_battery'):
-        ## todo: log
-        # th_das_error(DAS_OTHER_ERROR,'internal fault: action_set_battery called improperly')
-        return th_error()
-    if(request.method != 'POST'):
-        ## todo: log
-        # th_das_error(DAS_OTHER_ERROR,'action_set_battery called with wrong HTTP method')
+    if (not isValidActionCall(request, '/action/set_battery', 'POST')) :
         return th_error()
 
     ## todo: make sure this is in range or else th_error()
@@ -264,13 +263,7 @@ def action_set_battery():
 
 @app.route('/action/place_obstacle', methods=['POST'])
 def action_place_obstacle():
-    if(request.path != '/action/place_obstacle'):
-        ## todo: log
-        # th_das_error(DAS_OTHER_ERROR,'internal fault: action_place_obstacle called improperly')
-        return th_error()
-    if(request.method != 'POST'):
-        ## todo: log
-        # th_das_error(DAS_OTHER_ERROR,'action_place_obstacle called with wrong HTTP method')
+    if (not isValidActionCall(request, '/action/place_obstacle', 'POST')) :
         return th_error()
 
     if(request.headers['Content-Type'] != "application/json"):
@@ -294,13 +287,7 @@ def action_place_obstacle():
 
 @app.route('/action/remove_obstacle', methods=['POST'])
 def action_remove_obstacle():
-    if(request.path != '/action/remove_obstacle'):
-        ## todo: log
-        # th_das_error(DAS_OTHER_ERROR,'internal fault: action_remove_obstace called improperly')
-        return th_error()
-    if(request.method != 'POST'):
-        ## todo: log
-        #th_das_error(DAS_OTHER_ERROR,'action_remove_obstacle called with wrong HTTP method')
+    if (not isValidActionCall(request, '/action/remove_obstacle', 'POST')) :
         return th_error()
 
     if( request.headers['Content-Type'] != "application/json"):
