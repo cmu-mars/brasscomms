@@ -361,11 +361,48 @@ def action_remove_obstacle():
 @app.route('/action/perturb_sensor', methods=['POST'])
 def action_perturb_sensor():
     if (not isValidActionCall(request, '/action/perturb_sensor', 'POST')) :
+        # todo: log here
         return th_error()
 
-    ## this is a stub
+    if(request.headers['Content-Type'] != "application/json"):
+        # todo: log here
+        return th_error()
 
-    return th_error()
+    if(not ('bump' in params.keys())):
+        # todo: log here
+        return th_error()
+
+    if(not (isinstance(params['bump'], dict))):
+        #todo: log here
+        return th_error()
+
+    if (not (set(['x', 'y', 'z', 'p', 'w', 'r']).issubset(params['bump'].keys()))):
+        # todo: log here
+        return th_error()
+
+    if(int_out_of_range(params['bump']['x'], -3, 3)):
+        # todo: log here
+        return th_error()
+    if(int_out_of_range(params['bump']['y'], -3, 3)):
+        # todo: log here
+        return th_error()
+    if(int_out_of_range(params['bump']['z'], -3, 3)):
+        # todo: log here
+        return th_error()
+    if(int_out_of_range(params['bump']['p'], -6, 6)):
+        # todo: log here
+        return th_error()
+    if(int_out_of_range(params['bump']['w'], -6, 6)):
+        # todo: log here
+        return th_error()
+    if(int_out_of_range(params['bump']['r'], -6 , 6)):
+        # todo: log here
+        return th_error()
+
+    ## todo: currently we have no sensor to bump, so this doesn't do
+    ## anything other than check the format of the request and reply with
+    ## something well-formatted if it gets something well-formatted
+    return action_result({})
 
 
 # if you run this script from the command line directly, this causes it to
