@@ -399,6 +399,7 @@ def action_remove_obstacle():
     if success:
         return action_result({})
     else:
+        # todo: implicitly, this is because it was a bad obstacle ID. can we confirm that?
         log_das_error(LogError.RUNTIME_ERROR, 'action/remove_obstacle gazebo call failed')
         return th_error()
 
@@ -412,34 +413,42 @@ def action_perturb_sensor():
         return th_error()
 
     params = request.get_json(silent=True)
-    if(not ('bump' in params.keys())):
+    if (not ('ARGUMENTS' in params.keys())):
+        log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor got a post without ARGUMENTS')
+        return th_error()
+
+    if (not (isinstance(params['ARGUMENTS'], dict))):
+        log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor got a post where ARGUMENTS is not a dict')
+        return th_error()
+
+    if(not ('bump' in params['ARGUMENTS'].keys())):
         log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor recieved post without bump in the JSON object')
         return th_error()
 
-    if(not (isinstance(params['bump'], dict))):
+    if(not (isinstance(params['ARGUMENTS']['bump'], dict))):
         log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor recieved post with bump, but not bound to a dict')
         return th_error()
 
-    if (not (set(['x', 'y', 'z', 'p', 'w', 'r']).issubset(params['bump'].keys()))):
+    if (not (set(['x', 'y', 'z', 'p', 'w', 'r']).issubset(params['ARGUMENTS']['bump'].keys()))):
         log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor post with bump bound to a dict but missing one of the six fields')
         return th_error()
 
-    if(int_out_of_range(params['bump']['x'], -3, 3)):
+    if(int_out_of_range(params['ARGUMENTS']['bump']['x'], -3, 3)):
         log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor post with out of range x')
         return th_error()
-    if(int_out_of_range(params['bump']['y'], -3, 3)):
+    if(int_out_of_range(params['ARGUMENTS']['bump']['y'], -3, 3)):
         log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor post with out of range y')
         return th_error()
-    if(int_out_of_range(params['bump']['z'], -3, 3)):
+    if(int_out_of_range(params['ARGUMENTS']['bump']['z'], -3, 3)):
         log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor post with out of range z')
         return th_error()
-    if(int_out_of_range(params['bump']['p'], -6, 6)):
+    if(int_out_of_range(params['ARGUMENTS']['bump']['p'], -6, 6)):
         log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor post with out of range p')
         return th_error()
-    if(int_out_of_range(params['bump']['w'], -6, 6)):
+    if(int_out_of_range(params['ARGUMENTS']['bump']['w'], -6, 6)):
         log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor post with out of range w')
         return th_error()
-    if(int_out_of_range(params['bump']['r'], -6 , 6)):
+    if(int_out_of_range(params['ARGUMENTS']['bump']['r'], -6 , 6)):
         log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor post with out of range r')
         return th_error()
 
