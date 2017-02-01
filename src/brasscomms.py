@@ -41,7 +41,7 @@ class Status(Enum):
 class Error(Enum):
     TEST_DATA_FILE_ERROR  = 1
     TEST_DATA_FORMAT_ERROR = 2
-    DAS_LOG_URI_ERROR = 3
+    DAS_LOG_FILE_ERROR = 3
     DAS_OTHER_ERROR = 4
 
 # returns true iff the first argument is a digit inclusively between the
@@ -219,9 +219,8 @@ def log_das_error(error, msg):
             data = json.dumps(error_contents)
             log_file.write(data + "\n")
     except StandardError as e:
-        #todo: send das_error test control message with "error" : "DAS_LOG_FILE_ERROR"
-        #      if log file cannot be created, accesssed, or write to
-        return
+        th_das_error(Error.DAS_LOG_FILE_ERROR,'log file at ' + config_file_path + ' could not be accessed')
+
 
 ### helperfunctions for test actions
 
