@@ -333,7 +333,9 @@ def action_set_battery():
         log_das_error(LogError.RUNTIME_ERROR, 'action/set_battery got a post where ARGUMENTS gives voltage out of range')
         return th_error()
 
-    ## todo : implement real stuff here when we have the battery model
+    ## todo : implement real stuff here when we have the battery
+    ## model. also need to check that the argument voltage is less than the
+    ## current voltage, not just a valid possible voltage?
 
     return action_result({})
 
@@ -348,13 +350,21 @@ def action_place_obstacle():
 
     # todo: is this right? params should not have x and y at the top level
     params = request.get_json(silent=True)
-    if (not ('x' in params.keys() and 'y' in params.keys())) :
+    if (not ('ARGUMENTS' in params.keys())):
+        log_das_error(LogError.RUNTIME_ERROR, 'action/place_obstacle got a post without ARGUMENTS')
+        return th_error()
+
+    if (not (isinstance(params['ARGUMENTS'], dict))):
+        log_das_error(LogError.RUNTIME_ERROR, 'action/place_obstacle got a post where ARGUMENTS is not a dict')
+        return th_error()
+
+    if (not ('x' in  params['ARGUMENTS'].keys() and 'y' in params['ARGUMENTS'].keys())) :
         log_das_error(LogError.RUNTIME_ERROR, 'action/place_obstacle got a post without both and x and y')
         return th_error()
 
     global gazebo
 
-    obs_name = gazebo.place_new_obstacle(params["x"], params["y"])
+    obs_name = gazebo.place_new_obstacle(params['ARGUMENTS']["x"], params['ARGUMENTS']["y"])
     if obs_name is not None:
         ARGUMENTS = {"obstacle_id" : obs_name};
         return action_result(ARGUMENTS)
