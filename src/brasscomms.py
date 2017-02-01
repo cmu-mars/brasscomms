@@ -193,9 +193,9 @@ def action_result(body):
 def th_das_error(err,msg):
     global th_url
     now = datetime.datetime.now()
-    error_contents = {"TIME" : now.isoformat (),
+    error_contents = {"TIME" : now.isoformat(),
                       "ERROR" : str(err),
-                      "MESSAGE" : str(msg)}
+                      "MESSAGE" : msg}
     # todo: this r should be th_ack or th_err; do we care?
     r = requests.post(th_url+'/error', data = json.dumps(error_contents))
 
@@ -210,14 +210,14 @@ def das_ready():
         #todo: do something else if das_ready doesn't work?
         print "Fatal: couldn't connect to TH at " + th_url+"/ready"
 
-def log_das_error(err, msg):
+def log_das_error(error, msg):
     #todo: create log file if it doesn't exits
     #todo: send das_error test control message with "error" : "DAS_LOG_FILE_ERROR" 
-    #      if log file cannot be created, accesssed, or writte to 
+    #      if log file cannot be created, accesssed, or write to 
     #todo: open and write to log file
-    error_contents = {"TIME" : now.isoformat (),
-                      "ERROR" : str(err),
-                      "MESSAGE" : str(msg)}
+    error_contents = {"TIME" : now.isoformat(),
+                      "ERROR" : error,
+                      "MESSAGE" : msg}
     data = json.dumps(error_contents))
 
 ### helperfunctions for test actions
