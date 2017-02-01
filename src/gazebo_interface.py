@@ -131,7 +131,7 @@ class GazeboInterface:
 			return x, y, w, v
 		except rospy.ServiceException, e:
 			rospy.logerr("Could not get state of robot: %s"%e)
-			return None, None, None
+			return None, None, None, None
 
 	def place_new_obstacle(self,x,y):
 	    # Place a new obstacl at te map coordinates indicated. The obstacles is
