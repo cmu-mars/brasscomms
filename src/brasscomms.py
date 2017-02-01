@@ -201,10 +201,15 @@ def th_das_error(err,msg):
                       "ERROR" : err.name,
                       "MESSAGE" : msg}
     # todo: this r should be th_ack or th_err; do we care?
-    r = requests.post(th_url+'/error', data = json.dumps(error_contents))
+    try:
+        r = requests.post(th_url+'/error', data = json.dumps(error_contents))
+    except Exception as e:
+        # print "Fatal: couldn't connect to TH at " + th_url + "/error: " + str(e)
+        log_das_error(LogError.STARTUP_ERROR, "Fatal: couldn't connect to TH at " + th_url + "/error: " + str(e))
 
 def log_das_error(error, msg):
     log_file_path = '/test/log'
+    now = datetime.datetime.now()
     try:
         with open(log_file_path, 'a') as log_file :
             error_contents = {"TIME" : now.isoformat(),
@@ -213,6 +218,7 @@ def log_das_error(error, msg):
             data = json.dumps(error_contents)
             log_file.write(data + "\n")
     except StandardError as e:
+        # print "log file can't be opened: " + str(e)
         th_das_error(Error.DAS_LOG_FILE_ERROR,'log file at ' + log_file_path + ' could not be accessed')
 
 def das_ready():
