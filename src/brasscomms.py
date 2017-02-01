@@ -218,7 +218,7 @@ def log_das_error(err, msg):
     error_contents = {"TIME" : now.isoformat (),
                       "ERROR" : str(err),
                       "MESSAGE" : str(msg)}
-    data = json.dumps(error_contents))
+    data = json.dumps(error_contents)
 
 ### helperfunctions for test actions
 
