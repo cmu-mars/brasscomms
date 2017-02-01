@@ -63,6 +63,8 @@ def active_cb():
     # todo: log this instead of printing it
     print "brasscoms received notification that goal is active"
 
+## bradley
+
 ### some globals
 app = Flask(__name__)
 shared_var_lock = Lock ()
