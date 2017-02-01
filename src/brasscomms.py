@@ -194,7 +194,7 @@ def th_das_error(err,msg):
     global th_url
     now = datetime.datetime.now()
     error_contents = {"TIME" : now.isoformat(),
-                      "ERROR" : str(err),
+                      "ERROR" : err.name,
                       "MESSAGE" : msg}
     # todo: this r should be th_ack or th_err; do we care?
     r = requests.post(th_url+'/error', data = json.dumps(error_contents))
