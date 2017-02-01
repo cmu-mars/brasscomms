@@ -44,6 +44,10 @@ class Error(Enum):
     DAS_LOG_FILE_ERROR = 3
     DAS_OTHER_ERROR = 4
 
+class LogError(Enum):
+    STARTUP_ERROR = 1
+    RUNTIME_ERROR = 2
+
 # returns true iff the first argument is a digit inclusively between the
 # second two args. assumes that the second two are indeed digits, and that
 # the second is less than the third.
@@ -198,6 +202,18 @@ def th_das_error(err,msg):
     # todo: this r should be th_ack or th_err; do we care?
     r = requests.post(th_url+'/error', data = json.dumps(error_contents))
 
+def log_das_error(error, msg):
+    log_file_path = '/test/log'
+    try:
+        with open(log_file_path, 'a') as log_file :
+            error_contents = {"TIME" : now.isoformat(),
+                              "TYPE" : error.name,
+                              "MESSAGE" : msg}
+            data = json.dumps(error_contents)
+            log_file.write(data + "\n")
+    except StandardError as e:
+        th_das_error(Error.DAS_LOG_FILE_ERROR,'log file at ' + config_file_path + ' could not be accessed')
+
 def das_ready():
     global th_url
     now = datetime.datetime.now()
@@ -206,31 +222,17 @@ def das_ready():
     try:
         r = requests.post(th_url+'/ready', data = json.dumps(contents))
     except Exception as e:
-        #todo: do something else if das_ready doesn't work?
-        print "Fatal: couldn't connect to TH at " + th_url+"/ready"
-
-def log_das_error(error, msg):
-    log_file_path = '/test/log'
-    try:
-        with open(log_file_path, 'a') as log_file :
-            error_contents = {"TIME" : now.isoformat(),
-                          "ERROR" : error,
-                          "MESSAGE" : msg}
-            data = json.dumps(error_contents)
-            log_file.write(data + "\n")
-    except StandardError as e:
-        th_das_error(Error.DAS_LOG_FILE_ERROR,'log file at ' + config_file_path + ' could not be accessed')
-
+        log_das_error(LogError.STARTUP_ERROR, "Fatal: couldn't connect to TH at " + th_url + "/ready: " + str(e))
 
 ### helperfunctions for test actions
 
 #also logs invalid action calls
 def isValidActionCall(request, path, method) :
     if(request.path != path):
-        log_das_error('RUNTIME_ERROR','internal fault: '+ path + ' called improperly')
+        log_das_error(LogError.RUNTIME_ERROR,'internal fault: '+ path + ' called improperly')
         return False
     elif(request.method != method):
-        log_das_error('RUNTIME_ERROR', path + ' called with wrong HTTP method')
+        log_das_error(LogError.RUNTIME_ERROR, path + ' called with wrong HTTP method')
         return False
     else:
         return True
@@ -243,9 +245,13 @@ def action_query_path():
 
     global config
 
-    with open('/home/vagrant/catkin_ws/src/cp_gazebo/instructions/' + config["start_loc"] + '_to_' + config["target_loc"] + '.json') as config_file:
-        data = json.load(config_file)
-        return action_result({ 'path' : data['path'] })
+    try:
+        with open('/home/vagrant/catkin_ws/src/cp_gazebo/instructions/' + config["start_loc"] + '_to_' + config["target_loc"] + '.json') as config_file:
+            data = json.load(config_file)
+            return action_result({ 'path' : data['path'] })
+    except Exception as e:
+        log_das_error(LogError.RUNTIME_ERROR, "error in reading the files for query_path: " + str(e))
+        return th_error()
 
 @app.route('/action/start', methods=['POST'])
 def action_start():
@@ -271,9 +277,7 @@ def action_start():
             deadline = datetime.datetime.now() + data['time']
 
     except Exception as e:
-        ## todo: put these in the log file
-        print e
-        print "Could not send the goal!"
+        log_das_error(LogError.RUNTIME_ERROR, "could not send the goal!: " + str(e))
         return th_error()
 
     return action_result({})  # todo: this includes time as well; is that out of spec?
@@ -294,7 +298,8 @@ def action_observe():
                        "deadline" : deadline
                       }
         return action_result(observation)
-    except:
+    except Exception as e:
+        log_das_error(LogError.RUNTIME_ERROR, "error in observe: " + str(e))
         return th_error()
 
 @app.route('/action/set_battery', methods=['POST'])
@@ -316,13 +321,12 @@ def action_place_obstacle():
         return th_error()
 
     if(request.headers['Content-Type'] != "application/json"):
-        ## todo: log
-        # th_das_error(DAS_OTHER_ERROR,'action/place_obstacle recieved post without json header')
+        log_das_error(LogError.RUNTIME_ERROR, 'action/place_obstacle recieved post without json header')
         return th_error()
 
     params = request.get_json(silent=True)
     if (not ('x' in params.keys() and 'y' in params.keys())) :
-        ##todo: log
+        log_das_error(LogError.RUNTIME_ERROR, 'action/place_obstacle got a post without both and x and y')
         return th_error()
 
     global gazebo
@@ -332,6 +336,7 @@ def action_place_obstacle():
         ARGUMENTS = {"obstacle_id" : obs_name};
         return action_result(ARGUMENTS)
     else:
+        log_das_error(LogError.RUNTIME_ERROR, 'gazebo cant place new obstacle at given x y')
         return th_error()
 
 @app.route('/action/remove_obstacle', methods=['POST'])
@@ -340,13 +345,12 @@ def action_remove_obstacle():
         return th_error()
 
     if( request.headers['Content-Type'] != "application/json"):
-        ## todo: log
-        # th_das_error(DAS_OTHER_ERROR,'action_remove_obstacle recieved post without json header')
+        log_das_error(LogError.RUNTIME_ERROR, 'action_remove_obstacle recieved post without json header')
         return th_error()
 
     params = request.get_json(silent=True)
     if (not 'obstacle_id' in params.keys()) :
-        #todo: log this problem
+        log_das_error(LogError.RUNTIME_ERROR, 'action/remove_obstacle recieved post with bogus obstacle id')
         return th_error()
 
     global gazebo
@@ -355,47 +359,47 @@ def action_remove_obstacle():
         #todo: check for RR2 that this is good enough
         return action_result({})
     else:
+        log_das_error(LogError.RUNTIME_ERROR, 'action/remove_obstacle gazebo call failed')
         return th_error()
 
 @app.route('/action/perturb_sensor', methods=['POST'])
 def action_perturb_sensor():
     if (not isValidActionCall(request, '/action/perturb_sensor', 'POST')) :
-        # todo: log here
         return th_error()
 
     if(request.headers['Content-Type'] != "application/json"):
-        # todo: log here
+        log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor recieved post without json header')
         return th_error()
 
     if(not ('bump' in params.keys())):
-        # todo: log here
+        log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor recieved post without bump in the JSON object')
         return th_error()
 
     if(not (isinstance(params['bump'], dict))):
-        #todo: log here
+        log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor recieved post with bump, but not bound to a dict')
         return th_error()
 
     if (not (set(['x', 'y', 'z', 'p', 'w', 'r']).issubset(params['bump'].keys()))):
-        # todo: log here
+        log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor post with bump bound to a dict but missing one of the six fields')
         return th_error()
 
     if(int_out_of_range(params['bump']['x'], -3, 3)):
-        # todo: log here
+        log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor post with out of range x')
         return th_error()
     if(int_out_of_range(params['bump']['y'], -3, 3)):
-        # todo: log here
+        log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor post with out of range y')
         return th_error()
     if(int_out_of_range(params['bump']['z'], -3, 3)):
-        # todo: log here
+        log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor post with out of range z')
         return th_error()
     if(int_out_of_range(params['bump']['p'], -6, 6)):
-        # todo: log here
+        log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor post with out of range p')
         return th_error()
     if(int_out_of_range(params['bump']['w'], -6, 6)):
-        # todo: log here
+        log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor post with out of range w')
         return th_error()
     if(int_out_of_range(params['bump']['r'], -6 , 6)):
-        # todo: log here
+        log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor post with out of range r')
         return th_error()
 
     ## todo: currently we have no sensor to bump, so this doesn't do
