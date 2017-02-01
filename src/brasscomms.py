@@ -317,16 +317,23 @@ def action_set_battery():
         return th_error()
 
     params = request.get_json(silent=True)
-    if (not ('x' in params.keys() and 'y' in params.keys())) :
-        log_das_error(LogError.RUNTIME_ERROR, 'action/place_obstacle got a post without both and x and y')
+    if (not ('ARGUMENTS' in params.keys())):
+        log_das_error(LogError.RUNTIME_ERROR, 'action/set_battery got a post without ARGUMENTS')
         return th_error()
 
+    if (not (isinstance(params['ARGUMENTS'], dict))):
+        log_das_error(LogError.RUNTIME_ERROR, 'action/set_battery got a post where ARGUMENTS is not a dict')
+        return th_error()
 
-    ## todo: make sure this is in range or else th_error()
-    ## todo: for RR2 make sure this is valid and doesn't crash
+    if (not ('voltage' in params['ARGUMENTS'].keys())):
+        log_das_error(LogError.RUNTIME_ERROR, 'action/set_battery got a post where ARGUMENTS doesnt give voltage')
+        return th_error()
+
+    if (int_out_of_range(params['ARGUMENTS']['voltage'],104,166)):
+        log_das_error(LogError.RUNTIME_ERROR, 'action/set_battery got a post where ARGUMENTS gives voltage out of range')
+        return th_error()
+
     ## todo : implement real stuff here when we have the battery model
-
-    ## todo: check that the voltage is included in the post and is in range, th error otherwise
 
     return action_result({})
 
