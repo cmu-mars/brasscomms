@@ -279,7 +279,7 @@ def action_start():
         # update the deadline to be now + the amount of time for the path given in the json file
         with open('/home/vagrant/catkin_ws/src/cp_gazebo/instructions/' + config["start_loc"] + '_to_' + config["target_loc"] + '.json') as config_file:
             data = json.load(config_file)
-            deadline = datetime.datetime.now() + data['time']
+            deadline = datetime.datetime.now() + datetime.timedelta(seconds=data['time'])
 
     except Exception as e:
         log_das_error(LogError.RUNTIME_ERROR, "could not send the goal!: " + str(e))
