@@ -300,7 +300,7 @@ def action_observe():
         observation = {"x" : x, "y" : y, "w" : w,
                        "v" : vel ,
                        "voltage" : -1,  # todo: Need to work this out
-                       "deadline" : deadline
+                       "deadline" : deadline.isoformat()
                       }
         return action_result(observation)
     except Exception as e:
