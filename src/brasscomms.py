@@ -56,12 +56,11 @@ def parse_config_file():
     if not (os.path.exists(config_file_path)
             and os.path.isfile(config_file_path)
             and os.access(config_file_path,os.R_OK)):
-        th_das_error(Error.TEST_DATA_FILE_ERROR,'config file at ' + config_file_path + ' either does not exist, is not a file, is not readable')
-        # todo: does this sufficiently stop the world if the file doesn't parse?
+        th_das_error(Error.TEST_DATA_FILE_ERROR,'config file at ' + config_file_path + ' either does not exist, is not a file, or is not readable')
+        # todo: does sending this this sufficiently stop the world if the file doesn't parse?
     else:
         with open(config_file_path) as config_file:
             data = json.load(config_file)
-
             conf = Config(**data)
             return conf
 
@@ -154,13 +153,11 @@ def action_start():
 
     print "starting challenge problem"
     try:
-        ig_path = cp_gaz + '/instructions/' + config.start_loc + '_to_' + config.target_loc + '.ig'
-        igfile = open(ig_path, "r")
-        igcode = igfile.read()
-        # todo: when is it safe to close this file? does the 'with' pragma do this more cleanly?
-        goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
-        global client
-        client.send_goal( goal = goal, done_cb = done_cb, active_cb = active_cb)
+        with open(cp_gaz + '/instructions/' + config.start_loc + '_to_' + config.target_loc + '.ig') as igfile:
+            igcode = igfile.read()
+            goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
+            global client
+            client.send_goal( goal = goal, done_cb = done_cb, active_cb = active_cb)
 
         # update the deadline to be now + the amount of time for the path given in the json file
         with open(cp_gaz + '/instructions/' + config.start_loc + '_to_' + config.target_loc + '.json') as config_file:
@@ -234,7 +231,6 @@ def action_place_obstacle():
         log_das_error(LogError.RUNTIME_ERROR, 'action/place_obstacle recieved post without json header')
         return th_error()
 
-    # todo: is this right? params should not have x and y at the top level
     params = request.get_json(silent=True)
     if (not ('ARGUMENTS' in params.keys())):
         log_das_error(LogError.RUNTIME_ERROR, 'action/place_obstacle got a post without ARGUMENTS')
