@@ -23,30 +23,11 @@ import os.path
 
 from gazebo_interface import *
 from map_util import *
+from constants import *
 
 from move_base_msgs.msg import MoveBaseAction
 
 ### some definitions and helper functions
-class Status(Enum):
-    PERTURBATION_DETECTED  = 1
-    MISSION_SUSPENDED = 2
-    MISSION_RESUMED = 3
-    MISSION_HALTED = 4
-    MISSION_ABORTED = 5
-    ADAPTATION_INITIATED = 6
-    ADAPTATION_COMPLETED = 7
-    ADAPTATION_STOPPED = 8
-    ERROR = 9
-
-class Error(Enum):
-    TEST_DATA_FILE_ERROR  = 1
-    TEST_DATA_FORMAT_ERROR = 2
-    DAS_LOG_FILE_ERROR = 3
-    DAS_OTHER_ERROR = 4
-
-class LogError(Enum):
-    STARTUP_ERROR = 1
-    RUNTIME_ERROR = 2
 
 # returns true iff the first argument is a digit inclusively between the
 # second two args. assumes that the second two are indeed digits, and that
@@ -66,12 +47,11 @@ def active_cb():
 ### some globals
 app = Flask(__name__)
 shared_var_lock = Lock ()
-th_url = "http://brass-th"
 deadline = datetime.datetime.now() ## this is a default value; the result of observe will be well formed but wrong unless they call start first
 
 
 def parse_config_file():
-    config_file_path = '/test/data'
+    global config_file_path
 
     if not (os.path.exists(config_file_path)
             and os.path.isfile(config_file_path)
@@ -206,7 +186,7 @@ def th_das_error(err,msg):
         log_das_error(LogError.STARTUP_ERROR, "Fatal: couldn't connect to TH at " + th_url + "/error: " + str(e))
 
 def log_das_error(error, msg):
-    log_file_path = '/test/log'
+    global log_file_path
     now = datetime.datetime.now()
     try:
         with open(log_file_path, 'a') as log_file :
