@@ -133,9 +133,10 @@ def action_query_path():
         return th_error()
 
     global config
+    global cp_gaz
 
     try:
-        with open('/home/vagrant/catkin_ws/src/cp_gazebo/instructions/' + config.start_loc + '_to_' + config.target_loc + '.json') as path_file:
+        with open(cp_gaz + '/instructions/' + config.start_loc + '_to_' + config.target_loc + '.json') as path_file:
             data = json.load(path_file)
             return action_result({ 'path' : data['path'] })
     except Exception as e:
@@ -149,10 +150,11 @@ def action_start():
 
     global config
     global deadline
+    global cp_gaz
 
     print "starting challenge problem"
     try:
-        ig_path = '/home/vagrant/catkin_ws/src/cp_gazebo/instructions/' + config.start_loc + '_to_' + config.target_loc + '.ig'
+        ig_path = cp_gaz + '/instructions/' + config.start_loc + '_to_' + config.target_loc + '.ig'
         igfile = open(ig_path, "r")
         igcode = igfile.read()
         # todo: when is it safe to close this file? does the 'with' pragma do this more cleanly?
@@ -161,7 +163,7 @@ def action_start():
         client.send_goal( goal = goal, done_cb = done_cb, active_cb = active_cb)
 
         # update the deadline to be now + the amount of time for the path given in the json file
-        with open('/home/vagrant/catkin_ws/src/cp_gazebo/instructions/' + config.start_loc + '_to_' + config.target_loc + '.json') as config_file:
+        with open(cp_gaz + '/instructions/' + config.start_loc + '_to_' + config.target_loc + '.json') as config_file:
             data = json.load(config_file)
             deadline = datetime.datetime.now() + datetime.timedelta(seconds=data['time'])
 

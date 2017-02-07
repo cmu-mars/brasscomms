@@ -4,6 +4,7 @@ th_url = "http://brass-th"
 ta_url = "http://brass-th"
 config_file_path = '/test/data'
 log_file_path = '/test/log'
+cp_gaz = 'home/vagrant/catkin_ws/src/cp_gazebo'
 
 ## defines enums and string constants used throughout brasscomms
 class Status(Enum):
