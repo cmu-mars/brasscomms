@@ -37,8 +37,8 @@ def ensure_enum(cl):
 
 @attr.s
 class InitObs(object):
-    x = attr.ib(validator=in_range_inclusive(low=-1, high=24, type=int))
-    y = attr.ib(validator=in_range_inclusive(low=-1, high=12, type=int))
+    x = attr.ib(validator=in_range_inclusive(low=-1, high=24, type=float))
+    y = attr.ib(validator=in_range_inclusive(low=-1, high=12, type=float))
 
 
 @attr.s
@@ -53,9 +53,9 @@ class Bump(object):
 
 @attr.s
 class Config(object):
-    start_loc = attr.ib(validator=instance_of(str))
+    start_loc = attr.ib(validator=instance_of(unicode))
     start_yaw = attr.ib(validator=instance_of(float))
-    target_loc = attr.ib(validator=instance_of(str))
+    target_loc = attr.ib(validator=instance_of(unicode))
     enable_adaptation = attr.ib(convert=ensure_enum(AdaptationLevels))
     initial_voltage = attr.ib(validator=in_range_inclusive(low=106, high=166, type=int))
     initial_obstacle = attr.ib(validator=instance_of(bool))
