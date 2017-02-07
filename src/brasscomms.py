@@ -200,7 +200,6 @@ def th_das_error(err,msg):
     error_contents = {"TIME" : now.isoformat(),
                       "ERROR" : err.name,
                       "MESSAGE" : msg}
-    # todo: this r should be th_ack or th_err; do we care?
     try:
         r = requests.post(th_url+'/error', data = json.dumps(error_contents))
     except Exception as e:
@@ -223,7 +222,6 @@ def das_ready():
     global th_url
     now = datetime.datetime.now()
     contents = {"TIME" : now.isoformat ()}
-    # todo: this r should be th_ack or th_err; do we care?
     try:
         r = requests.post(th_url+'/ready', data = json.dumps(contents))
     except Exception as e:
