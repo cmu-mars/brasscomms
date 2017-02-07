@@ -49,7 +49,6 @@ app = Flask(__name__)
 shared_var_lock = Lock ()
 deadline = datetime.datetime.now() ## this is a default value; the result of observe will be well formed but wrong unless they call start first
 
-
 def parse_config_file():
     global config_file_path
 

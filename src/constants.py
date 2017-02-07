@@ -1,3 +1,10 @@
+from enum import Enum
+
+th_url = "http://brass-th"
+ta_url = "http://brass-th"
+config_file_path = '/test/data'
+log_file_path = '/test/log'
+
 ## defines enums and string constants used throughout brasscomms
 class Status(Enum):
     PERTURBATION_DETECTED  = 1
@@ -20,8 +27,19 @@ class LogError(Enum):
     STARTUP_ERROR = 1
     RUNTIME_ERROR = 2
 
-th_url = "http://brass-th"
-config_file_path = '/test/data'
-log_file_path = '/test/log'
-
+## each end point is ta_url/action/(one of these)
 class EP(Enum):
+    query_path = 1
+    start = 2
+    observe = 3
+    set_battery = 4
+    place_obstacle = 5
+    remove_obstacle = 6
+    perturb_sensor = 7
+
+##AdaptationStrings = Enum('AdaptationStrings', 'CP1_NoAdaptation')
+class AdaptionLevels(Enum):
+    CP1_NoAdaptation = 1
+    CP2_NoAdaptation = 2
+    CP1_Adaptation = 3
+    CP2_Adaptation = 4
