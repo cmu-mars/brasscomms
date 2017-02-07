@@ -51,15 +51,15 @@ shared_var_lock = Lock ()
 deadline = datetime.datetime.now() ## this is a default value; the result of observe will be well formed but wrong unless they call start first
 
 def parse_config_file():
-    global config_file_path
+    global CONFIG_FILE_PATH
 
-    if not (os.path.exists(config_file_path)
-            and os.path.isfile(config_file_path)
-            and os.access(config_file_path,os.R_OK)):
-        th_das_error(Error.TEST_DATA_FILE_ERROR,'config file at ' + config_file_path + ' either does not exist, is not a file, or is not readable')
+    if not (os.path.exists(CONFIG_FILE_PATH)
+            and os.path.isfile(CONFIG_FILE_PATH)
+            and os.access(CONFIG_FILE_PATH,os.R_OK)):
+        th_das_error(Error.TEST_DATA_FILE_ERROR,'config file at ' + CONFIG_FILE_PATH + ' either does not exist, is not a file, or is not readable')
         # todo: does sending this this sufficiently stop the world if the file doesn't parse?
     else:
-        with open(config_file_path) as config_file:
+        with open(CONFIG_FILE_PATH) as config_file:
             data = json.load(config_file)
             conf = Config(**data)
             return conf
@@ -80,21 +80,21 @@ def action_result(body):
 
 ### subroutines for forming and sending messages to the TH
 def th_das_error(err,msg):
-    global th_url
+    global TH_URL
     now = datetime.datetime.now()
     error_contents = {"TIME" : now.isoformat(),
                       "ERROR" : err.name,
                       "MESSAGE" : msg}
     try:
-        r = requests.post(th_url+'/error', data = json.dumps(error_contents))
+        r = requests.post(TH_URL+'/error', data = json.dumps(error_contents))
     except Exception as e:
-        log_das_error(LogError.STARTUP_ERROR, "Fatal: couldn't connect to TH at " + th_url + "/error: " + str(e))
+        log_das_error(LogError.STARTUP_ERROR, "Fatal: couldn't connect to TH at " + TH_URL + "/error: " + str(e))
 
 def log_das_error(error, msg):
-    global log_file_path
+    global LOG_FILE_PATH
     now = datetime.datetime.now()
     try:
-        with open(log_file_path, 'a') as log_file :
+        with open(LOG_FILE_PATH, 'a') as log_file :
             error_contents = {"TIME" : now.isoformat(),
                               "TYPE" : error.name,
                               "MESSAGE" : msg}
@@ -104,13 +104,13 @@ def log_das_error(error, msg):
         th_das_error(Error.DAS_LOG_FILE_ERROR,'log file at ' + log_file_path + ' could not be accessed')
 
 def das_ready():
-    global th_url
+    global TH_URL
     now = datetime.datetime.now()
     contents = {"TIME" : now.isoformat ()}
     try:
-        r = requests.post(th_url+'/ready', data = json.dumps(contents))
+        r = requests.post(TH_URL+'/ready', data = json.dumps(contents))
     except Exception as e:
-        log_das_error(LogError.STARTUP_ERROR, "Fatal: couldn't connect to TH at " + th_url + "/ready: " + str(e))
+        log_das_error(LogError.STARTUP_ERROR, "Fatal: couldn't connect to TH at " + TH_URL + "/ready: " + str(e))
 
 ### helperfunctions for test actions
 
@@ -132,10 +132,10 @@ def action_query_path():
         return th_error()
 
     global config
-    global cp_gaz
+    global CP_GAZ
 
     try:
-        with open(cp_gaz + '/instructions/' + config.start_loc + '_to_' + config.target_loc + '.json') as path_file:
+        with open(CP_GAZ + '/instructions/' + config.start_loc + '_to_' + config.target_loc + '.json') as path_file:
             data = json.load(path_file)
             return action_result({ 'path' : data['path'] })
     except Exception as e:
@@ -149,19 +149,19 @@ def action_start():
 
     global config
     global deadline
-    global cp_gaz
+    global CP_GAZ
 
     print "starting challenge problem"
     try:
         ## todo: test and make sure this change didn't break anything
-        with open(cp_gaz + '/instructions/' + config.start_loc + '_to_' + config.target_loc + '.ig') as igfile:
+        with open(CP_GAZ + '/instructions/' + config.start_loc + '_to_' + config.target_loc + '.ig') as igfile:
             igcode = igfile.read()
             goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
             global client
             client.send_goal( goal = goal, done_cb = done_cb, active_cb = active_cb)
 
         # update the deadline to be now + the amount of time for the path given in the json file
-        with open(cp_gaz + '/instructions/' + config.start_loc + '_to_' + config.target_loc + '.json') as config_file:
+        with open(CP_GAZ + '/instructions/' + config.start_loc + '_to_' + config.target_loc + '.json') as config_file:
             data = json.load(config_file)
             deadline = datetime.datetime.now() + datetime.timedelta(seconds=data['time'])
 

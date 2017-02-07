@@ -1,14 +1,14 @@
 from enum import Enum
 
-th_url = "http://brass-th"
-ta_url = "http://brass-th"
-config_file_path = '/test/data'
-log_file_path = '/test/log'
-cp_gaz = '/home/vagrant/catkin_ws/src/cp_gazebo'
+TH_URL = "http://brass-th"
+TA_URL = "http://brass-th"
+CONFIG_FILE_PATH = '/test/data'
+LOG_FILE_PATH = '/test/log'
+CP_GAZ = '/home/vagrant/catkin_ws/src/cp_gazebo'
 
 ## defines enums and string constants used throughout brasscomms
 class Status(Enum):
-    PERTURBATION_DETECTED  = 1
+    PERTURBATION_DETECTED = 1
     MISSION_SUSPENDED = 2
     MISSION_RESUMED = 3
     MISSION_HALTED = 4
@@ -19,7 +19,7 @@ class Status(Enum):
     ERROR = 9
 
 class Error(Enum):
-    TEST_DATA_FILE_ERROR  = 1
+    TEST_DATA_FILE_ERROR = 1
     TEST_DATA_FORMAT_ERROR = 2
     DAS_LOG_FILE_ERROR = 3
     DAS_OTHER_ERROR = 4
