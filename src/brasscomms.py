@@ -24,6 +24,7 @@ import os.path
 from gazebo_interface import *
 from map_util import *
 from constants import *
+from parse_config import *
 
 from move_base_msgs.msg import MoveBaseAction
 
@@ -56,107 +57,13 @@ def parse_config_file():
             and os.path.isfile(config_file_path)
             and os.access(config_file_path,os.R_OK)):
         th_das_error(Error.TEST_DATA_FILE_ERROR,'config file at ' + config_file_path + ' either does not exist, is not a file, is not readable')
+        # todo: does this sufficiently stop the world if the file doesn't parse?
     else:
         with open(config_file_path) as config_file:
             data = json.load(config_file)
 
-        # start_loc
-        if (not ('start_loc' in data.keys())):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain start_loc')
-        if(not (isinstance(data['start_loc'],unicode))):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for start_loc is not a string')
-        if(not (isWaypoint(data['start_loc']))):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for start_loc is not a waypoint id')
-
-        # start_yaw
-        if (not ('start_yaw' in data.keys())):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain start_yaw')
-        if(not (isinstance(data['start_yaw'],float))):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for start_yaw is not a float')
-        if(data['start_yaw'] < 0 or data['start_yaw'] > (2*math.pi)):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for start_yaw is not in the range 0..2pi')
-
-        # target_loc
-        if (not ('target_loc' in data.keys())):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain target_loc')
-        if(not (isinstance(data['target_loc'],unicode))):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for target_loc is not a string')
-        if(not (isWaypoint(data['target_loc']))):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for target_loc is not a waypoint id')
-
-        # enable_adaptation
-        if (not ('enable_adaptation' in data.keys())):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain enable_adaptation')
-        if (not (isinstance(data['enable_adaptation'], unicode))):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for enable_adaptation is not a string')
-        if (not data['enable_adaptation'] in ["CP1_NoAdaptation", "CP2_NoAdaptation", "CP1_Adaptation", "CP2_Adaptation"]):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for enable_adaptation is not one of the enumerated forms')
-
-        # initial_voltage
-        if (not ('initial_voltage' in data.keys())):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain initial_voltage')
-        if (not (isinstance(data['initial_voltage'], int))):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for initial_voltage is not an integer')
-        if (data['initial_voltage'] < 104 or data['initial_voltage'] > 166):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for initial_voltage is out of range')
-
-        # initial_obstacle
-        if (not ('initial_obstacle' in data.keys())):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain inital_obstacle')
-        if (not (isinstance(data['initial_obstacle'],bool))):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for initial_obstacle is not a bool')
-
-        # initial_obstacle_location
-        if (not ('initial_obstacle_location' in data.keys())):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain initial_obstacle_location')
-        if (not (isinstance(data['initial_obstacle_location'], dict))):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for initial_obstacle_location is not a dict')
-        # ... initial_obstacle_location[x]
-        if (not ('x' in data['initial_obstacle_location'].keys())):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain initial_obstacle_location x coordinate')
-        if (not (isinstance(data['initial_obstacle_location']['x'], float))):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for initial_obstacle_location x coordinate is not a float')
-        if (data['initial_obstacle_location']['x'] < -1 or data['initial_obstacle_location']['x'] > 24):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for initial_obstacle_location x coordinate is out of range')
-        # ... initial_obstacle_location[y]
-        if (not ('y' in data['initial_obstacle_location'].keys())):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain initial_obstacle_location y coordinate')
-        if (not (isinstance(data['initial_obstacle_location']['y'], float))):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for initial_obstacle_location y coordinate is not a float')
-        if (data['initial_obstacle_location']['y'] < -1 or data['initial_obstacle_location']['y'] > 24):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for initial_obstacle_location y coordinate is out of range')
-
-        # sensor_perturbation
-        if (not ('sensor_perturbation' in data.keys())):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file does not contain sensor_perturbation')
-        if (not (isinstance(data['sensor_perturbation'], dict))):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for sensor_perturbation is not a dict')
-        if (not (set(['x', 'y', 'z', 'p', 'w', 'r']).issubset(data['sensor_perturbation'].keys()))):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for sensor_perturbation does not include all of: x,y,z,p,w,r')
-        # .. sensor_perturbation[x]
-        if(int_out_of_range(data['sensor_perturbation']['x'], -3, 3)):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for sensor_perturbation x is not an in-range integer')
-        # .. sensor_perturbation[y]
-        if(int_out_of_range(data['sensor_perturbation']['y'], -3, 3)):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for sensor_perturbation y is not an in-range integer')
-        # .. sensor_perturbation[z]
-        if(int_out_of_range(data['sensor_perturbation']['z'], -3, 3)):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for sensor_perturbation z is not an in-range integer')
-        # .. sensor_perturbation[p]
-        if(int_out_of_range(data['sensor_perturbation']['p'], -6, 6)):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for sensor_perturbation p is not an in-range integer')
-        # .. sensor_perturbation[w]
-        if(int_out_of_range(data['sensor_perturbation']['w'], -6, 6)):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for sensor_perturbation w is not an in-range integer')
-        # .. sensor_perturbation[r]
-        if(int_out_of_range(data['sensor_perturbation']['r'], -6 , 6)):
-            th_das_error(Error.TEST_DATA_FORMAT_ERROR, 'config file binding for sensor_perturbation r is not an in-range integer')
-
-        # todo: stop the world if the file doesn't parse?
-
-    # nb: we silently ignore anything extra information that might be
-    # present at any level of the config.
-    return data
+            conf = Config(**data)
+            return conf
 
 ### subroutines for forming API results
 def formActionResult(result):
@@ -228,7 +135,7 @@ def action_query_path():
     global config
 
     try:
-        with open('/home/vagrant/catkin_ws/src/cp_gazebo/instructions/' + config["start_loc"] + '_to_' + config["target_loc"] + '.json') as path_file:
+        with open('/home/vagrant/catkin_ws/src/cp_gazebo/instructions/' + config.start_loc + '_to_' + config.target_loc + '.json') as path_file:
             data = json.load(path_file)
             return action_result({ 'path' : data['path'] })
     except Exception as e:
@@ -245,7 +152,7 @@ def action_start():
 
     print "starting challenge problem"
     try:
-        ig_path = '/home/vagrant/catkin_ws/src/cp_gazebo/instructions/' + config["start_loc"] + '_to_' + config["target_loc"] + '.ig'
+        ig_path = '/home/vagrant/catkin_ws/src/cp_gazebo/instructions/' + config.start_loc + '_to_' + config.target_loc + '.ig'
         igfile = open(ig_path, "r")
         igcode = igfile.read()
         # todo: when is it safe to close this file? does the 'with' pragma do this more cleanly?
@@ -254,7 +161,7 @@ def action_start():
         client.send_goal( goal = goal, done_cb = done_cb, active_cb = active_cb)
 
         # update the deadline to be now + the amount of time for the path given in the json file
-        with open('/home/vagrant/catkin_ws/src/cp_gazebo/instructions/' + config["start_loc"] + '_to_' + config["target_loc"] + '.json') as config_file:
+        with open('/home/vagrant/catkin_ws/src/cp_gazebo/instructions/' + config.start_loc + '_to_' + config.target_loc + '.json') as config_file:
             data = json.load(config_file)
             deadline = datetime.datetime.now() + datetime.timedelta(seconds=data['time'])
 
