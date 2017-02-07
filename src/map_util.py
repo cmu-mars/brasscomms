@@ -1,8 +1,10 @@
+""" utility functions for working with waypoints and maps """
 ### imports
 from __future__ import with_statement
 import json
 
 def waypointToCoords(waypointID):
+    """ given a way point, produce its coordinates """
     if not isWaypoint(waypointID):
         raise KeyError('The specified waypointID does not exist')
     waypointList = loadWaypointListFromFile(waypointID)
@@ -10,12 +12,14 @@ def waypointToCoords(waypointID):
     return {waypoint['coord']}
 
 def isWaypoint(waypointID):
+    """ given a string, determine if it is actually a waypoint id """
     waypointList = loadWaypointListFromFile(waypointID)
     if len(waypointList) > 1:
         raise ValueError('There is more than one waypoint with the same identifier in the waypoint locations config file')
     return len(waypointList) == 1
 
 def loadWaypointListFromFile(waypointID):
+    """ produce the list of waypoints names matching the given ID """
     waypoint_locations_path = '/home/vagrant/catkin_ws/src/cp_gazebo/maps/Wean-entire-floor4-waypoint-locations.json'
     with open(waypoint_locations_path) as waypoints_file:
         data = json.load(waypoints_file)
