@@ -68,7 +68,7 @@ def parse_config_file():
 def formActionResult(result):
     now = datetime.datetime.now()
     ACTION_RESULT = {"TIME" : now.isoformat (),
-                     "ARGUMENTS": result}
+                     "RESULT": result}
     return ACTION_RESULT
 
 def th_error():
@@ -153,6 +153,7 @@ def action_start():
 
     print "starting challenge problem"
     try:
+        ## todo: test and make sure this change didn't break anything
         with open(cp_gaz + '/instructions/' + config.start_loc + '_to_' + config.target_loc + '.ig') as igfile:
             igcode = igfile.read()
             goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
