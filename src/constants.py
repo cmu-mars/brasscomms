@@ -38,7 +38,7 @@ class EP(Enum):
     perturb_sensor = 7
 
 ##AdaptationStrings = Enum('AdaptationStrings', 'CP1_NoAdaptation')
-class AdaptionLevels(Enum):
+class AdaptationLevels(Enum):
     CP1_NoAdaptation = 1
     CP2_NoAdaptation = 2
     CP1_Adaptation = 3
