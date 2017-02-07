@@ -6,7 +6,7 @@ CONFIG_FILE_PATH = '/test/data'
 LOG_FILE_PATH = '/test/log'
 CP_GAZ = '/home/vagrant/catkin_ws/src/cp_gazebo'
 
-## defines enums and string constants used throughout brasscomms
+""" defines enums and string constants used throughout brasscomms """
 
 class Status(Enum):
     """ statuses for DAS_STATUS messages """
