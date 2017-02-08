@@ -53,16 +53,15 @@ deadline = datetime.datetime.now() ## this is a default value; the result of obs
 def parse_config_file():
     global CONFIG_FILE_PATH
 
-    if not (os.path.exists(CONFIG_FILE_PATH)
-            and os.path.isfile(CONFIG_FILE_PATH)
-            and os.access(CONFIG_FILE_PATH, os.R_OK)):
-        th_das_error(Error.TEST_DATA_FILE_ERROR, '%s does not exist, is not a file, or is not readable' % CONFIG_FILE_PATH)
-        # todo: does sending this this sufficiently stop the world if the file doesn't parse?
-    else:
+    if (os.path.exists(CONFIG_FILE_PATH) and os.path.isfile(CONFIG_FILE_PATH) and os.access(CONFIG_FILE_PATH, os.R_OK)):
         with open(CONFIG_FILE_PATH) as config_file:
             data = json.load(config_file)
             conf = Config(**data)
             return conf
+    else:
+        # todo: does sending this this sufficiently stop the world if the file doesn't parse?
+        # todo: return something?
+        th_das_error(Error.TEST_DATA_FILE_ERROR, '%s does not exist, is not a file, or is not readable' % CONFIG_FILE_PATH)
 
 ### subroutines for forming API results
 def formActionResult(result):
@@ -121,6 +120,7 @@ def das_ready():
 
 # also logs invalid action calls
 def isValidActionCall(request, path, methods):
+    """ return true if the request respects the methods, false and log it otherwise """
     if(request.path != path):
         log_das_error(LogError.RUNTIME_ERROR, 'internal fault: %s called improperly' % path)
         return False
@@ -148,6 +148,7 @@ def instruct(ext):
 ### subroutines per endpoint URL in API wiki page order
 @app.route(QUERY_PATH.url, methods=QUERY_PATH.methods)
 def action_query_path():
+    """ implements query path end point """
     if (not isValidActionCall(request, QUERY_PATH.url, QUERY_PATH.methods)):
         return th_error()
 
@@ -161,6 +162,7 @@ def action_query_path():
 
 @app.route(START.url, methods=START.methods)
 def action_start():
+    """ implements start end point """
     if (not isValidActionCall(request, START.url, START.methods)):
         return th_error()
 
@@ -187,6 +189,7 @@ def action_start():
 
 @app.route(OBSERVE.url, methods=OBSERVE.methods)
 def action_observe():
+    """ implements observe end point """
     if (not isValidActionCall(request, OBSERVE.url, OBSERVE.methods)):
         return th_error()
 
@@ -207,6 +210,7 @@ def action_observe():
 
 @app.route(SET_BATTERY.url, methods=SET_BATERY.methods)
 def action_set_battery():
+    """ implements set_battery end point """
     if (not isValidActionCall(request, SET_BATTERY.url, SET_BATTERY.methods)):
         return th_error()
     if (not check_json(request, SET_BATTERY.url)):
@@ -237,6 +241,7 @@ def action_set_battery():
 
 @app.route(PLACE_OBSTACLE.url, methods=PLACE_OBSTACLE.methods)
 def action_place_obstacle():
+    """ implements place_obstacle end point """
     if (not isValidActionCall(request, PLACE_OBSTACLE.url, PLACE_OBSTACLE.methods)):
         return th_error()
 
@@ -268,6 +273,7 @@ def action_place_obstacle():
 
 @app.route(REMOVE_OBSTACLE.url, methods=REMOVE_OBSTACLE.methods)
 def action_remove_obstacle():
+    """ implements remove_obstacle end point """
     if (not isValidActionCall(request, REMOVE_OBSTACLE.url, methods=REMOVE_OBSTACLE.methods):
         return th_error()
     if (not (check_json(request,REMOVE_OBSTACLE.url))):
@@ -297,6 +303,7 @@ def action_remove_obstacle():
 
 @app.route(PERTURB_SENSOR.url, methods=PERTURB_SENSOR.methods)
 def action_perturb_sensor():
+    """ implements perturb_sensor end point """
     if (not isValidActionCall(request, PERTURB_SENSOR.url, methods=PERTURB_SENSOR.methods)):
         return th_error()
     if (not (check_json(request,PERTURB_SENSOR.url))):
