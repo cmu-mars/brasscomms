@@ -125,17 +125,21 @@ def isValidActionCall(request, path, method):
     else:
         return True
 
+def instruct(ext):
+    """ given an extension, provides the path to the config-relevant file in instructions """
+    global GP_GAZ
+    global config
+
+    return CP_GAZ + '/instructions/' + config.start_loc + '_to_' + config.target_loc + ext
+
 ### subroutines per endpoint URL in API wiki page order
 @app.route('/action/query_path', methods=['GET'])
 def action_query_path():
     if (not isValidActionCall(request, '/action/query_path', 'GET')):
         return th_error()
 
-    global config
-    global CP_GAZ
-
     try:
-        with open(CP_GAZ + '/instructions/' + config.start_loc + '_to_' + config.target_loc + '.json') as path_file:
+        with open(instruct('.json')) as path_file:
             data = json.load(path_file)
             return action_result({ 'path' : data['path'] })
     except Exception as e:
@@ -147,21 +151,20 @@ def action_start():
     if (not isValidActionCall(request, '/action/start', 'POST')):
         return th_error()
 
-    global config
     global deadline
-    global CP_GAZ
 
+    ## todo: log this?
     print "starting challenge problem"
     try:
         ## todo: test and make sure this change didn't break anything
-        with open(CP_GAZ + '/instructions/' + config.start_loc + '_to_' + config.target_loc + '.ig') as igfile:
+        with open(instruct('.ig')) as igfile:
             igcode = igfile.read()
             goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
             global client
             client.send_goal( goal = goal, done_cb = done_cb, active_cb = active_cb)
 
         # update the deadline to be now + the amount of time for the path given in the json file
-        with open(CP_GAZ + '/instructions/' + config.start_loc + '_to_' + config.target_loc + '.json') as config_file:
+        with open(instruct('.json')) as config_file:
             data = json.load(config_file)
             deadline = datetime.datetime.now() + datetime.timedelta(seconds=data['time'])
 
