@@ -2,34 +2,35 @@
 
 #! /usr/bin/env python
 
-### imports
+### standard imports
 from __future__ import with_statement
+
+from os.path import exists, isfile
+from os import access, R_OK
+from threading import Lock ## todo: do we need a lock?
+import json
+import sys
+import datetime
+import requests
+
+### relevant third party imports
+from flask import *
+
 import roslib
 import rospy
 import actionlib
 import ig_action_msgs.msg
-import sys
 import tf
+from move_base_msgs.msg import MoveBaseAction
 
-from threading import Lock
-
-import datetime
-
-from flask import *
-
-import requests
-import json
-import os.path
-
+### other brasscomms modules
 from constants import (TH_URL, CONFIG_FILE_PATH, LOG_FILE_PATH, CP_GAZ,
                        JSON_MIME, Error, LogError, QUERY_PATH, # Status,
                        START, OBSERVE, SET_BATTERY, PLACE_OBSTACLE,
                        REMOVE_OBSTACLE, PERTURB_SENSOR)
-from gazebo_interface import *
-from map_util import *
-from parse import *
-
-from move_base_msgs.msg import MoveBaseAction
+from gazebo_interface import GazeboInterface
+# from map_util import *
+from parse import Coords, Bump, Config, TestAction, Voltage, ObstacleID
 
 ### some definitions and helper functions
 
@@ -50,7 +51,7 @@ deadline = datetime.datetime.now() ## this is a default value; the result
 
 def parse_config_file():
     """ checks the appropriate place for the config file, and loads into an object if possible """
-    if os.path.exists(CONFIG_FILE_PATH) and os.path.isfile(CONFIG_FILE_PATH) and os.access(CONFIG_FILE_PATH, os.R_OK):
+    if exists(CONFIG_FILE_PATH) and isfile(CONFIG_FILE_PATH) and access(CONFIG_FILE_PATH, R_OK):
         with open(CONFIG_FILE_PATH) as config_file:
             data = json.load(config_file)
             conf = Config(**data)
@@ -86,10 +87,9 @@ def th_das_error(err, msg):
 
 def log_das(error, msg):
     """ formats the arguments per the API and inserts them to the log """
-    now = datetime.datetime.now()
     try:
         with open(LOG_FILE_PATH, 'a') as log_file:
-            error_contents = {"TIME" : now.isoformat(),
+            error_contents = {"TIME" : (datetime.datetime.now()).isoformat(),
                               "TYPE" : error.name,
                               "MESSAGE" : msg}
             data = json.dumps(error_contents)
@@ -100,8 +100,7 @@ def log_das(error, msg):
 def das_ready():
     """ POSTs DAS_READY to the TH, or logs if failed"""
     dest = TH_URL + "/ready"
-    now = datetime.datetime.now()
-    contents = {"TIME" : now.isoformat()}
+    contents = {"TIME" : (datetime.datetime.now()).isoformat()}
     try:
         requests.post(dest, data=json.dumps(contents))
     except Exception as e:
@@ -115,19 +114,14 @@ def check_action(request, path, methods):
     if request.path != path:
         log_das(LogError.RUNTIME_ERROR, 'internal fault: %s called improperly' % path)
         return False
-    elif not request.method in methods:
+    if not request.method in methods:
         log_das(LogError.RUNTIME_ERROR, '%s called with bad HTTP request: %s not in %s' % (path, request.method, methods))
         return False
-    else:
-        return True
-
-def check_json(request, url):
-    """ returns true if the request has a json header, false and logs a DAS error otherwise """
-    if request.headers['Content-Type'] != JSON_MIME:
+    if ('POST' == request.method) and (request.headers['Content-Type'] != JSON_MIME):
         log_das(LogError.RUNTIME_ERROR, '%s POSTed to without json header' % url)
         return False
-    else:
-        return True
+
+    return True
 
 def instruct(ext):
     """ given an extension, provides the path to the config-relevant file in instructions """
@@ -204,9 +198,6 @@ def action_set_battery():
     if not check_action(request, SET_BATTERY.url, SET_BATTERY.methods):
         return th_error()
 
-    if not check_json(request, SET_BATTERY.url):
-        return th_error()
-
     try:
         params = TestAction(request.get_json(silent=True))
         params.ARGUMENTS = Voltage(params.ARGUMENTS)
@@ -224,9 +215,6 @@ def action_set_battery():
 def action_place_obstacle():
     """ implements place_obstacle end point """
     if not check_action(request, PLACE_OBSTACLE.url, PLACE_OBSTACLE.methods):
-        return th_error()
-
-    if not check_json(request, PLACE_OBSTACLE.url):
         return th_error()
 
     try:
@@ -250,8 +238,6 @@ def action_remove_obstacle():
     """ implements remove_obstacle end point """
     if not check_action(request, REMOVE_OBSTACLE.url, methods=REMOVE_OBSTACLE.methods):
         return th_error()
-    if not check_json(request, REMOVE_OBSTACLE.url):
-        return th_error()
 
     try:
         params = TestAction(request.get_json(silent=True))
@@ -273,8 +259,6 @@ def action_remove_obstacle():
 def action_perturb_sensor():
     """ implements perturb_sensor end point """
     if not check_action(request, PERTURB_SENSOR.url, methods=PERTURB_SENSOR.methods):
-        return th_error()
-    if not check_json(request, PERTURB_SENSOR.url):
         return th_error()
 
     try:
