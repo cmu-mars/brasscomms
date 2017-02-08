@@ -363,7 +363,7 @@ if __name__ == "__main__":
     gazebo = GazeboInterface()
 
     # parse the config file
-    # todo: this posts errors to the TH, but we should stop the world when that happens
+    # todo: this raises Python errors on bad input. need to post to DAS error, stop the world.
     config = parse_config_file()
 
     # this should block until the navigation stack is ready to recieve goals
