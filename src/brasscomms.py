@@ -213,24 +213,15 @@ def action_set_battery():
     """ implements set_battery end point """
     if (not isValidActionCall(request, SET_BATTERY.url, SET_BATTERY.methods)):
         return th_error()
+
     if (not check_json(request, SET_BATTERY.url)):
         return th_error()
 
-    params = request.get_json(silent=True)
-    if (not ('ARGUMENTS' in params.keys())):
-        log_das_error(LogError.RUNTIME_ERROR, 'action/set_battery got a post without ARGUMENTS')
-        return th_error()
-
-    if (not (isinstance(params['ARGUMENTS'], dict))):
-        log_das_error(LogError.RUNTIME_ERROR, 'action/set_battery got a post where ARGUMENTS is not a dict')
-        return th_error()
-
-    if (not ('voltage' in params['ARGUMENTS'].keys())):
-        log_das_error(LogError.RUNTIME_ERROR, 'action/set_battery got a post where ARGUMENTS doesnt give voltage')
-        return th_error()
-
-    if (int_out_of_range(params['ARGUMENTS']['voltage'],104,166)):
-        log_das_error(LogError.RUNTIME_ERROR, 'action/set_battery got a post where ARGUMENTS gives voltage out of range')
+    try:
+        params = TestAction(request.get_json(silent = True))
+        params.ARGUMENTS = Voltage(params.ARGUMENTS)
+    except Exception as e:
+        log_das_error(LogError.RUNTIME_ERROR, '%s got a malformed test action POST: %s' % (SET_BATTERY.url, e))
         return th_error()
 
     ## todo : implement real stuff here when we have the battery
@@ -247,23 +238,16 @@ def action_place_obstacle():
 
     if (not (check_json(request,PLACE_OBSTACLE.url))):
         return th_error()
-
-    params = request.get_json(silent=True)
-    if (not ('ARGUMENTS' in params.keys())):
-        log_das_error(LogError.RUNTIME_ERROR, 'action/place_obstacle got a post without ARGUMENTS')
-        return th_error()
-
-    if (not (isinstance(params['ARGUMENTS'], dict))):
-        log_das_error(LogError.RUNTIME_ERROR, 'action/place_obstacle got a post where ARGUMENTS is not a dict')
-        return th_error()
-
-    if (not ('x' in  params['ARGUMENTS'].keys() and 'y' in params['ARGUMENTS'].keys())):
-        log_das_error(LogError.RUNTIME_ERROR, 'action/place_obstacle got a post without both and x and y')
+    try:
+        params = TestAction(request.get_json(silent = True))
+        params.ARGUMENTS = Coords(params.ARGUMENTS)
+    except Exception as e:
+        log_das_error(LogError.RUNTIME_ERROR, '%s got a malformed test action POST: %s' % (PLACE_OBSTACLE.url, e))
         return th_error()
 
     global gazebo
 
-    obs_name = gazebo.place_new_obstacle(params['ARGUMENTS']["x"], params['ARGUMENTS']["y"])
+    obs_name = gazebo.place_new_obstacle(params.ARGUMENTS.x, params.ARGUMENTS.y)
     if obs_name is not None:
         ARGUMENTS = {"obstacle_id" : obs_name}
         return action_result(ARGUMENTS)
@@ -279,21 +263,15 @@ def action_remove_obstacle():
     if (not (check_json(request,REMOVE_OBSTACLE.url))):
         return th_error()
 
-    params = request.get_json(silent=True)
-    if (not ('ARGUMENTS' in params.keys())):
-        log_das_error(LogError.RUNTIME_ERROR, 'action/remove_obstacle got a post without ARGUMENTS')
-        return th_error()
-
-    if (not (isinstance(params['ARGUMENTS'], dict))):
-        log_das_error(LogError.RUNTIME_ERROR, 'action/remove_obstacle got a post where ARGUMENTS is not a dict')
-        return th_error()
-
-    if (not 'obstacle_id' in params['ARGUMENTS'].keys()):
-        log_das_error(LogError.RUNTIME_ERROR, 'action/remove_obstacle recieved post with bogus obstacle id')
+    try:
+        params = TestAction(request.get_json(silent = True))
+        params.ARGUMENTS = ObstacleID(params.ARGUMENTS)
+    except Exception as e:
+        log_das_error(LogError.RUNTIME_ERROR, '%s got a malformed test action POST: %s' % (REMOVE_OBSTACLE.url, e))
         return th_error()
 
     global gazebo
-    success = gazebo.delete_obstacle(params['ARGUMENTS']["obstacle_id"])
+    success = gazebo.delete_obstacle(params.ARGUMENTS.obstacle_id)
     if success:
         return action_result({})
     else:
@@ -309,44 +287,11 @@ def action_perturb_sensor():
     if (not (check_json(request,PERTURB_SENSOR.url))):
         return th_error()
 
-    params = request.get_json(silent=True)
-    if (not ('ARGUMENTS' in params.keys())):
-        log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor got a post without ARGUMENTS')
-        return th_error()
-
-    if (not (isinstance(params['ARGUMENTS'], dict))):
-        log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor got a post where ARGUMENTS is not a dict')
-        return th_error()
-
-    if(not ('bump' in params['ARGUMENTS'].keys())):
-        log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor recieved post without bump in the JSON object')
-        return th_error()
-
-    if(not (isinstance(params['ARGUMENTS']['bump'], dict))):
-        log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor recieved post with bump, but not bound to a dict')
-        return th_error()
-
-    if (not (set(['x', 'y', 'z', 'p', 'w', 'r']).issubset(params['ARGUMENTS']['bump'].keys()))):
-        log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor post with bump bound to a dict but missing one of the six fields')
-        return th_error()
-
-    if(int_out_of_range(params['ARGUMENTS']['bump']['x'], -3, 3)):
-        log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor post with out of range x')
-        return th_error()
-    if(int_out_of_range(params['ARGUMENTS']['bump']['y'], -3, 3)):
-        log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor post with out of range y')
-        return th_error()
-    if(int_out_of_range(params['ARGUMENTS']['bump']['z'], -3, 3)):
-        log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor post with out of range z')
-        return th_error()
-    if(int_out_of_range(params['ARGUMENTS']['bump']['p'], -6, 6)):
-        log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor post with out of range p')
-        return th_error()
-    if(int_out_of_range(params['ARGUMENTS']['bump']['w'], -6, 6)):
-        log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor post with out of range w')
-        return th_error()
-    if(int_out_of_range(params['ARGUMENTS']['bump']['r'], -6 , 6)):
-        log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor post with out of range r')
+    try:
+        params = request.get_json(silent = True)
+        params.ARGUMENTS = Bump(params.ARGUMENTS)
+    except Exception as e:
+        log_das_error(LogError.RUNTIME_ERROR, '%s got a malformed test action POST: %s' % (PERTURB_SENSOR.url, e))
         return th_error()
 
     ## todo: currently we have no sensor to bump, so this doesn't do
