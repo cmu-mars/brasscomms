@@ -3,7 +3,7 @@ import collections
 from enum import Enum
 
 TH_URL = "http://brass-th"
-TA_URL = "http://brass-th"
+TA_URL = "http://brass-ta"
 CONFIG_FILE_PATH = '/test/data'
 LOG_FILE_PATH = '/test/log'
 CP_GAZ = '/home/vagrant/catkin_ws/src/cp_gazebo'

@@ -1,3 +1,5 @@
+""" defines and implements the the TA RESTful interface """
+
 #! /usr/bin/env python
 
 ### imports
@@ -8,22 +10,23 @@ import actionlib
 import ig_action_msgs.msg
 import sys
 import tf
-import math
 
 from threading import Lock
 
 import datetime
 
 from flask import *
-from enum import Enum
 
 import requests
 import json
 import os.path
 
+from constants import (TH_URL, CONFIG_FILE_PATH, LOG_FILE_PATH, CP_GAZ,
+                       JSON_MIME, Error, LogError, QUERY_PATH, # Status,
+                       START, OBSERVE, SET_BATTERY, PLACE_OBSTACLE,
+                       REMOVE_OBSTACLE, PERTURB_SENSOR)
 from gazebo_interface import *
 from map_util import *
-from constants import *
 from parse import *
 
 from move_base_msgs.msg import MoveBaseAction
@@ -46,8 +49,7 @@ deadline = datetime.datetime.now() ## this is a default value; the result
                                    ## wrong unless they call start first
 
 def parse_config_file():
-    global CONFIG_FILE_PATH
-
+    """ checks the appropriate place for the config file, and loads into an object if possible """
     if os.path.exists(CONFIG_FILE_PATH) and os.path.isfile(CONFIG_FILE_PATH) and os.access(CONFIG_FILE_PATH, os.R_OK):
         with open(CONFIG_FILE_PATH) as config_file:
             data = json.load(config_file)
@@ -59,36 +61,31 @@ def parse_config_file():
         th_das_error(Error.TEST_DATA_FILE_ERROR, '%s does not exist, is not a file, or is not readable' % CONFIG_FILE_PATH)
 
 ### subroutines for forming API results
-def formActionResult(result):
-    now = datetime.datetime.now()
-    ACTION_RESULT = {"TIME" : now.isoformat(),
-                     "RESULT": result}
-    return ACTION_RESULT
-
 def th_error():
+    """ the response for a TH error """
     return Response(status=400)
 
 def action_result(body):
-    with_time = formActionResult(body)
-    return Response(json.dumps(with_time), status=200, mimetype=JSON_MIME)
+    """ given a body, produce the action result with headers """
+    return Response(json.dumps({"TIME" : (datetime.datetime.now()).isoformat(),
+                                "RESULT": body}),
+                    status=200, mimetype=JSON_MIME)
 
 ### subroutines for forming and sending messages to the TH
 def th_das_error(err, msg):
-    global TH_URL
-
+    """ posts a DAS_ERROR formed with the arguments """
     dest = TH_URL + "/error"
     now = datetime.datetime.now()
     error_contents = {"TIME" : now.isoformat(),
                       "ERROR" : err.name,
                       "MESSAGE" : msg}
     try:
-        r = requests.post(dest, data=json.dumps(error_contents))
+        requests.post(dest, data=json.dumps(error_contents))
     except Exception as e:
         log_das(LogError.STARTUP_ERROR, "Fatal: cannot connect to TH at %s: %s" % (dest, e))
 
 def log_das(error, msg):
     """ formats the arguments per the API and inserts them to the log """
-    global LOG_FILE_PATH
     now = datetime.datetime.now()
     try:
         with open(LOG_FILE_PATH, 'a') as log_file:
@@ -102,20 +99,18 @@ def log_das(error, msg):
 
 def das_ready():
     """ POSTs DAS_READY to the TH, or logs if failed"""
-    global TH_URL
-
     dest = TH_URL + "/ready"
     now = datetime.datetime.now()
     contents = {"TIME" : now.isoformat()}
     try:
-        r = requests.post(dest, data=json.dumps(contents))
+        requests.post(dest, data=json.dumps(contents))
     except Exception as e:
         log_das(LogError.STARTUP_ERROR, "Fatal: couldn't connect to TH at %s: %s" % (dest, e))
 
 ### helperfunctions for test actions
 
 # also logs invalid action calls
-def isValidActionCall(request, path, methods):
+def check_action(request, path, methods):
     """ return true if the request respects the methods, false and log it otherwise """
     if request.path != path:
         log_das(LogError.RUNTIME_ERROR, 'internal fault: %s called improperly' % path)
@@ -136,7 +131,6 @@ def check_json(request, url):
 
 def instruct(ext):
     """ given an extension, provides the path to the config-relevant file in instructions """
-    global GP_GAZ
     global config
 
     return CP_GAZ + '/instructions/' + config.start_loc + '_to_' + config.target_loc + ext
@@ -145,7 +139,7 @@ def instruct(ext):
 @app.route(QUERY_PATH.url, methods=QUERY_PATH.methods)
 def action_query_path():
     """ implements query path end point """
-    if not isValidActionCall(request, QUERY_PATH.url, QUERY_PATH.methods):
+    if not check_action(request, QUERY_PATH.url, QUERY_PATH.methods):
         return th_error()
 
     try:
@@ -159,7 +153,7 @@ def action_query_path():
 @app.route(START.url, methods=START.methods)
 def action_start():
     """ implements start end point """
-    if not isValidActionCall(request, START.url, START.methods):
+    if not check_action(request, START.url, START.methods):
         return th_error()
 
     global deadline
@@ -186,7 +180,7 @@ def action_start():
 @app.route(OBSERVE.url, methods=OBSERVE.methods)
 def action_observe():
     """ implements observe end point """
-    if not isValidActionCall(request, OBSERVE.url, OBSERVE.methods):
+    if not check_action(request, OBSERVE.url, OBSERVE.methods):
         return th_error()
 
     global gazebo
@@ -204,10 +198,10 @@ def action_observe():
         log_das(LogError.RUNTIME_ERROR, "error in %s: %s " % (OBSERVE.url, e))
         return th_error()
 
-@app.route(SET_BATTERY.url, methods=SET_BATERY.methods)
+@app.route(SET_BATTERY.url, methods=SET_BATTERY.methods)
 def action_set_battery():
     """ implements set_battery end point """
-    if not isValidActionCall(request, SET_BATTERY.url, SET_BATTERY.methods):
+    if not check_action(request, SET_BATTERY.url, SET_BATTERY.methods):
         return th_error()
 
     if not check_json(request, SET_BATTERY.url):
@@ -229,14 +223,14 @@ def action_set_battery():
 @app.route(PLACE_OBSTACLE.url, methods=PLACE_OBSTACLE.methods)
 def action_place_obstacle():
     """ implements place_obstacle end point """
-    if not isValidActionCall(request, PLACE_OBSTACLE.url, PLACE_OBSTACLE.methods):
+    if not check_action(request, PLACE_OBSTACLE.url, PLACE_OBSTACLE.methods):
         return th_error()
 
     if not check_json(request, PLACE_OBSTACLE.url):
         return th_error()
 
     try:
-        params = TestAction(request, get_json(silent=True))
+        params = TestAction(request.get_json(silent=True))
         params.ARGUMENTS = Coords(params.ARGUMENTS)
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR, '%s got a malformed test action POST: %s' % (PLACE_OBSTACLE.url, e))
@@ -246,8 +240,7 @@ def action_place_obstacle():
 
     obs_name = gazebo.place_new_obstacle(params.ARGUMENTS.x, params.ARGUMENTS.y)
     if obs_name is not None:
-        ARGUMENTS = {"obstacle_id" : obs_name}
-        return action_result(ARGUMENTS)
+        return action_result({"obstacle_id" : obs_name})
     else:
         log_das(LogError.RUNTIME_ERROR, 'gazebo cant place new obstacle at given x y')
         return th_error()
@@ -255,13 +248,13 @@ def action_place_obstacle():
 @app.route(REMOVE_OBSTACLE.url, methods=REMOVE_OBSTACLE.methods)
 def action_remove_obstacle():
     """ implements remove_obstacle end point """
-    if (not isValidActionCall(request, REMOVE_OBSTACLE.url, methods=REMOVE_OBSTACLE.methods)):
+    if not check_action(request, REMOVE_OBSTACLE.url, methods=REMOVE_OBSTACLE.methods):
         return th_error()
-    if (not (check_json(request,REMOVE_OBSTACLE.url))):
+    if not check_json(request, REMOVE_OBSTACLE.url):
         return th_error()
 
     try:
-        params = TestAction(request.get_json(silent = True))
+        params = TestAction(request.get_json(silent=True))
         params.ARGUMENTS = ObstacleID(params.ARGUMENTS)
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR, '%s got a malformed test action POST: %s' % (REMOVE_OBSTACLE.url, e))
@@ -279,13 +272,13 @@ def action_remove_obstacle():
 @app.route(PERTURB_SENSOR.url, methods=PERTURB_SENSOR.methods)
 def action_perturb_sensor():
     """ implements perturb_sensor end point """
-    if (not isValidActionCall(request, PERTURB_SENSOR.url, methods=PERTURB_SENSOR.methods)):
+    if not check_action(request, PERTURB_SENSOR.url, methods=PERTURB_SENSOR.methods):
         return th_error()
-    if (not (check_json(request,PERTURB_SENSOR.url))):
+    if not check_json(request, PERTURB_SENSOR.url):
         return th_error()
 
     try:
-        params = request.get_json(silent = True)
+        params = request.get_json(silent=True)
         params.ARGUMENTS = Bump(params.ARGUMENTS)
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR, '%s got a malformed test action POST: %s' % (PERTURB_SENSOR.url, e))
@@ -330,4 +323,4 @@ if __name__ == "__main__":
 
     ## actually start up the flask service. this never returns, so it must
     ## be the last thing in the file
-    app.run (host="0.0.0.0")
+    app.run(host="0.0.0.0")
