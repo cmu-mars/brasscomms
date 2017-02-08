@@ -24,7 +24,7 @@ import os.path
 from gazebo_interface import *
 from map_util import *
 from constants import *
-from parse_config import *
+from parse import *
 
 from move_base_msgs.msg import MoveBaseAction
 
