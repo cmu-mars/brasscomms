@@ -33,7 +33,7 @@ from move_base_msgs.msg import MoveBaseAction
 # returns true iff the first argument is a digit inclusively between the
 # second two args. assumes that the second two are indeed digits, and that
 # the second is less than the third.
-def int_out_of_range(x,lower,upper) :
+def int_out_of_range(x, lower, upper):
     return not(isinstance(x,int) and x >= lower and x <= upper)
 
 ## callbacks to change the status
@@ -47,7 +47,7 @@ def active_cb():
 
 ### some globals
 app = Flask(__name__)
-shared_var_lock = Lock ()
+shared_var_lock = Lock()
 deadline = datetime.datetime.now() ## this is a default value; the result of observe will be well formed but wrong unless they call start first
 
 def parse_config_file():
@@ -94,7 +94,7 @@ def log_das_error(error, msg):
     global LOG_FILE_PATH
     now = datetime.datetime.now()
     try:
-        with open(LOG_FILE_PATH, 'a') as log_file :
+        with open(LOG_FILE_PATH, 'a') as log_file:
             error_contents = {"TIME" : now.isoformat(),
                               "TYPE" : error.name,
                               "MESSAGE" : msg}
@@ -115,7 +115,7 @@ def das_ready():
 ### helperfunctions for test actions
 
 # also logs invalid action calls
-def isValidActionCall(request, path, method) :
+def isValidActionCall(request, path, method):
     if(request.path != path):
         log_das_error(LogError.RUNTIME_ERROR,'internal fault: '+ path + ' called improperly')
         return False
@@ -128,7 +128,7 @@ def isValidActionCall(request, path, method) :
 ### subroutines per endpoint URL in API wiki page order
 @app.route('/action/query_path', methods=['GET'])
 def action_query_path():
-    if (not isValidActionCall(request, '/action/query_path', 'GET')) :
+    if (not isValidActionCall(request, '/action/query_path', 'GET')):
         return th_error()
 
     global config
@@ -144,7 +144,7 @@ def action_query_path():
 
 @app.route('/action/start', methods=['POST'])
 def action_start():
-    if (not isValidActionCall(request, '/action/start', 'POST')) :
+    if (not isValidActionCall(request, '/action/start', 'POST')):
         return th_error()
 
     global config
@@ -173,7 +173,7 @@ def action_start():
 
 @app.route('/action/observe', methods=['GET'])
 def action_observe():
-    if (not isValidActionCall(request, '/action/observe', 'GET')) :
+    if (not isValidActionCall(request, '/action/observe', 'GET')):
         return th_error()
 
     global gazebo
@@ -193,7 +193,7 @@ def action_observe():
 
 @app.route('/action/set_battery', methods=['POST'])
 def action_set_battery():
-    if (not isValidActionCall(request, '/action/set_battery', 'POST')) :
+    if (not isValidActionCall(request, '/action/set_battery', 'POST')):
         return th_error()
 
     if(request.headers['Content-Type'] != "application/json"):
@@ -225,7 +225,7 @@ def action_set_battery():
 
 @app.route('/action/place_obstacle', methods=['POST'])
 def action_place_obstacle():
-    if (not isValidActionCall(request, '/action/place_obstacle', 'POST')) :
+    if (not isValidActionCall(request, '/action/place_obstacle', 'POST')):
         return th_error()
 
     if(request.headers['Content-Type'] != "application/json"):
@@ -241,7 +241,7 @@ def action_place_obstacle():
         log_das_error(LogError.RUNTIME_ERROR, 'action/place_obstacle got a post where ARGUMENTS is not a dict')
         return th_error()
 
-    if (not ('x' in  params['ARGUMENTS'].keys() and 'y' in params['ARGUMENTS'].keys())) :
+    if (not ('x' in  params['ARGUMENTS'].keys() and 'y' in params['ARGUMENTS'].keys())):
         log_das_error(LogError.RUNTIME_ERROR, 'action/place_obstacle got a post without both and x and y')
         return th_error()
 
@@ -249,7 +249,7 @@ def action_place_obstacle():
 
     obs_name = gazebo.place_new_obstacle(params['ARGUMENTS']["x"], params['ARGUMENTS']["y"])
     if obs_name is not None:
-        ARGUMENTS = {"obstacle_id" : obs_name};
+        ARGUMENTS = {"obstacle_id" : obs_name}
         return action_result(ARGUMENTS)
     else:
         log_das_error(LogError.RUNTIME_ERROR, 'gazebo cant place new obstacle at given x y')
@@ -257,7 +257,7 @@ def action_place_obstacle():
 
 @app.route('/action/remove_obstacle', methods=['POST'])
 def action_remove_obstacle():
-    if (not isValidActionCall(request, '/action/remove_obstacle', 'POST')) :
+    if (not isValidActionCall(request, '/action/remove_obstacle', 'POST')):
         return th_error()
 
     if( request.headers['Content-Type'] != "application/json"):
@@ -273,7 +273,7 @@ def action_remove_obstacle():
         log_das_error(LogError.RUNTIME_ERROR, 'action/remove_obstacle got a post where ARGUMENTS is not a dict')
         return th_error()
 
-    if (not 'obstacle_id' in params['ARGUMENTS'].keys()) :
+    if (not 'obstacle_id' in params['ARGUMENTS'].keys()):
         log_das_error(LogError.RUNTIME_ERROR, 'action/remove_obstacle recieved post with bogus obstacle id')
         return th_error()
 
@@ -288,7 +288,7 @@ def action_remove_obstacle():
 
 @app.route('/action/perturb_sensor', methods=['POST'])
 def action_perturb_sensor():
-    if (not isValidActionCall(request, '/action/perturb_sensor', 'POST')) :
+    if (not isValidActionCall(request, '/action/perturb_sensor', 'POST')):
         return th_error()
 
     if(request.headers['Content-Type'] != "application/json"):
