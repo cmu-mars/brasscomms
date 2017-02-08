@@ -32,6 +32,7 @@ class LogError(Enum):
     """" errors for DAS_ERROR log messages """
     STARTUP_ERROR = 1
     RUNTIME_ERROR = 2
+    INFO = 3
 
 Endpoint = collections.namedtuple('Endpoint', 'url methods')
 QUERY_PATH = Endpoint(url='/action/query_path', methods=['GET'])

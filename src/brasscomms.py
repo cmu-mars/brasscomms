@@ -32,18 +32,18 @@ from move_base_msgs.msg import MoveBaseAction
 
 def done_cb(terminal, result):
     """ callback for when the bot is at the target """
-    # todo: log this instead of printing it
-    print "brasscomms received successful result from plan: %d" % terminal
+    log_das(LogError.INFO, "brasscomms received successful result from plan: %d" % terminal)
 
 def active_cb():
     """ callback for when the bot is made active """
-    # todo: log this instead of printing it
-    print "brasscoms received notification that goal is active"
+    log_das(LogError.INFO,  "brasscoms received notification that goal is active")
 
 ### some globals
 app = Flask(__name__)
 shared_var_lock = Lock()
-deadline = datetime.datetime.now() ## this is a default value; the result of observe will be well formed but wrong unless they call start first
+deadline = datetime.datetime.now() ## this is a default value; the result
+                                   ## of observe will be well formed but
+                                   ## wrong unless they call start first
 
 def parse_config_file():
     global CONFIG_FILE_PATH
@@ -84,9 +84,10 @@ def th_das_error(err,msg):
     try:
         r = requests.post(dest, data = json.dumps(error_contents))
     except Exception as e:
-        log_das_error(LogError.STARTUP_ERROR, "Fatal: cannot connect to TH at %s: %s" % (dest, e))
+        log_das(LogError.STARTUP_ERROR, "Fatal: cannot connect to TH at %s: %s" % (dest, e))
 
-def log_das_error(error, msg):
+def log_das(error, msg):
+    """ formats the arguments per the API and inserts them to the log """
     global LOG_FILE_PATH
     now = datetime.datetime.now()
     try:
@@ -109,7 +110,7 @@ def das_ready():
     try:
         r = requests.post(dest, data = json.dumps(contents))
     except Exception as e:
-        log_das_error(LogError.STARTUP_ERROR, "Fatal: couldn't connect to TH at %s: %s" % (dest,e))
+        log_das(LogError.STARTUP_ERROR, "Fatal: couldn't connect to TH at %s: %s" % (dest,e))
 
 ### helperfunctions for test actions
 
@@ -117,10 +118,10 @@ def das_ready():
 def isValidActionCall(request, path, methods):
     """ return true if the request respects the methods, false and log it otherwise """
     if(request.path != path):
-        log_das_error(LogError.RUNTIME_ERROR, 'internal fault: %s called improperly' % path)
+        log_das(LogError.RUNTIME_ERROR, 'internal fault: %s called improperly' % path)
         return False
     elif(not (request.method in methods)):
-        log_das_error(LogError.RUNTIME_ERROR, '%s called with bad HTTP request: %s not in %s' % (path, request.method, methods))
+        log_das(LogError.RUNTIME_ERROR, '%s called with bad HTTP request: %s not in %s' % (path, request.method, methods))
         return False
     else:
         return True
@@ -128,7 +129,7 @@ def isValidActionCall(request, path, methods):
 def check_json(request, url):
     """ returns true if the request has a json header, false and logs a DAS error otherwise """
     if(request.headers['Content-Type'] != JSON_MIME):
-        log_das_error(LogError.RUNTIME_ERROR, '%s POSTed to without json header' % url)
+        log_das(LogError.RUNTIME_ERROR, '%s POSTed to without json header' % url)
         return False
     else:
         return True
@@ -152,7 +153,7 @@ def action_query_path():
             data = json.load(path_file)
             return action_result({ 'path' : data['path'] })
     except Exception as e:
-        log_das_error(LogError.RUNTIME_ERROR, "error in reading the files for %s: %s " % (QUERY_PATH.url, e)
+        log_das(LogError.RUNTIME_ERROR, "error in reading the files for %s: %s " % (QUERY_PATH.url, e)
         return th_error()
 
 @app.route(START.url, methods=START.methods)
@@ -163,8 +164,7 @@ def action_start():
 
     global deadline
 
-    ## todo: log this?
-    print "starting challenge problem"
+    log_das(LogError.INFO, "starting challenge problem")
     try:
         ## todo: test and make sure this change didn't break anything
         with open(instruct('.ig')) as igfile:
@@ -178,7 +178,7 @@ def action_start():
             data = json.load(config_file)
             deadline = datetime.datetime.now() + datetime.timedelta(seconds=data['time'])
     except Exception as e:
-        log_das_error(LogError.RUNTIME_ERROR, "could not send the goal in %s: %s " % (START.url, e)
+        log_das(LogError.RUNTIME_ERROR, "could not send the goal in %s: %s " % (START.url, e)
 
     return action_result({})  # todo: this includes time as well; is that out of spec?
 
@@ -200,7 +200,7 @@ def action_observe():
                       }
         return action_result(observation)
     except Exception as e:
-        log_das_error(LogError.RUNTIME_ERROR, "error in %s: %s " % (OBSERVE.url, e))
+        log_das(LogError.RUNTIME_ERROR, "error in %s: %s " % (OBSERVE.url, e))
         return th_error()
 
 @app.route(SET_BATTERY.url, methods=SET_BATERY.methods)
@@ -216,7 +216,7 @@ def action_set_battery():
         params = TestAction(request.get_json(silent = True))
         params.ARGUMENTS = Voltage(params.ARGUMENTS)
     except Exception as e:
-        log_das_error(LogError.RUNTIME_ERROR, '%s got a malformed test action POST: %s' % (SET_BATTERY.url, e))
+        log_das(LogError.RUNTIME_ERROR, '%s got a malformed test action POST: %s' % (SET_BATTERY.url, e))
         return th_error()
 
     ## todo : implement real stuff here when we have the battery
@@ -237,7 +237,7 @@ def action_place_obstacle():
         params = TestAction(request.get_json(silent = True))
         params.ARGUMENTS = Coords(params.ARGUMENTS)
     except Exception as e:
-        log_das_error(LogError.RUNTIME_ERROR, '%s got a malformed test action POST: %s' % (PLACE_OBSTACLE.url, e))
+        log_das(LogError.RUNTIME_ERROR, '%s got a malformed test action POST: %s' % (PLACE_OBSTACLE.url, e))
         return th_error()
 
     global gazebo
@@ -247,7 +247,7 @@ def action_place_obstacle():
         ARGUMENTS = {"obstacle_id" : obs_name}
         return action_result(ARGUMENTS)
     else:
-        log_das_error(LogError.RUNTIME_ERROR, 'gazebo cant place new obstacle at given x y')
+        log_das(LogError.RUNTIME_ERROR, 'gazebo cant place new obstacle at given x y')
         return th_error()
 
 @app.route(REMOVE_OBSTACLE.url, methods=REMOVE_OBSTACLE.methods)
@@ -262,7 +262,7 @@ def action_remove_obstacle():
         params = TestAction(request.get_json(silent = True))
         params.ARGUMENTS = ObstacleID(params.ARGUMENTS)
     except Exception as e:
-        log_das_error(LogError.RUNTIME_ERROR, '%s got a malformed test action POST: %s' % (REMOVE_OBSTACLE.url, e))
+        log_das(LogError.RUNTIME_ERROR, '%s got a malformed test action POST: %s' % (REMOVE_OBSTACLE.url, e))
         return th_error()
 
     global gazebo
@@ -271,7 +271,7 @@ def action_remove_obstacle():
         return action_result({})
     else:
         # todo: implicitly, this is because it was a bad obstacle ID. can we confirm that?
-        log_das_error(LogError.RUNTIME_ERROR, 'action/remove_obstacle gazebo call failed')
+        log_das(LogError.RUNTIME_ERROR, 'action/remove_obstacle gazebo call failed')
         return th_error()
 
 @app.route(PERTURB_SENSOR.url, methods=PERTURB_SENSOR.methods)
@@ -286,7 +286,7 @@ def action_perturb_sensor():
         params = request.get_json(silent = True)
         params.ARGUMENTS = Bump(params.ARGUMENTS)
     except Exception as e:
-        log_das_error(LogError.RUNTIME_ERROR, '%s got a malformed test action POST: %s' % (PERTURB_SENSOR.url, e))
+        log_das(LogError.RUNTIME_ERROR, '%s got a malformed test action POST: %s' % (PERTURB_SENSOR.url, e))
         return th_error()
 
     ## todo: currently we have no sensor to bump, so this doesn't do
