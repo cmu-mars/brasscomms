@@ -26,6 +26,7 @@ def ensure_cls(cl):
     """If the attribute is an instance of cls, pass, else try constructing."""
 
     def converter(val):
+        """ convert val to the instance """
         if isinstance(val, cl):
             return val
         else:
@@ -37,6 +38,7 @@ def ensure_enum(cl):
     """If the attribute is an instance of cls, pass, else try constructing."""
 
     def converter(val):
+        """ convert val to the instance """
         if isinstance(val, cl):
             return val
         else:
@@ -74,15 +76,18 @@ class Config(object):
 
 @attr.s
 class TestAction(object):
+    """ class with attributes for test actions, leaving arguments unparsed """
     ## todo: check that this is a valid time string
     TIME = attr.ib(validator=instance_of(unicode))
     ARGUMENTS = attr.ib(validator=instance_of(dict))
 
 @attr.s
 class Voltage(object):
+    """ class with attributes for voltage """
     voltage = attr.ib(validator=VALID_VOLT)
 
 @attr.s
 class ObstacleID(object):
+    """ class with attributes for obstacle ids """
     ## todo: also check here if it's a good name?
     obstacle_id = attr.ib(validator=instance_of(unicode))
