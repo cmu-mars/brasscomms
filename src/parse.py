@@ -1,7 +1,7 @@
 """classes representing the results of parsing the config file and args to
 end points, with attributes to enforce invariants
 """
-
+import math
 import attr
 from attr.validators import instance_of
 
@@ -66,7 +66,7 @@ class Bump(object):
 class Config(object):
     """ class with attributes for the config file """
     start_loc = attr.ib(validator=instance_of(unicode))
-    start_yaw = attr.ib(validator=instance_of(float))
+    start_yaw = attr.ib(validator=in_range_inclusive(low=0.0, high=2*math.pi, kind=float))
     target_loc = attr.ib(validator=instance_of(unicode))
     enable_adaptation = attr.ib(convert=ensure_enum(AdaptationLevels))
     initial_voltage = attr.ib(validator=VALID_VOLT)
