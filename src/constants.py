@@ -1,5 +1,5 @@
 """ defines enums and string constants used throughout brasscomms """
-
+import collections
 from enum import Enum
 
 TH_URL = "http://brass-th"
@@ -32,15 +32,14 @@ class LogError(Enum):
     STARTUP_ERROR = 1
     RUNTIME_ERROR = 2
 
-class EP(Enum):
-    """ end point names """
-    query_path = 1
-    start = 2
-    observe = 3
-    set_battery = 4
-    place_obstacle = 5
-    remove_obstacle = 6
-    perturb_sensor = 7
+Endpoint = collections.namedtuple('Endpoint', 'url methods')
+QUERY_PATH = Endpoint(url='/action/query_path', methods=['GET'])
+START = Endpoint(url='/action/start', methods=['POST'])
+OBSERVE = Endpoint(url='/action/observe', methods=['GET'])
+SET_BATTERY = Endpoint(url='/action/set_battery', methods=['POST'])
+PLACE_OBSTACLE = Endpoint(url='/action/place_obstacle', methods=['POST'])
+REMOVE_OBSTACLE = Endpoint(url='/action/remove_obstacle', methods=['POST'])
+PERTURB_SENSOR = Endpoint(url='/action/perturb_sensor', methods=['POST'])
 
 class AdaptationLevels(Enum):
     """ adaptations levels for config file """
