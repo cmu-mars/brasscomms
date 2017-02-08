@@ -56,7 +56,7 @@ def parse_config_file():
     if not (os.path.exists(CONFIG_FILE_PATH)
             and os.path.isfile(CONFIG_FILE_PATH)
             and os.access(CONFIG_FILE_PATH, os.R_OK)):
-        th_das_error(Error.TEST_DATA_FILE_ERROR, 'config file at %s either does not exist, is not a file, or is not readable' % CONFIG_FILE_PATH)
+        th_das_error(Error.TEST_DATA_FILE_ERROR, '%s does not exist, is not a file, or is not readable' % CONFIG_FILE_PATH)
         # todo: does sending this this sufficiently stop the world if the file doesn't parse?
     else:
         with open(CONFIG_FILE_PATH) as config_file:
@@ -103,9 +103,10 @@ def log_das_error(error, msg):
             data = json.dumps(error_contents)
             log_file.write(data + "\n")
     except StandardError as e:
-        th_das_error(Error.DAS_LOG_FILE_ERROR,'log file at %s could not be accessed' % log_file_path)
+        th_das_error(Error.DAS_LOG_FILE_ERROR,'%s could not be accessed: %s' % (LOG_FILE_PATH, e))
 
 def das_ready():
+    """ POSTs DAS_READY to the TH, or logs if failed"""
     global TH_URL
 
     dest = TH_URL + "/ready"
@@ -130,6 +131,7 @@ def isValidActionCall(request, path, methods):
         return True
 
 def check_json(request, url):
+    """ returns true if the request has a json header, false and logs a DAS error otherwise """
     if(request.headers['Content-Type'] != JSON_MIME):
         log_das_error(LogError.RUNTIME_ERROR, '%s POSTed to without json header' % url)
         return False
@@ -178,7 +180,6 @@ def action_start():
         with open(instruct('.json')) as config_file:
             data = json.load(config_file)
             deadline = datetime.datetime.now() + datetime.timedelta(seconds=data['time'])
-
     except Exception as e:
         log_das_error(LogError.RUNTIME_ERROR, "could not send the goal in %s: %s " % (START.url, e)
 
@@ -201,7 +202,7 @@ def action_observe():
                       }
         return action_result(observation)
     except Exception as e:
-        log_das_error(LogError.RUNTIME_ERROR, "error in %s: %s " % (OBSERVE.url, e)
+        log_das_error(LogError.RUNTIME_ERROR, "error in %s: %s " % (OBSERVE.url, e))
         return th_error()
 
 @app.route(SET_BATTERY.url, methods=SET_BATERY.methods)
