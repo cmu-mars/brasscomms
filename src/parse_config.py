@@ -57,7 +57,7 @@ class Config(object):
     start_yaw = attr.ib(validator=instance_of(float))
     target_loc = attr.ib(validator=instance_of(unicode))
     enable_adaptation = attr.ib(convert=ensure_enum(AdaptationLevels))
-    initial_voltage = attr.ib(validator=in_range_inclusive(low=106, high=166, type=int))
+    initial_voltage = attr.ib(validator=in_range_inclusive(low=104, high=166, type=int))
     initial_obstacle = attr.ib(validator=instance_of(bool))
     initial_obstacle_location = attr.ib(convert=ensure_cls(InitObs))
     sensor_perturbation = attr.ib(convert=ensure_cls(Bump))

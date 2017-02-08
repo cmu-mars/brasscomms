@@ -39,7 +39,7 @@ def int_out_of_range(x, lower, upper):
 ## callbacks to change the status
 def done_cb(terminal, result):
     # todo: log this instead of printing it
-    print "brasscomms received successful result from plan: %d" %(terminal)
+    print "brasscomms received successful result from plan: %d" % terminal
 
 def active_cb():
     # todo: log this instead of printing it
@@ -129,6 +129,13 @@ def isValidActionCall(request, path, methods):
     else:
         return True
 
+def check_json(request, url):
+    if(request.headers['Content-Type'] != JSON_MIME):
+        log_das_error(LogError.RUNTIME_ERROR, '%s POSTed to without json header' % url)
+        return False
+    else:
+        return True
+
 def instruct(ext):
     """ given an extension, provides the path to the config-relevant file in instructions """
     global GP_GAZ
@@ -147,7 +154,7 @@ def action_query_path():
             data = json.load(path_file)
             return action_result({ 'path' : data['path'] })
     except Exception as e:
-        log_das_error(LogError.RUNTIME_ERROR, "error in reading the files for query_path: " + str(e))
+        log_das_error(LogError.RUNTIME_ERROR, "error in reading the files for %s: %s " % (QUERY_PATH.url, e)
         return th_error()
 
 @app.route(START.url, methods=START.methods)
@@ -173,8 +180,7 @@ def action_start():
             deadline = datetime.datetime.now() + datetime.timedelta(seconds=data['time'])
 
     except Exception as e:
-        log_das_error(LogError.RUNTIME_ERROR, "could not send the goal!: " + str(e))
-        return th_error()
+        log_das_error(LogError.RUNTIME_ERROR, "could not send the goal in %s: %s " % (START.url, e)
 
     return action_result({})  # todo: this includes time as well; is that out of spec?
 
@@ -195,16 +201,14 @@ def action_observe():
                       }
         return action_result(observation)
     except Exception as e:
-        log_das_error(LogError.RUNTIME_ERROR, "error in observe: " + str(e))
+        log_das_error(LogError.RUNTIME_ERROR, "error in %s: %s " % (OBSERVE.url, e)
         return th_error()
 
 @app.route(SET_BATTERY.url, methods=SET_BATERY.methods)
 def action_set_battery():
     if (not isValidActionCall(request, SET_BATTERY.url, SET_BATTERY.methods)):
         return th_error()
-
-    if(request.headers['Content-Type'] != JSON_MIME):
-        log_das_error(LogError.RUNTIME_ERROR, 'action/set_battery recieved post without json header')
+    if (not check_json(request, SET_BATTERY.url)):
         return th_error()
 
     params = request.get_json(silent=True)
@@ -235,8 +239,7 @@ def action_place_obstacle():
     if (not isValidActionCall(request, PLACE_OBSTACLE.url, PLACE_OBSTACLE.methods)):
         return th_error()
 
-    if(request.headers['Content-Type'] != JSON_MIME):
-        log_das_error(LogError.RUNTIME_ERROR, 'action/place_obstacle recieved post without json header')
+    if (not (check_json(request,PLACE_OBSTACLE.url))):
         return th_error()
 
     params = request.get_json(silent=True)
@@ -266,9 +269,7 @@ def action_place_obstacle():
 def action_remove_obstacle():
     if (not isValidActionCall(request, REMOVE_OBSTACLE.url, methods=REMOVE_OBSTACLE.methods):
         return th_error()
-
-    if( request.headers['Content-Type'] != JSON_MIME):
-        log_das_error(LogError.RUNTIME_ERROR, 'action_remove_obstacle recieved post without json header')
+    if (not (check_json(request,REMOVE_OBSTACLE.url))):
         return th_error()
 
     params = request.get_json(silent=True)
@@ -297,9 +298,7 @@ def action_remove_obstacle():
 def action_perturb_sensor():
     if (not isValidActionCall(request, PERTURB_SENSOR.url, methods=PERTURB_SENSOR.methods)):
         return th_error()
-
-    if(request.headers['Content-Type'] != JSON_MIME):
-        log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor recieved post without json header')
+    if (not (check_json(request,PERTURB_SENSOR.url))):
         return th_error()
 
     params = request.get_json(silent=True)
