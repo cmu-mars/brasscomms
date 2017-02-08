@@ -36,7 +36,7 @@ def done_cb(terminal, result):
 
 def active_cb():
     """ callback for when the bot is made active """
-    log_das(LogError.INFO,  "brasscoms received notification that goal is active")
+    log_das(LogError.INFO, "brasscoms received notification that goal is active")
 
 ### some globals
 app = Flask(__name__)
@@ -48,7 +48,7 @@ deadline = datetime.datetime.now() ## this is a default value; the result
 def parse_config_file():
     global CONFIG_FILE_PATH
 
-    if (os.path.exists(CONFIG_FILE_PATH) and os.path.isfile(CONFIG_FILE_PATH) and os.access(CONFIG_FILE_PATH, os.R_OK)):
+    if os.path.exists(CONFIG_FILE_PATH) and os.path.isfile(CONFIG_FILE_PATH) and os.access(CONFIG_FILE_PATH, os.R_OK):
         with open(CONFIG_FILE_PATH) as config_file:
             data = json.load(config_file)
             conf = Config(**data)
@@ -61,7 +61,7 @@ def parse_config_file():
 ### subroutines for forming API results
 def formActionResult(result):
     now = datetime.datetime.now()
-    ACTION_RESULT = {"TIME" : now.isoformat (),
+    ACTION_RESULT = {"TIME" : now.isoformat(),
                      "RESULT": result}
     return ACTION_RESULT
 
@@ -70,10 +70,10 @@ def th_error():
 
 def action_result(body):
     with_time = formActionResult(body)
-    return Response(json.dumps(with_time),status=200, mimetype=JSON_MIME)
+    return Response(json.dumps(with_time), status=200, mimetype=JSON_MIME)
 
 ### subroutines for forming and sending messages to the TH
-def th_das_error(err,msg):
+def th_das_error(err, msg):
     global TH_URL
 
     dest = TH_URL + "/error"
@@ -82,7 +82,7 @@ def th_das_error(err,msg):
                       "ERROR" : err.name,
                       "MESSAGE" : msg}
     try:
-        r = requests.post(dest, data = json.dumps(error_contents))
+        r = requests.post(dest, data=json.dumps(error_contents))
     except Exception as e:
         log_das(LogError.STARTUP_ERROR, "Fatal: cannot connect to TH at %s: %s" % (dest, e))
 
@@ -98,7 +98,7 @@ def log_das(error, msg):
             data = json.dumps(error_contents)
             log_file.write(data + "\n")
     except StandardError as e:
-        th_das_error(Error.DAS_LOG_FILE_ERROR,'%s could not be accessed: %s' % (LOG_FILE_PATH, e))
+        th_das_error(Error.DAS_LOG_FILE_ERROR, '%s could not be accessed: %s' % (LOG_FILE_PATH, e))
 
 def das_ready():
     """ POSTs DAS_READY to the TH, or logs if failed"""
@@ -106,21 +106,21 @@ def das_ready():
 
     dest = TH_URL + "/ready"
     now = datetime.datetime.now()
-    contents = {"TIME" : now.isoformat ()}
+    contents = {"TIME" : now.isoformat()}
     try:
-        r = requests.post(dest, data = json.dumps(contents))
+        r = requests.post(dest, data=json.dumps(contents))
     except Exception as e:
-        log_das(LogError.STARTUP_ERROR, "Fatal: couldn't connect to TH at %s: %s" % (dest,e))
+        log_das(LogError.STARTUP_ERROR, "Fatal: couldn't connect to TH at %s: %s" % (dest, e))
 
 ### helperfunctions for test actions
 
 # also logs invalid action calls
 def isValidActionCall(request, path, methods):
     """ return true if the request respects the methods, false and log it otherwise """
-    if(request.path != path):
+    if request.path != path:
         log_das(LogError.RUNTIME_ERROR, 'internal fault: %s called improperly' % path)
         return False
-    elif(not (request.method in methods)):
+    elif not request.method in methods:
         log_das(LogError.RUNTIME_ERROR, '%s called with bad HTTP request: %s not in %s' % (path, request.method, methods))
         return False
     else:
@@ -128,7 +128,7 @@ def isValidActionCall(request, path, methods):
 
 def check_json(request, url):
     """ returns true if the request has a json header, false and logs a DAS error otherwise """
-    if(request.headers['Content-Type'] != JSON_MIME):
+    if request.headers['Content-Type'] != JSON_MIME:
         log_das(LogError.RUNTIME_ERROR, '%s POSTed to without json header' % url)
         return False
     else:
@@ -145,21 +145,21 @@ def instruct(ext):
 @app.route(QUERY_PATH.url, methods=QUERY_PATH.methods)
 def action_query_path():
     """ implements query path end point """
-    if (not isValidActionCall(request, QUERY_PATH.url, QUERY_PATH.methods)):
+    if not isValidActionCall(request, QUERY_PATH.url, QUERY_PATH.methods):
         return th_error()
 
     try:
         with open(instruct('.json')) as path_file:
             data = json.load(path_file)
-            return action_result({ 'path' : data['path'] })
+            return action_result({'path' : data['path']})
     except Exception as e:
-        log_das(LogError.RUNTIME_ERROR, "error in reading the files for %s: %s " % (QUERY_PATH.url, e)
+        log_das(LogError.RUNTIME_ERROR, "error in reading the files for %s: %s " % (QUERY_PATH.url, e))
         return th_error()
 
 @app.route(START.url, methods=START.methods)
 def action_start():
     """ implements start end point """
-    if (not isValidActionCall(request, START.url, START.methods)):
+    if not isValidActionCall(request, START.url, START.methods):
         return th_error()
 
     global deadline
@@ -171,30 +171,31 @@ def action_start():
             igcode = igfile.read()
             goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
             global client
-            client.send_goal( goal = goal, done_cb = done_cb, active_cb = active_cb)
+            client.send_goal(goal=goal, done_cb=done_cb, active_cb=active_cb)
 
         # update the deadline to be now + the amount of time for the path given in the json file
         with open(instruct('.json')) as config_file:
             data = json.load(config_file)
             deadline = datetime.datetime.now() + datetime.timedelta(seconds=data['time'])
     except Exception as e:
-        log_das(LogError.RUNTIME_ERROR, "could not send the goal in %s: %s " % (START.url, e)
+        log_das(LogError.RUNTIME_ERROR, "could not send the goal in %s: %s " % (START.url, e))
+        ## todo: should we th_error() here? this seems bad.
 
     return action_result({})  # todo: this includes time as well; is that out of spec?
 
 @app.route(OBSERVE.url, methods=OBSERVE.methods)
 def action_observe():
     """ implements observe end point """
-    if (not isValidActionCall(request, OBSERVE.url, OBSERVE.methods)):
+    if not isValidActionCall(request, OBSERVE.url, OBSERVE.methods):
         return th_error()
 
     global gazebo
     global deadline
 
     try:
-        x, y, w , vel = gazebo.get_turtlebot_state()
+        x, y, w, vel = gazebo.get_turtlebot_state()
         observation = {"x" : x, "y" : y, "w" : w,
-                       "v" : vel ,
+                       "v" : vel,
                        "voltage" : -1,  # todo: Need to work this out
                        "deadline" : deadline.isoformat()
                       }
@@ -206,14 +207,14 @@ def action_observe():
 @app.route(SET_BATTERY.url, methods=SET_BATERY.methods)
 def action_set_battery():
     """ implements set_battery end point """
-    if (not isValidActionCall(request, SET_BATTERY.url, SET_BATTERY.methods)):
+    if not isValidActionCall(request, SET_BATTERY.url, SET_BATTERY.methods):
         return th_error()
 
-    if (not check_json(request, SET_BATTERY.url)):
+    if not check_json(request, SET_BATTERY.url):
         return th_error()
 
     try:
-        params = TestAction(request.get_json(silent = True))
+        params = TestAction(request.get_json(silent=True))
         params.ARGUMENTS = Voltage(params.ARGUMENTS)
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR, '%s got a malformed test action POST: %s' % (SET_BATTERY.url, e))
@@ -228,13 +229,14 @@ def action_set_battery():
 @app.route(PLACE_OBSTACLE.url, methods=PLACE_OBSTACLE.methods)
 def action_place_obstacle():
     """ implements place_obstacle end point """
-    if (not isValidActionCall(request, PLACE_OBSTACLE.url, PLACE_OBSTACLE.methods)):
+    if not isValidActionCall(request, PLACE_OBSTACLE.url, PLACE_OBSTACLE.methods):
         return th_error()
 
-    if (not (check_json(request,PLACE_OBSTACLE.url))):
+    if not check_json(request, PLACE_OBSTACLE.url):
         return th_error()
+
     try:
-        params = TestAction(request.get_json(silent = True))
+        params = TestAction(request, get_json(silent=True))
         params.ARGUMENTS = Coords(params.ARGUMENTS)
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR, '%s got a malformed test action POST: %s' % (PLACE_OBSTACLE.url, e))
@@ -253,7 +255,7 @@ def action_place_obstacle():
 @app.route(REMOVE_OBSTACLE.url, methods=REMOVE_OBSTACLE.methods)
 def action_remove_obstacle():
     """ implements remove_obstacle end point """
-    if (not isValidActionCall(request, REMOVE_OBSTACLE.url, methods=REMOVE_OBSTACLE.methods):
+    if (not isValidActionCall(request, REMOVE_OBSTACLE.url, methods=REMOVE_OBSTACLE.methods)):
         return th_error()
     if (not (check_json(request,REMOVE_OBSTACLE.url))):
         return th_error()
