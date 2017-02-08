@@ -30,18 +30,13 @@ from move_base_msgs.msg import MoveBaseAction
 
 ### some definitions and helper functions
 
-# returns true iff the first argument is a digit inclusively between the
-# second two args. assumes that the second two are indeed digits, and that
-# the second is less than the third.
-def int_out_of_range(x, lower, upper):
-    return not(isinstance(x,int) and x >= lower and x <= upper)
-
-## callbacks to change the status
 def done_cb(terminal, result):
+    """ callback for when the bot is at the target """
     # todo: log this instead of printing it
     print "brasscomms received successful result from plan: %d" % terminal
 
 def active_cb():
+    """ callback for when the bot is made active """
     # todo: log this instead of printing it
     print "brasscoms received notification that goal is active"
 
