@@ -1,10 +1,14 @@
+"""classes representing the results of parsing the config file and args to
+end points, with attributes to enforce invariants
+"""
+
 import attr
-from enum import Enum
 from attr.validators import instance_of
 
-from constants import *
+from constants import AdaptationLevels
 
-def in_range_inclusive(low=None, high=None, type=None):
+def in_range_inclusive(low=None, high=None, kind=None):
+    """ produce range checkers approriate for attrs given lower and upper bounds"""
     def _isvalid(instance, attribute, value):
         if value < low or value > high:
             raise ValueError('{} out of range'.format(value))
@@ -37,27 +41,28 @@ def ensure_enum(cl):
 
 @attr.s
 class InitObs(object):
-    x = attr.ib(validator=in_range_inclusive(low=-1, high=24, type=float))
-    y = attr.ib(validator=in_range_inclusive(low=-1, high=12, type=float))
-
+    """ class with attributes for inital position """
+    x = attr.ib(validator=in_range_inclusive(low=-1, high=24, kind=float))
+    y = attr.ib(validator=in_range_inclusive(low=-1, high=12, kind=float))
 
 @attr.s
 class Bump(object):
-    x = attr.ib(validator=in_range_inclusive(low=-3, high=3, type=int))
-    y = attr.ib(validator=in_range_inclusive(low=-3, high=3, type=int))
-    z = attr.ib(validator=in_range_inclusive(low=-3, high=3, type=int))
-    p = attr.ib(validator=in_range_inclusive(low=-6, high=6, type=int))
-    w = attr.ib(validator=in_range_inclusive(low=-6, high=6, type=int))
-    r = attr.ib(validator=in_range_inclusive(low=-6, high=6, type=int))
-
+    """ class with attributes for sensor bumps """
+    x = attr.ib(validator=in_range_inclusive(low=-3, high=3, kind=int))
+    y = attr.ib(validator=in_range_inclusive(low=-3, high=3, kind=int))
+    z = attr.ib(validator=in_range_inclusive(low=-3, high=3, kind=int))
+    p = attr.ib(validator=in_range_inclusive(low=-6, high=6, kind=int))
+    w = attr.ib(validator=in_range_inclusive(low=-6, high=6, kind=int))
+    r = attr.ib(validator=in_range_inclusive(low=-6, high=6, kind=int))
 
 @attr.s
 class Config(object):
+    """ class with attributes for the config file """
     start_loc = attr.ib(validator=instance_of(unicode))
     start_yaw = attr.ib(validator=instance_of(float))
     target_loc = attr.ib(validator=instance_of(unicode))
     enable_adaptation = attr.ib(convert=ensure_enum(AdaptationLevels))
-    initial_voltage = attr.ib(validator=in_range_inclusive(low=104, high=166, type=int))
+    initial_voltage = attr.ib(validator=in_range_inclusive(low=104, high=166, kind=int))
     initial_obstacle = attr.ib(validator=instance_of(bool))
     initial_obstacle_location = attr.ib(convert=ensure_cls(InitObs))
     sensor_perturbation = attr.ib(convert=ensure_cls(Bump))
