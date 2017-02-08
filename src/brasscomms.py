@@ -115,12 +115,12 @@ def das_ready():
 ### helperfunctions for test actions
 
 # also logs invalid action calls
-def isValidActionCall(request, path, method):
+def isValidActionCall(request, path, methods):
     if(request.path != path):
-        log_das_error(LogError.RUNTIME_ERROR,'internal fault: '+ path + ' called improperly')
+        log_das_error(LogError.RUNTIME_ERROR,'internal fault: ' + path + ' called improperly')
         return False
-    elif(request.method != method):
-        log_das_error(LogError.RUNTIME_ERROR, path + ' called with wrong HTTP method')
+    elif(not (request.method in methods)):
+        log_das_error(LogError.RUNTIME_ERROR, path + ' called with bad HTTP request:' + requst.method + 'not in' + str(methods))
         return False
     else:
         return True
@@ -133,9 +133,9 @@ def instruct(ext):
     return CP_GAZ + '/instructions/' + config.start_loc + '_to_' + config.target_loc + ext
 
 ### subroutines per endpoint URL in API wiki page order
-@app.route('/action/query_path', methods=['GET'])
+@app.route(QUERY_PATH.url, methods=QUERY_PATH.methods)
 def action_query_path():
-    if (not isValidActionCall(request, '/action/query_path', 'GET')):
+    if (not isValidActionCall(request, QUERY_PATH.url, QUERY_PATH.methods)):
         return th_error()
 
     try:
@@ -146,9 +146,9 @@ def action_query_path():
         log_das_error(LogError.RUNTIME_ERROR, "error in reading the files for query_path: " + str(e))
         return th_error()
 
-@app.route('/action/start', methods=['POST'])
+@app.route(START.url, methods=START.methods)
 def action_start():
-    if (not isValidActionCall(request, '/action/start', 'POST')):
+    if (not isValidActionCall(request, START.url, START.methods)):
         return th_error()
 
     global deadline
@@ -174,9 +174,9 @@ def action_start():
 
     return action_result({})  # todo: this includes time as well; is that out of spec?
 
-@app.route('/action/observe', methods=['GET'])
+@app.route(OBSERVE.url, methods=OBSERVE.methods)
 def action_observe():
-    if (not isValidActionCall(request, '/action/observe', 'GET')):
+    if (not isValidActionCall(request, OBSERVE.url, OBSERVE.methods)):
         return th_error()
 
     global gazebo
@@ -194,9 +194,9 @@ def action_observe():
         log_das_error(LogError.RUNTIME_ERROR, "error in observe: " + str(e))
         return th_error()
 
-@app.route('/action/set_battery', methods=['POST'])
+@app.route(SET_BATTERY.url, methods=SET_BATERY.methods)
 def action_set_battery():
-    if (not isValidActionCall(request, '/action/set_battery', 'POST')):
+    if (not isValidActionCall(request, SET_BATTERY.url, SET_BATTERY.methods)):
         return th_error()
 
     if(request.headers['Content-Type'] != "application/json"):
@@ -226,9 +226,9 @@ def action_set_battery():
 
     return action_result({})
 
-@app.route('/action/place_obstacle', methods=['POST'])
+@app.route(PLACE_OBSTACLE.url, methods=PLACE_OBSTACLE.methods)
 def action_place_obstacle():
-    if (not isValidActionCall(request, '/action/place_obstacle', 'POST')):
+    if (not isValidActionCall(request, PLACE_OBSTACLE.url, PLACE_OBSTACLE.methods)):
         return th_error()
 
     if(request.headers['Content-Type'] != "application/json"):
@@ -258,9 +258,9 @@ def action_place_obstacle():
         log_das_error(LogError.RUNTIME_ERROR, 'gazebo cant place new obstacle at given x y')
         return th_error()
 
-@app.route('/action/remove_obstacle', methods=['POST'])
+@app.route(REMOVE_OBSTACLE.url, methods=REMOVE_OBSTACLE.methods)
 def action_remove_obstacle():
-    if (not isValidActionCall(request, '/action/remove_obstacle', 'POST')):
+    if (not isValidActionCall(request, REMOVE_OBSTACLE.url, methods=REMOVE_OBSTACLE.methods):
         return th_error()
 
     if( request.headers['Content-Type'] != "application/json"):
@@ -289,9 +289,9 @@ def action_remove_obstacle():
         log_das_error(LogError.RUNTIME_ERROR, 'action/remove_obstacle gazebo call failed')
         return th_error()
 
-@app.route('/action/perturb_sensor', methods=['POST'])
+@app.route(PERTURB_SENSOR.url, methods=PERTURB_SENSOR.methods)
 def action_perturb_sensor():
-    if (not isValidActionCall(request, '/action/perturb_sensor', 'POST')):
+    if (not isValidActionCall(request, PERTURB_SENSOR.url, methods=PERTURB_SENSOR.methods)):
         return th_error()
 
     if(request.headers['Content-Type'] != "application/json"):
