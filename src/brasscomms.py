@@ -55,8 +55,8 @@ def parse_config_file():
 
     if not (os.path.exists(CONFIG_FILE_PATH)
             and os.path.isfile(CONFIG_FILE_PATH)
-            and os.access(CONFIG_FILE_PATH,os.R_OK)):
-        th_das_error(Error.TEST_DATA_FILE_ERROR,'config file at ' + CONFIG_FILE_PATH + ' either does not exist, is not a file, or is not readable')
+            and os.access(CONFIG_FILE_PATH, os.R_OK)):
+        th_das_error(Error.TEST_DATA_FILE_ERROR, 'config file at %s either does not exist, is not a file, or is not readable' % CONFIG_FILE_PATH)
         # todo: does sending this this sufficiently stop the world if the file doesn't parse?
     else:
         with open(CONFIG_FILE_PATH) as config_file:
@@ -76,19 +76,21 @@ def th_error():
 
 def action_result(body):
     with_time = formActionResult(body)
-    return Response(json.dumps(with_time),status=200, mimetype='application/json')
+    return Response(json.dumps(with_time),status=200, mimetype=JSON_MIME)
 
 ### subroutines for forming and sending messages to the TH
 def th_das_error(err,msg):
     global TH_URL
+
+    dest = TH_URL + "/error"
     now = datetime.datetime.now()
     error_contents = {"TIME" : now.isoformat(),
                       "ERROR" : err.name,
                       "MESSAGE" : msg}
     try:
-        r = requests.post(TH_URL+'/error', data = json.dumps(error_contents))
+        r = requests.post(dest, data = json.dumps(error_contents))
     except Exception as e:
-        log_das_error(LogError.STARTUP_ERROR, "Fatal: couldn't connect to TH at " + TH_URL + "/error: " + str(e))
+        log_das_error(LogError.STARTUP_ERROR, "Fatal: cannot connect to TH at %s: %s" % (dest, e))
 
 def log_das_error(error, msg):
     global LOG_FILE_PATH
@@ -101,26 +103,28 @@ def log_das_error(error, msg):
             data = json.dumps(error_contents)
             log_file.write(data + "\n")
     except StandardError as e:
-        th_das_error(Error.DAS_LOG_FILE_ERROR,'log file at ' + log_file_path + ' could not be accessed')
+        th_das_error(Error.DAS_LOG_FILE_ERROR,'log file at %s could not be accessed' % log_file_path)
 
 def das_ready():
     global TH_URL
+
+    dest = TH_URL + "/ready"
     now = datetime.datetime.now()
     contents = {"TIME" : now.isoformat ()}
     try:
-        r = requests.post(TH_URL+'/ready', data = json.dumps(contents))
+        r = requests.post(dest, data = json.dumps(contents))
     except Exception as e:
-        log_das_error(LogError.STARTUP_ERROR, "Fatal: couldn't connect to TH at " + TH_URL + "/ready: " + str(e))
+        log_das_error(LogError.STARTUP_ERROR, "Fatal: couldn't connect to TH at %s: %s" % (dest,e))
 
 ### helperfunctions for test actions
 
 # also logs invalid action calls
 def isValidActionCall(request, path, methods):
     if(request.path != path):
-        log_das_error(LogError.RUNTIME_ERROR,'internal fault: ' + path + ' called improperly')
+        log_das_error(LogError.RUNTIME_ERROR, 'internal fault: %s called improperly' % path)
         return False
     elif(not (request.method in methods)):
-        log_das_error(LogError.RUNTIME_ERROR, path + ' called with bad HTTP request:' + requst.method + 'not in' + str(methods))
+        log_das_error(LogError.RUNTIME_ERROR, '%s called with bad HTTP request: %s not in %s' % (path, request.method, methods))
         return False
     else:
         return True
@@ -199,7 +203,7 @@ def action_set_battery():
     if (not isValidActionCall(request, SET_BATTERY.url, SET_BATTERY.methods)):
         return th_error()
 
-    if(request.headers['Content-Type'] != "application/json"):
+    if(request.headers['Content-Type'] != JSON_MIME):
         log_das_error(LogError.RUNTIME_ERROR, 'action/set_battery recieved post without json header')
         return th_error()
 
@@ -231,7 +235,7 @@ def action_place_obstacle():
     if (not isValidActionCall(request, PLACE_OBSTACLE.url, PLACE_OBSTACLE.methods)):
         return th_error()
 
-    if(request.headers['Content-Type'] != "application/json"):
+    if(request.headers['Content-Type'] != JSON_MIME):
         log_das_error(LogError.RUNTIME_ERROR, 'action/place_obstacle recieved post without json header')
         return th_error()
 
@@ -263,7 +267,7 @@ def action_remove_obstacle():
     if (not isValidActionCall(request, REMOVE_OBSTACLE.url, methods=REMOVE_OBSTACLE.methods):
         return th_error()
 
-    if( request.headers['Content-Type'] != "application/json"):
+    if( request.headers['Content-Type'] != JSON_MIME):
         log_das_error(LogError.RUNTIME_ERROR, 'action_remove_obstacle recieved post without json header')
         return th_error()
 
@@ -294,7 +298,7 @@ def action_perturb_sensor():
     if (not isValidActionCall(request, PERTURB_SENSOR.url, methods=PERTURB_SENSOR.methods)):
         return th_error()
 
-    if(request.headers['Content-Type'] != "application/json"):
+    if(request.headers['Content-Type'] != JSON_MIME):
         log_das_error(LogError.RUNTIME_ERROR, '/action/perturb_sensor recieved post without json header')
         return th_error()
 
