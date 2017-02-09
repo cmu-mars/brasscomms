@@ -59,7 +59,8 @@ def parse_config_file():
     else:
         # todo: does sending this this sufficiently stop the world if the file doesn't parse?
         # todo: return something?
-        th_das_error(Error.TEST_DATA_FILE_ERROR, '%s does not exist, is not a file, or is not readable' % CONFIG_FILE_PATH)
+        th_das_error(Error.TEST_DATA_FILE_ERROR,
+                     '%s does not exist, is not a file, or is not readable' % CONFIG_FILE_PATH)
 
 ### subroutines for forming API results
 def th_error():
@@ -106,18 +107,16 @@ def das_ready():
     except Exception as e:
         log_das(LogError.STARTUP_ERROR, "Fatal: couldn't connect to TH at %s: %s" % (dest, e))
 
-### helperfunctions for test actions
-
-# also logs invalid action calls
 def check_action(request, path, methods):
     """ return true if the request respects the methods, false and log it otherwise """
     if request.path != path:
         log_das(LogError.RUNTIME_ERROR, 'internal fault: %s called improperly' % path)
         return False
     if not request.method in methods:
-        log_das(LogError.RUNTIME_ERROR, '%s called with bad HTTP request: %s not in %s' % (path, request.method, methods))
+        log_das(LogError.RUNTIME_ERROR,
+                '%s called with bad HTTP request: %s not in %s' % (path, request.method, methods))
         return False
-    if ('POST' == request.method) and (request.headers['Content-Type'] != JSON_MIME):
+    if (request.method == 'POST') and (request.headers['Content-Type'] != JSON_MIME):
         log_das(LogError.RUNTIME_ERROR, '%s POSTed to without json header' % url)
         return False
 
@@ -141,7 +140,8 @@ def action_query_path():
             data = json.load(path_file)
             return action_result({'path' : data['path']})
     except Exception as e:
-        log_das(LogError.RUNTIME_ERROR, "error in reading the files for %s: %s " % (QUERY_PATH.url, e))
+        log_das(LogError.RUNTIME_ERROR,
+                "error in reading the files for %s: %s " % (QUERY_PATH.url, e))
         return th_error()
 
 @app.route(START.url, methods=START.methods)
@@ -202,7 +202,8 @@ def action_set_battery():
         params = TestAction(request.get_json(silent=True))
         params.ARGUMENTS = Voltage(params.ARGUMENTS)
     except Exception as e:
-        log_das(LogError.RUNTIME_ERROR, '%s got a malformed test action POST: %s' % (SET_BATTERY.url, e))
+        log_das(LogError.RUNTIME_ERROR,
+                '%s got a malformed test action POST: %s' % (SET_BATTERY.url, e))
         return th_error()
 
     ## todo : implement real stuff here when we have the battery
@@ -221,7 +222,8 @@ def action_place_obstacle():
         params = TestAction(request.get_json(silent=True))
         params.ARGUMENTS = Coords(params.ARGUMENTS)
     except Exception as e:
-        log_das(LogError.RUNTIME_ERROR, '%s got a malformed test action POST: %s' % (PLACE_OBSTACLE.url, e))
+        log_das(LogError.RUNTIME_ERROR,
+                '%s got a malformed test action POST: %s' % (PLACE_OBSTACLE.url, e))
         return th_error()
 
     global gazebo
@@ -243,7 +245,8 @@ def action_remove_obstacle():
         params = TestAction(request.get_json(silent=True))
         params.ARGUMENTS = ObstacleID(params.ARGUMENTS)
     except Exception as e:
-        log_das(LogError.RUNTIME_ERROR, '%s got a malformed test action POST: %s' % (REMOVE_OBSTACLE.url, e))
+        log_das(LogError.RUNTIME_ERROR,
+                '%s got a malformed test action POST: %s' % (REMOVE_OBSTACLE.url, e))
         return th_error()
 
     global gazebo
@@ -265,14 +268,14 @@ def action_perturb_sensor():
         params = request.get_json(silent=True)
         params.ARGUMENTS = Bump(params.ARGUMENTS)
     except Exception as e:
-        log_das(LogError.RUNTIME_ERROR, '%s got a malformed test action POST: %s' % (PERTURB_SENSOR.url, e))
+        log_das(LogError.RUNTIME_ERROR,
+                '%s got a malformed test action POST: %s' % (PERTURB_SENSOR.url, e))
         return th_error()
 
     ## todo: currently we have no sensor to bump, so this doesn't do
     ## anything other than check the format of the request and reply with
     ## something well-formatted if it gets something well-formatted
     return action_result({})
-
 
 # if you run this script from the command line directly, this causes it to
 # actually launch the little web server and the node
@@ -286,7 +289,8 @@ def action_perturb_sensor():
 if __name__ == "__main__":
     ## start up the ros node and make an action server
     rospy.init_node("brasscomms")
-    client = actionlib.SimpleActionClient("ig_action_server", ig_action_msgs.msg.InstructionGraphAction)
+    client = actionlib.SimpleActionClient("ig_action_server",
+                                          ig_action_msgs.msg.InstructionGraphAction)
     client.wait_for_server()
 
     # make an interface into Gazebo
