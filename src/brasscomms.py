@@ -217,7 +217,8 @@ def action_set_battery():
         return th_error()
 
     try:
-        params = TestAction(request.get_json(silent=True))
+        j = request.get_json(silent=True)
+        params = TestAction(**j)
         params.ARGUMENTS = Voltage(**params.ARGUMENTS)
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
@@ -237,7 +238,8 @@ def action_place_obstacle():
         return th_error()
 
     try:
-        params = TestAction(request.get_json(silent=True))
+        j = request.get_json(silent=True)
+        params = TestAction(**j)
         params.ARGUMENTS = Coords(**params.ARGUMENTS)
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
@@ -260,7 +262,8 @@ def action_remove_obstacle():
         return th_error()
 
     try:
-        params = TestAction(request.get_json(silent=True))
+        j = request.get_json(silent=True)
+        params = TestAction(**j)
         params.ARGUMENTS = ObstacleID(**params.ARGUMENTS)
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
@@ -272,7 +275,8 @@ def action_remove_obstacle():
     if success:
         return action_result({})
     else:
-        # todo: implicitly, this is because it was a bad obstacle ID. can we confirm that?
+        # todo: implicitly, this is because it was a bad obstacle
+        # ID. can we confirm that?
         log_das(LogError.RUNTIME_ERROR, 'action/remove_obstacle gazebo call failed')
         return th_error()
 
@@ -283,7 +287,8 @@ def action_perturb_sensor():
         return th_error()
 
     try:
-        params = request.get_json(silent=True)
+        j = request.get_json(silent=True)
+        params = TestAction(**j)
         params.ARGUMENTS = Bump(**params.ARGUMENTS)
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
