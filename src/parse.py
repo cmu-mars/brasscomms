@@ -10,10 +10,10 @@ from constants import AdaptationLevels
 def in_range_inclusive(low=None, high=None, kind=None):
     """ produce range checkers approriate for attrs given lower and upper bounds"""
     def _isvalid(instance, attribute, value):
+        if not isinstance(value, kind):
+            raise ValueError('%s is not a %s' % (value, kind))
         if value < low or value > high:
-            raise ValueError('{} out of range'.format(value))
-        if not isinstance(value, type):
-            raise ValueError('{} out of range'.format(value))
+            raise ValueError('%s not in [%s,%s]' % (value , low, high))
 
     return _isvalid
 
