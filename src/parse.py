@@ -49,8 +49,8 @@ def ensure_enum(cl):
 @attr.s
 class Coords(object):
     """ class with attributes for inital position """
-    x = attr.ib(validator=in_range_inclusive(low=-1, high=24, kind=float))
-    y = attr.ib(validator=in_range_inclusive(low=-1, high=12, kind=float))
+    x = attr.ib(validator=in_range_inclusive(low=-1.0, high=24.0, kind=float))
+    y = attr.ib(validator=in_range_inclusive(low=-1.0, high=12.0, kind=float))
 
 @attr.s
 class Bump(object):

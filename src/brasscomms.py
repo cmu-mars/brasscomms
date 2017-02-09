@@ -1,6 +1,6 @@
-""" defines and implements the the TA RESTful interface """
-
 #! /usr/bin/env python
+
+""" defines and implements the the TA RESTful interface """
 
 ### standard imports
 from __future__ import with_statement
@@ -307,9 +307,14 @@ if __name__ == "__main__":
     gazebo = GazeboInterface()
 
     # parse the config file
-    # todo: this raises Python errors on bad input. need to post to DAS error, stop the world.
-    config = parse_config_file()
+    try:
+        config = parse_config_file()
+    except Exception as e:
+        log_das(LogError.STARTUP_ERROR, "Fatal: config file doesn't parse: %s" % e)
+        # todo: this raises Python errors on bad input. need to post
+        # to DAS error, stop the world.
 
+        
     # this should block until the navigation stack is ready to recieve goals
     move_base = actionlib.SimpleActionClient("move_base", MoveBaseAction)
     move_base.wait_for_server()
