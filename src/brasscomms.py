@@ -161,7 +161,8 @@ def action_start():
             global client
             client.send_goal(goal=goal, done_cb=done_cb, active_cb=active_cb)
 
-        # update the deadline to be now + the amount of time for the path given in the json file
+        # update the deadline to be now + the amount of time for the path
+        # given in the json file
         with open(instruct('.json')) as config_file:
             data = json.load(config_file)
             deadline = datetime.datetime.now() + datetime.timedelta(seconds=data['time'])
@@ -169,7 +170,8 @@ def action_start():
         log_das(LogError.RUNTIME_ERROR, "could not send the goal in %s: %s " % (START.url, e))
         ## todo: should we th_error() here? this seems bad.
 
-    return action_result({})  # todo: this includes time as well; is that out of spec?
+    return action_result({})  # todo: this includes time as well; is that
+                              # out of spec?
 
 @app.route(OBSERVE.url, methods=OBSERVE.methods)
 def action_observe():
@@ -200,7 +202,7 @@ def action_set_battery():
 
     try:
         params = TestAction(request.get_json(silent=True))
-        params.ARGUMENTS = Voltage(params.ARGUMENTS)
+        params.ARGUMENTS = Voltage(**params.ARGUMENTS)
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
                 '%s got a malformed test action POST: %s' % (SET_BATTERY.url, e))
@@ -220,7 +222,7 @@ def action_place_obstacle():
 
     try:
         params = TestAction(request.get_json(silent=True))
-        params.ARGUMENTS = Coords(params.ARGUMENTS)
+        params.ARGUMENTS = Coords(**params.ARGUMENTS)
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
                 '%s got a malformed test action POST: %s' % (PLACE_OBSTACLE.url, e))
@@ -243,7 +245,7 @@ def action_remove_obstacle():
 
     try:
         params = TestAction(request.get_json(silent=True))
-        params.ARGUMENTS = ObstacleID(params.ARGUMENTS)
+        params.ARGUMENTS = ObstacleID(**params.ARGUMENTS)
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
                 '%s got a malformed test action POST: %s' % (REMOVE_OBSTACLE.url, e))
@@ -266,7 +268,7 @@ def action_perturb_sensor():
 
     try:
         params = request.get_json(silent=True)
-        params.ARGUMENTS = Bump(params.ARGUMENTS)
+        params.ARGUMENTS = Bump(**params.ARGUMENTS)
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
                 '%s got a malformed test action POST: %s' % (PERTURB_SENSOR.url, e))
