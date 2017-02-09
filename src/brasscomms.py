@@ -158,6 +158,14 @@ def action_start():
     if not check_action(request, START.url, START.methods):
         return th_error()
 
+    try:
+        j = request.get_json(silent=True)
+        params = TestAction(**j)
+    except Exception as e:
+        log_das(LogError.RUNTIME_ERROR,
+                '%s got a malformed test action POST: %s' % (START.url, e))
+        return th_error()
+
     global deadline
 
     log_das(LogError.INFO, "starting challenge problem")
@@ -314,7 +322,7 @@ if __name__ == "__main__":
         # todo: this raises Python errors on bad input. need to post
         # to DAS error, stop the world.
 
-        
+
     # this should block until the navigation stack is ready to recieve goals
     move_base = actionlib.SimpleActionClient("move_base", MoveBaseAction)
     move_base.wait_for_server()
