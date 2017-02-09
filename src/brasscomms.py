@@ -7,20 +7,20 @@ from __future__ import with_statement
 
 from os.path import exists, isfile
 from os import access, R_OK
-from threading import Lock ## todo: do we need a lock?
+## from threading import Lock ## todo: do we need a lock?
 import json
-import sys
+# import sys ## todo: do we need this?
 import datetime
 import requests
 
 ### relevant third party imports
-from flask import *
+from flask import Flask, Response, request
 
-import roslib
+# import roslib ## todo: do we need this?
 import rospy
 import actionlib
 import ig_action_msgs.msg
-import tf
+# import tf ## todo: do we need this?
 from move_base_msgs.msg import MoveBaseAction
 
 ### other brasscomms modules
@@ -44,10 +44,11 @@ def active_cb():
 
 ### some globals
 app = Flask(__name__)
-shared_var_lock = Lock()
 deadline = datetime.datetime.now() ## this is a default value; the result
                                    ## of observe will be well formed but
                                    ## wrong unless they call start first
+
+## shared_var_lock = Lock() ## todo :commented out until we have occasion to use it
 
 def parse_config_file():
     """ checks the appropriate place for the config file, and loads into an object if possible """
@@ -117,7 +118,7 @@ def check_action(request, path, methods):
                 '%s called with bad HTTP request: %s not in %s' % (path, request.method, methods))
         return False
     if (request.method == 'POST') and (request.headers['Content-Type'] != JSON_MIME):
-        log_das(LogError.RUNTIME_ERROR, '%s POSTed to without json header' % url)
+        log_das(LogError.RUNTIME_ERROR, '%s POSTed to without json header' % path)
         return False
 
     return True
