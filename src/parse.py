@@ -90,4 +90,4 @@ class Voltage(object):
 class ObstacleID(object):
     """ class with attributes for obstacle ids """
     ## todo: also check here if it's a good name?
-    obstacle_id = attr.ib(validator=instance_of(unicode))
+    obstacleid = attr.ib(validator=instance_of(unicode))

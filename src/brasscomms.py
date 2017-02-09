@@ -250,7 +250,7 @@ def action_place_obstacle():
 
     obs_name = gazebo.place_new_obstacle(params.ARGUMENTS.x, params.ARGUMENTS.y)
     if obs_name is not None:
-        return action_result({"obstacle_id" : obs_name})
+        return action_result({"obstacleid" : obs_name})
     else:
         log_das(LogError.RUNTIME_ERROR, 'gazebo cant place new obstacle at given x y')
         return th_error()
@@ -271,7 +271,7 @@ def action_remove_obstacle():
         return th_error()
 
     global gazebo
-    success = gazebo.delete_obstacle(params.ARGUMENTS.obstacle_id)
+    success = gazebo.delete_obstacle(params.ARGUMENTS.obstacleid)
     if success:
         return action_result({})
     else:
