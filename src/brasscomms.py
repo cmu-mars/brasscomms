@@ -108,16 +108,23 @@ def das_ready():
     except Exception as e:
         log_das(LogError.STARTUP_ERROR, "Fatal: couldn't connect to TH at %s: %s" % (dest, e))
 
-def check_action(request, path, methods):
+def check_action(req, path, methods):
     """ return true if the request respects the methods, false and log it otherwise """
-    if request.path != path:
+
+    # check that the method is running from actually getting hit
+    if req.path != path:
         log_das(LogError.RUNTIME_ERROR, 'internal fault: %s called improperly' % path)
         return False
+
+    # check that it's being called in a way it's designed for
     if not request.method in methods:
         log_das(LogError.RUNTIME_ERROR,
-                '%s called with bad HTTP request: %s not in %s' % (path, request.method, methods))
+                '%s called with bad HTTP request: %s not in %s' % (path, req.method, methods))
         return False
-    if (request.method == 'POST') and (request.headers['Content-Type'] != JSON_MIME):
+
+    # if it's a post, make sure that it got JSON. req.method also needs to
+    # be in methods, but that must be true from above
+    if (req.method == 'POST') and (request.headers['Content-Type'] != JSON_MIME):
         log_das(LogError.RUNTIME_ERROR, '%s POSTed to without json header' % path)
         return False
 
