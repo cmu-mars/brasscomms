@@ -34,8 +34,11 @@ from parse import (Coords, Bump, Config, TestAction,
 
 def done_cb(terminal, result):
     """ callback for when the bot is at the target """
-    done_early("done_cb called, so we got a good result from the plan", DoneEarly.AT_TARGET)
-    log_das(LogError.INFO, "brasscomms received successful result from plan: %d" % terminal)
+    ### todo come back to this
+    # done_early("done_cb called, so we got a good result from the plan", 
+    #           DoneEarly.AT_TARGET)
+    log_das(LogError.INFO,
+            "brasscomms received successful result from plan: %d" % terminal)
 
 def active_cb():
     """ callback for when the bot is made active """
