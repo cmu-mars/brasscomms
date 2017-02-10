@@ -300,10 +300,6 @@ def action_perturb_sensor():
                 '%s got a malformed test action POST: %s' % (PERTURB_SENSOR.url, e))
         return th_error()
 
-    print "-----------------------"
-    print str(params)
-    print "-----------------------"
-
     ## todo: currently we have no sensor to bump, so this doesn't do
     ## anything other than check the format of the request and reply with
     ## something well-formatted if it gets something well-formatted
