@@ -55,8 +55,8 @@ def parse_config_file():
             conf = Config(**data)
             return conf
     else:
-        # todo: does sending this this sufficiently stop the world if the file doesn't parse?
-        # todo: return something?
+        # todo: does sending this this sufficiently stop the world if
+        # the file doesn't parse?  todo: return something?
         th_das_error(Error.TEST_DATA_FILE_ERROR,
                      '%s does not exist, is not a file, or is not readable' % CONFIG_FILE_PATH)
 
@@ -181,10 +181,9 @@ def action_start():
             deadline = datetime.datetime.now() + datetime.timedelta(seconds=data['time'])
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR, "could not send the goal in %s: %s " % (START.url, e))
-        ## todo: should we th_error() here? this seems bad.
+        return th_error()
 
-    return action_result({})  # todo: this includes time as well; is that
-                              # out of spec?
+    return action_result({})
 
 @app.route(OBSERVE.url, methods=OBSERVE.methods)
 def action_observe():
