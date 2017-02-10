@@ -167,7 +167,6 @@ def action_start():
 
     log_das(LogError.INFO, "starting challenge problem")
     try:
-        ## todo: test and make sure this change didn't break anything
         with open(instruct('.ig')) as igfile:
             igcode = igfile.read()
             goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
@@ -267,9 +266,7 @@ def action_remove_obstacle():
         return th_error()
 
     global gazebo
-    print "-----------------------"
-    print str(params)
-    print "-----------------------"
+    ## todo: this breaks for slightly mysterious reasons
     success = gazebo.delete_obstacle(params.ARGUMENTS.obstacleid)
     if success:
         return action_result({})
