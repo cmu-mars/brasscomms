@@ -104,7 +104,7 @@ def done_early(message, reason):
     contents = {"TIME" : (datetime.datetime.now()).isoformat(),
                 "TARGET" : message,
                 "ARGUMENTS" : {"done" : reason.name}}
-    log_das(Error.INFO, "ending early: %s; %s" % (reason.name, message)
+    log_das(Error.INFO, "ending early: %s; %s" % (reason.name, message))
 
     try:
         requests.post(dest, data=json.dumps(contents))
