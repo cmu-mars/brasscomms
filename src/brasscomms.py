@@ -294,14 +294,19 @@ def action_remove_obstacle():
                 '%s got a malformed test action POST: %s' % (REMOVE_OBSTACLE.url, e))
         return th_error()
 
-    global gazebo
-    ## todo: this breaks for slightly mysterious reasons
-    success = gazebo.delete_obstacle(params.ARGUMENTS.obstacleid)
-    if success:
-        return action_result({})
-    else:
-        log_das(LogError.RUNTIME_ERROR, 'action/remove_obstacle gazebo call failed')
+    try:
+        global gazebo
+        ## todo: this breaks for slightly mysterious reasons
+        success = gazebo.delete_obstacle(params.ARGUMENTS.obstacleid)
+        if success:
+            return action_result({})
+        else:
+            log_das(LogError.RUNTIME_ERROR, '%s gazebo call failed' % REMOVE_OBSTACLE.url)
+            return th_error()
+    except Exception as e:
+        log_das(LogError.RUNTIME_ERROR, '%s raised an exception: %s' % (REMOVE_OBSTACLE.url, e))
         return th_error()
+
 
 @app.route(PERTURB_SENSOR.url, methods=PERTURB_SENSOR.methods)
 def action_perturb_sensor():
