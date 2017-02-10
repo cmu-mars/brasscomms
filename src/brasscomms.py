@@ -102,7 +102,7 @@ def done_early(message, reason):
     """ POSTs action message to the TH that we're done early """
     dest = TH_URL + "/action/done"
     contents = {"TIME" : (datetime.datetime.now()).isoformat(),
-                "TARGET" : str(message),
+                "TARGET" : message,
                 "ARGUMENTS" : {"done" : reason.name}}
     log_das(Error.INFO, "ending early: %s; %s" % (reason.name, message)
 
@@ -345,7 +345,7 @@ if __name__ == "__main__":
     # arrange the bot in the location specified by the config
     try:
         start_coords = waypoint_to_coords(config.start_loc)
-        gazebo.set_turtlebot_position(start_coords['x'], start_coords['y'], 0)
+        gazebo.set_turtlebot_position(start_coords['x'], start_coords['y'], config.start_yaw)
     except Exception as e:
         log_das(LogError.STARTUP_ERROR,
                 "Fatal: config file inconsistent with map: %s" % e)
