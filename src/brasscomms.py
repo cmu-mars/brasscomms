@@ -143,7 +143,7 @@ def action_query_path():
     try:
         with open(instruct('.json')) as path_file:
             data = json.load(path_file)
-            return action_result({'path' : data['path']})
+            return action_result({'path' : data['path'], 'time' : data['time']})
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
                 "error in reading the files for %s: %s " % (QUERY_PATH.url, e))
