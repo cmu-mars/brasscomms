@@ -35,8 +35,8 @@ from parse import (Coords, Bump, Config, TestAction,
 def done_cb(terminal, result):
     """ callback for when the bot is at the target """
     ### todo come back to this
-    # done_early("done_cb called, so we got a good result from the plan", 
-    #           DoneEarly.AT_TARGET)
+    done_early("done_cb called, so we got a good result from the plan",
+               DoneEarly.AT_TARGET)
     log_das(LogError.INFO,
             "brasscomms received successful result from plan: %d" % terminal)
 
@@ -107,7 +107,7 @@ def done_early(message, reason):
     contents = {"TIME" : (datetime.datetime.now()).isoformat(),
                 "TARGET" : message,
                 "ARGUMENTS" : {"done" : reason.name}}
-    log_das(Error.INFO, "ending early: %s; %s" % (reason.name, message))
+    log_das(LogError.INFO, "ending early: %s; %s" % (reason.name, message))
 
     try:
         requests.post(dest, data=json.dumps(contents))
@@ -273,8 +273,7 @@ def action_place_obstacle():
                               "topleft_x" : params.ARGUMENTS.x - 1.2,
                               "topleft_y" : params.ARGUMENTS.y - 1.2,
                               "botright_x" : params.ARGUMENTS.x + 1.2,
-                              "botright_y" : params.ARGUMENTS.x + 1.2
-                              })
+                              "botright_y" : params.ARGUMENTS.x + 1.2})
     else:
         log_das(LogError.RUNTIME_ERROR, 'gazebo cant place new obstacle at given x y')
         return th_error()
