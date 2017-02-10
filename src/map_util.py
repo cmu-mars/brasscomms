@@ -10,7 +10,7 @@ def waypoint_to_coords(waypoint_id):
         raise KeyError('The specified waypointID does not exist')
     waypoint_list = load_waypoints(waypoint_id)
     waypoint = waypoint_list[0]
-    return {waypoint['coord']}
+    return waypoint['coord']
 
 def is_waypoint(waypoint_id):
     """ given a string, determine if it is actually a waypoint id """

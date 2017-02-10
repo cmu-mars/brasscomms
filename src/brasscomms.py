@@ -26,7 +26,7 @@ from constants import (TH_URL, CONFIG_FILE_PATH, LOG_FILE_PATH, CP_GAZ,
                        START, OBSERVE, SET_BATTERY, PLACE_OBSTACLE,
                        REMOVE_OBSTACLE, PERTURB_SENSOR)
 from gazebo_interface import GazeboInterface
-# from map_util import *
+from map_util import waypoint_to_coords
 from parse import Coords, Bump, Config, TestAction, Voltage, ObstacleID, SingleBumpName
 
 ### some definitions and helper functions
@@ -319,6 +319,16 @@ if __name__ == "__main__":
         config = parse_config_file()
     except Exception as e:
         log_das(LogError.STARTUP_ERROR, "Fatal: config file doesn't parse: %s" % e)
+        raise
+
+    # arrange the bot in the location specified by the config
+    try:
+        start_coords = waypoint_to_coords(config.start_loc)
+        gazebo.set_turtlebot_position(start_coords['x'], start_coords['y'], 0)
+    except Exception as e:
+        log_das(LogError.STARTUP_ERROR, 
+                "Fatal: config file inconsistent with map: %s" % e)
+        raise
 
     # this should block until the navigation stack is ready to recieve goals
     move_base = actionlib.SimpleActionClient("move_base", MoveBaseAction)
