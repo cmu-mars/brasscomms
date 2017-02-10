@@ -24,15 +24,17 @@ from move_base_msgs.msg import MoveBaseAction
 from constants import (TH_URL, CONFIG_FILE_PATH, LOG_FILE_PATH, CP_GAZ,
                        JSON_MIME, Error, LogError, QUERY_PATH, # Status,
                        START, OBSERVE, SET_BATTERY, PLACE_OBSTACLE,
-                       REMOVE_OBSTACLE, PERTURB_SENSOR)
+                       REMOVE_OBSTACLE, PERTURB_SENSOR, DoneEarly)
 from gazebo_interface import GazeboInterface
 from map_util import waypoint_to_coords
-from parse import Coords, Bump, Config, TestAction, Voltage, ObstacleID, SingleBumpName
+from parse import (Coords, Bump, Config, TestAction,
+                   Voltage, ObstacleID, SingleBumpName)
 
 ### some definitions and helper functions
 
 def done_cb(terminal, result):
     """ callback for when the bot is at the target """
+    done_early("done_cb called, so we got a good result from the plan", DoneEarly.AT_TARGET)
     log_das(LogError.INFO, "brasscomms received successful result from plan: %d" % terminal)
 
 def active_cb():
@@ -96,6 +98,20 @@ def log_das(error, msg):
     except StandardError as e:
         th_das_error(Error.DAS_LOG_FILE_ERROR, '%s could not be accessed: %s' % (LOG_FILE_PATH, e))
 
+def done_early(message, reason):
+    """ POSTs action message to the TH that we're done early """
+    dest = TH_URL + "/action/done"
+    contents = {"TIME" : (datetime.datetime.now()).isoformat(),
+                "TARGET" : str(message),
+                "ARGUMENTS" : {"done" : reason.name}}
+    log_das(Error.INFO, "ending early: %s; %s" % (reason.name, message)
+
+    try:
+        requests.post(dest, data=json.dumps(contents))
+    except Exception as e:
+        log_das(LogError.RUNTIME_ERROR,
+                "Fatal: couldn't connect to TH to indicate early termination at %s: %s" % (dest, e))
+
 def das_ready():
     """ POSTs DAS_READY to the TH, or logs if failed"""
     dest = TH_URL + "/ready"
@@ -103,7 +119,8 @@ def das_ready():
     try:
         requests.post(dest, data=json.dumps(contents))
     except Exception as e:
-        log_das(LogError.STARTUP_ERROR, "Fatal: couldn't connect to TH at %s: %s" % (dest, e))
+        log_das(LogError.STARTUP_ERROR,
+                "Fatal: couldn't connect to TH to send DAS_READY at %s: %s" % (dest, e))
 
 def check_action(req, path, methods):
     """ return true if the request respects the methods, false and log it otherwise """
@@ -224,6 +241,10 @@ def action_set_battery():
     ## model. also need to check that the argument voltage is less than the
     ## current voltage, not just a valid possible voltage?
 
+    ## todo: register a callback with the battery sim here to hit
+    ## done_early in case we run out. alt: we may need to subscribe to
+    ## the topic below.
+
     return action_result({})
 
 @app.route(PLACE_OBSTACLE.url, methods=PLACE_OBSTACLE.methods)
@@ -326,7 +347,7 @@ if __name__ == "__main__":
         start_coords = waypoint_to_coords(config.start_loc)
         gazebo.set_turtlebot_position(start_coords['x'], start_coords['y'], 0)
     except Exception as e:
-        log_das(LogError.STARTUP_ERROR, 
+        log_das(LogError.STARTUP_ERROR,
                 "Fatal: config file inconsistent with map: %s" % e)
         raise
 

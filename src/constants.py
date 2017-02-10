@@ -34,6 +34,10 @@ class LogError(Enum):
     RUNTIME_ERROR = 2
     INFO = 3
 
+class DoneEarly(Enum):
+    BATTERY = 1
+    AT_TARGET = 2
+
 Endpoint = collections.namedtuple('Endpoint', 'url methods')
 QUERY_PATH = Endpoint(url='/action/query_path', methods=['GET'])
 START = Endpoint(url='/action/start', methods=['POST'])
