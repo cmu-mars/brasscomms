@@ -9,18 +9,15 @@ from os.path import exists, isfile
 from os import access, R_OK
 ## from threading import Lock ## todo: do we need a lock?
 import json
-# import sys ## todo: do we need this?
 import datetime
 import requests
 
 ### relevant third party imports
 from flask import Flask, Response, request
 
-# import roslib ## todo: do we need this?
 import rospy
 import actionlib
 import ig_action_msgs.msg
-# import tf ## todo: do we need this?
 from move_base_msgs.msg import MoveBaseAction
 
 ### other brasscomms modules
@@ -278,8 +275,6 @@ def action_remove_obstacle():
     if success:
         return action_result({})
     else:
-        # todo: implicitly, this is because it was a bad obstacle
-        # ID. can we confirm that?
         log_das(LogError.RUNTIME_ERROR, 'action/remove_obstacle gazebo call failed')
         return th_error()
 
@@ -288,7 +283,6 @@ def action_perturb_sensor():
     """ implements perturb_sensor end point """
     if not check_action(request, PERTURB_SENSOR.url, methods=PERTURB_SENSOR.methods):
         return th_error()
-
 
     try:
         j = request.get_json(silent=True)
@@ -329,8 +323,6 @@ if __name__ == "__main__":
         config = parse_config_file()
     except Exception as e:
         log_das(LogError.STARTUP_ERROR, "Fatal: config file doesn't parse: %s" % e)
-        # todo: this raises Python errors on bad input. need to post
-        # to DAS error, stop the world.
 
     # this should block until the navigation stack is ready to recieve goals
     move_base = actionlib.SimpleActionClient("move_base", MoveBaseAction)
