@@ -30,7 +30,7 @@ from constants import (TH_URL, CONFIG_FILE_PATH, LOG_FILE_PATH, CP_GAZ,
                        REMOVE_OBSTACLE, PERTURB_SENSOR)
 from gazebo_interface import GazeboInterface
 # from map_util import *
-from parse import Coords, Bump, Config, TestAction, Voltage, ObstacleID
+from parse import Coords, Bump, Config, TestAction, Voltage, ObstacleID, SingleBumpName
 
 ### some definitions and helper functions
 
@@ -271,6 +271,9 @@ def action_remove_obstacle():
         return th_error()
 
     global gazebo
+    print "-----------------------"
+    print str(params)
+    print "-----------------------"
     success = gazebo.delete_obstacle(params.ARGUMENTS.obstacleid)
     if success:
         return action_result({})
@@ -286,14 +289,20 @@ def action_perturb_sensor():
     if not check_action(request, PERTURB_SENSOR.url, methods=PERTURB_SENSOR.methods):
         return th_error()
 
+
     try:
         j = request.get_json(silent=True)
         params = TestAction(**j)
-        params.ARGUMENTS = Bump(**params.ARGUMENTS)
+        params.ARGUMENTS = SingleBumpName(**params.ARGUMENTS)
+        params.ARGUMENTS.bump = Bump(**params.ARGUMENTS.bump)
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
                 '%s got a malformed test action POST: %s' % (PERTURB_SENSOR.url, e))
         return th_error()
+
+    print "-----------------------"
+    print str(params)
+    print "-----------------------"
 
     ## todo: currently we have no sensor to bump, so this doesn't do
     ## anything other than check the format of the request and reply with
@@ -327,13 +336,15 @@ if __name__ == "__main__":
         # todo: this raises Python errors on bad input. need to post
         # to DAS error, stop the world.
 
-
     # this should block until the navigation stack is ready to recieve goals
     move_base = actionlib.SimpleActionClient("move_base", MoveBaseAction)
     move_base.wait_for_server()
 
-    ## todo: call bradley's stuff to teleport the robot to the place it's actully starting not l1
+    ## todo: call bradley's stuff to teleport the robot to the place
+    ## it's actully starting not l1
+
     ## todo: this posts errors to the TH, but we should stop the world when that happens
+
     ## todo: this may happen too early
     das_ready()
 

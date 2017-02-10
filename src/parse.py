@@ -3,6 +3,7 @@ end points, with attributes to enforce invariants
 """
 import math
 import attr
+import unicodedata
 from attr.validators import instance_of
 
 from constants import AdaptationLevels
@@ -46,6 +47,11 @@ def ensure_enum(cl):
 
     return converter
 
+def ensure_str():
+    def converter(val):
+        return str(unicodedata.normalize('NFKD', val).encode('ascii','ignore'))
+    return converter
+
 @attr.s
 class Coords(object):
     """ class with attributes for inital position """
@@ -61,6 +67,10 @@ class Bump(object):
     p = attr.ib(validator=VALID_66)
     w = attr.ib(validator=VALID_66)
     r = attr.ib(validator=VALID_66)
+
+@attr.s
+class SingleBumpName(object):
+    bump = attr.ib(validator=instance_of(dict))
 
 @attr.s
 class Config(object):
@@ -90,4 +100,4 @@ class Voltage(object):
 class ObstacleID(object):
     """ class with attributes for obstacle ids """
     ## todo: also check here if it's a good name?
-    obstacleid = attr.ib(validator=instance_of(unicode))
+    obstacleid = attr.ib(validator=instance_of(str),convert=ensure_str())
