@@ -7,7 +7,6 @@ from __future__ import with_statement
 
 from os.path import exists, isfile
 from os import access, R_OK
-## from threading import Lock ## todo: do we need a lock?
 import json
 import datetime
 import requests
@@ -22,7 +21,7 @@ from move_base_msgs.msg import MoveBaseAction
 
 ### other brasscomms modules
 from constants import (TH_URL, CONFIG_FILE_PATH, LOG_FILE_PATH, CP_GAZ,
-                       JSON_MIME, Error, LogError, QUERY_PATH, # Status,
+                       JSON_MIME, Error, LogError, QUERY_PATH, Status,
                        START, OBSERVE, SET_BATTERY, PLACE_OBSTACLE,
                        REMOVE_OBSTACLE, PERTURB_SENSOR, DoneEarly)
 from gazebo_interface import GazeboInterface
@@ -34,7 +33,6 @@ from parse import (Coords, Bump, Config, TestAction,
 
 def done_cb(terminal, result):
     """ callback for when the bot is at the target """
-    ### todo come back to this
     done_early("done_cb called, so we got a good result from the plan",
                DoneEarly.AT_TARGET)
     log_das(LogError.INFO,
