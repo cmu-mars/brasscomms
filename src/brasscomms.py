@@ -354,7 +354,13 @@ if __name__ == "__main__":
     except Exception as e:
         log_das(LogError.STARTUP_ERROR, "Fatal: config file doesn't parse: %s" % e)
         raise
+        
+    # this should block until the navigation stack is ready to recieve goals
+    move_base = actionlib.SimpleActionClient("move_base", MoveBaseAction)
+    move_base.wait_for_server()
 
+    ## todo: call bradley's stuff to teleport the robot to the place
+    ## it's actully starting not l1
     # arrange the bot in the location specified by the config
     try:
         start_coords = waypoint_to_coords(config.start_loc)
@@ -363,13 +369,6 @@ if __name__ == "__main__":
         log_das(LogError.STARTUP_ERROR,
                 "Fatal: config file inconsistent with map: %s" % e)
         raise
-
-    # this should block until the navigation stack is ready to recieve goals
-    move_base = actionlib.SimpleActionClient("move_base", MoveBaseAction)
-    move_base.wait_for_server()
-
-    ## todo: call bradley's stuff to teleport the robot to the place
-    ## it's actully starting not l1
 
     ## todo: this posts errors to the TH, but we should stop the world when that happens
 
