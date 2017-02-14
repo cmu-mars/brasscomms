@@ -17,6 +17,9 @@ OBS_MODEL = os.path.expanduser('~/catkin_ws/src/cp_gazebo/models/box.sdf')
 X_MAP_TO_GAZEBO_TRANSLATION = 56
 Y_MAP_TO_GAZEBO_TRANSLATION = 42
 
+class GazeboExcpetion(Exception):
+	pass
+
 class GazeboInterface:
     # Class to manage interaction with Gazebo. This class should be instantiated only once.
         
@@ -38,8 +41,11 @@ class GazeboInterface:
 		self.set_model_state = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
 		self.spawn_model = rospy.ServiceProxy('/gazebo/spawn_sdf_model', SpawnModel)
 		self.delete_model = rospy.ServiceProxy('/gazebo/delete_model', DeleteModel)
-		rospy.wait_for_service('/gazebo/get_model_state')
-		rospy.wait_for_service('/gazebo/spawn_gazebo_model')
+		try:
+			rospy.wait_for_service('/gazebo/get_model_state', timeout=30)
+			rospy.wait_for_service('/gazebo/spawn_gazebo_model')
+		except rospy.ROSException, e:
+			raise GazeboExcpetion("Could not connect to gazebo", e)
 
 	def translateMapToGazebo(self,mx, my):
 	    # Translate from map coordinates to gazebo coordinates

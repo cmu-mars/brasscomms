@@ -101,3 +101,9 @@ class ObstacleID(object):
     """ class with attributes for obstacle ids """
     ## todo: also check here if it's a good name?
     obstacleid = attr.ib(validator=instance_of(str),convert=ensure_str())
+
+@attr.s
+class InternalStatus(object):
+    STATUS = attr.ib(validator=instance_of(unicode))
+    MESSAGE = attr.ib(validator=instance_of(unicode))
+    TIME = attr.ib(validator=instance_of(unicode))

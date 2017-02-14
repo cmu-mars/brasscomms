@@ -46,6 +46,7 @@ SET_BATTERY = Endpoint(url='/action/set_battery', methods=['POST'])
 PLACE_OBSTACLE = Endpoint(url='/action/place_obstacle', methods=['POST'])
 REMOVE_OBSTACLE = Endpoint(url='/action/remove_obstacle', methods=['POST'])
 PERTURB_SENSOR = Endpoint(url='/action/perturb_sensor', methods=['POST'])
+INTERNAL_STATUS = Endpoint(url='/internal/status', methods=['POST'])
 
 class AdaptationLevels(Enum):
     """ adaptations levels for config file """
@@ -53,3 +54,8 @@ class AdaptationLevels(Enum):
     CP2_NoAdaptation = 2
     CP1_Adaptation = 3
     CP2_Adaptation = 4
+
+class SubSystem(Enum):
+    """ Subsystems comprising experiment """
+    BASE = 1
+    DAS = 2

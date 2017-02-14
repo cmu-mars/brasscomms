@@ -4,6 +4,7 @@
 
 ### standard imports
 from __future__ import with_statement
+from threading import Lock
 
 from os.path import exists, isfile
 from os import access, R_OK
@@ -23,11 +24,14 @@ from move_base_msgs.msg import MoveBaseAction
 from constants import (TH_URL, CONFIG_FILE_PATH, LOG_FILE_PATH, CP_GAZ,
                        JSON_MIME, Error, LogError, QUERY_PATH, Status,
                        START, OBSERVE, SET_BATTERY, PLACE_OBSTACLE,
-                       REMOVE_OBSTACLE, PERTURB_SENSOR, DoneEarly)
+                       REMOVE_OBSTACLE, PERTURB_SENSOR, DoneEarly,
+                       AdaptationLevels, INTERNAL_STATUS, SubSystem)
 from gazebo_interface import GazeboInterface
+from rainbow_interface import RainbowInterface
 from map_util import waypoint_to_coords
 from parse import (Coords, Bump, Config, TestAction,
-                   Voltage, ObstacleID, SingleBumpName)
+                   Voltage, ObstacleID, SingleBumpName, 
+                   InternalStatus)
 
 ### some definitions and helper functions
 
@@ -123,6 +127,35 @@ def das_ready():
         log_das(LogError.STARTUP_ERROR,
                 "Fatal: couldn't connect to TH to send DAS_READY at %s: %s" % (dest, e))
 
+def das_status(status, message):
+    dest = TH_URL + "/action/status"
+    contents = {"TIME" : (datetime.datetime.now()).isoformat(),
+                "STATUS": status.name,
+                "MESSAGE": message}
+    try:
+        requests.post(dest, data=json.dumps(contents))
+    except Exception as e:
+        log_das(LogError.STARTUP_ERROR,
+                "Fatal: couldn't connect to TH to send DAS_STATUS at %s: %s" % (dest, e))
+
+
+STATE_LOCK = Lock()
+READY_LIST =  []
+
+def indicate_ready(subsystem):
+    ready = False
+    global config
+    with STATE_LOCK:
+        READY_LIST.append(subsystem)
+        if config.enable_adaptation == AdaptationLevels.CP1_NoAdaptation or config.enable_adaptation == AdaptationLevels.CP2_NoAdaptation:
+            ready = SubSystem.BASE in READY_LIST
+        else:
+            ready = SubSystem.BASE in READY_LIST and SubSystem.DAS in READY_LIST
+            if not ready and SubSystem.DAS in READY_LIST:
+                log_das(LogError.INFO, 'DAS is ready before base - this should not happen')
+    if ready:
+        das_ready()
+
 def check_action(req, path, methods):
     """ return true if the request respects the methods, false and log it otherwise """
 
@@ -139,8 +172,8 @@ def check_action(req, path, methods):
 
     # if it's a post, make sure that it got JSON. req.method also needs to
     # be in methods, but that must be true from above
-    if (req.method == 'POST') and (request.headers['Content-Type'] != JSON_MIME):
-        log_das(LogError.RUNTIME_ERROR, '%s POSTed to without json header' % path)
+    if (req.method == 'POST') and (JSON_MIME not in request.headers['Content-Type']):
+        log_das(LogError.RUNTIME_ERROR, '%s POSTed to without json header: %s' % (path, request.headers['Content-Type']))
         return False
 
     return True
@@ -329,6 +362,51 @@ def action_perturb_sensor():
     ## something well-formatted if it gets something well-formatted
     return action_result({})
 
+@app.route(INTERNAL_STATUS.url, methods=INTERNAL_STATUS.methods)
+def internal_status():
+    """ implements the internal status, for communication from Rainbow """
+    if not check_action(request, INTERNAL_STATUS.url, methods=INTERNAL_STATUS.methods):
+        return th_error()
+
+    try:
+        j = request.get_json(silent=True)
+        params = InternalStatus(**j)
+        if params.STATUS == "RAINBOW_READY":
+            # Rainbow is now ready to, so send das_ready()
+            indicate_ready(SubSystem.DAS)
+        elif "PERTURBATION_DETECTED" == params.STATUS:
+            status = Status.PERTURBATION_DETECTED;
+            das_status(status, params.MESSAGE)
+        elif "MISSION_SUSPENDED" == params.STATUS:
+            status = Status.MISSION_SUSPENDED;
+            das_status(status, params.MESSAGE)
+        elif "MISSION_RESUMED" == params.STATUS:
+            status = Status.MISSION_RESUMED;
+            das_status(status, params.MESSAGE)
+        elif "MISSION_HALTED" == params.STATUS:
+            status = Status.MISSION_HALTED;
+            das_status(status, params.MESSAGE)
+        elif "MISSION_ABORTED" == params.STATUS:
+            status = Status.MISSION_ABORTED;
+            das_status(status, params.MESSAGE)
+        elif "ADAPTATION_INITIATED" == params.STATUS:
+            status = Status.ADAPTATION_INITIATED;
+            das_status(status, params.MESSAGE)
+        elif "ADAPTATION_COMPLETED" == params.STATUS:
+            status = Status.ADAPTATION_COMPLETED;
+            das_status(status, params.MESSAGE)
+        elif "ADAPTATION_STOPPED" == params.STATUS:
+            status = Status.ADAPTATION_STOPPED;
+            das_status(status, params.MESSAGE)
+        elif "ERROR" == params.STATUS:
+            das_status(Status.ERROR, params.MESSAGE)
+    except Exception as e:
+        log_das(LogError.RUNTIME_ERROR,
+                '%s got a malformed internal status: %s' %(INTERNAL_STATUS.url, e))
+    return action_result({})
+
+
+
 # if you run this script from the command line directly, this causes it to
 # actually launch the little web server and the node
 #
@@ -346,7 +424,10 @@ if __name__ == "__main__":
     client.wait_for_server()
 
     # make an interface into Gazebo
-    gazebo = GazeboInterface()
+    try:
+        gazebo = GazeboInterface()
+    except Exception as e:
+        log_das(LogError.STARTUP_ERROR, "Fatal: gazebo did not start up: %s" % e)
 
     # parse the config file
     try:
@@ -359,8 +440,6 @@ if __name__ == "__main__":
     move_base = actionlib.SimpleActionClient("move_base", MoveBaseAction)
     move_base.wait_for_server()
 
-    ## todo: call bradley's stuff to teleport the robot to the place
-    ## it's actully starting not l1
     # arrange the bot in the location specified by the config
     try:
         start_coords = waypoint_to_coords(config.start_loc)
@@ -370,10 +449,16 @@ if __name__ == "__main__":
                 "Fatal: config file inconsistent with map: %s" % e)
         raise
 
+    # start Rainbow
+    rainbow_log = open("/test/rainbow.log", 'w')
+    rainbow = RainbowInterface()
+    rainbow.launchRainbow(config.enable_adaptation, rainbow_log)
+    rainbow.startRainbow()
+
     ## todo: this posts errors to the TH, but we should stop the world when that happens
 
     ## todo: this may happen too early
-    das_ready()
+    indicate_ready(SubSystem.BASE)
 
     ## actually start up the flask service. this never returns, so it must
     ## be the last thing in the file
