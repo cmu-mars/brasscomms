@@ -30,7 +30,7 @@ from gazebo_interface import GazeboInterface
 from rainbow_interface import RainbowInterface
 from map_util import waypoint_to_coords
 from parse import (Coords, Bump, Config, TestAction,
-                   Voltage, ObstacleID, SingleBumpName, 
+                   Voltage, ObstacleID, SingleBumpName,
                    InternalStatus)
 
 ### some definitions and helper functions
@@ -216,12 +216,17 @@ def action_start():
 
     global deadline
 
+    ## check to see if there's already an assigned goal, abort if so.
+    global client
+    if client.gh:
+        log_das(LogError.RUNTIME_ERROR,
+            "%s hit with an active goal" % START.url)
+
     log_das(LogError.INFO, "starting challenge problem")
     try:
         with open(instruct('.ig')) as igfile:
             igcode = igfile.read()
             goal = ig_action_msgs.msg.InstructionGraphGoal(order=igcode)
-            global client
             client.send_goal(goal=goal, done_cb=done_cb, active_cb=active_cb)
 
         # update the deadline to be now + the amount of time for the path
@@ -435,7 +440,7 @@ if __name__ == "__main__":
     except Exception as e:
         log_das(LogError.STARTUP_ERROR, "Fatal: config file doesn't parse: %s" % e)
         raise
-        
+
     # this should block until the navigation stack is ready to recieve goals
     move_base = actionlib.SimpleActionClient("move_base", MoveBaseAction)
     move_base.wait_for_server()
