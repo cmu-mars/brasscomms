@@ -73,7 +73,7 @@ def th_error():
 
 def action_result(body):
     """ given a body, produce the action result with headers """
-    return Response(json.dumps({"TIME" : timestr(),
+    return Response(json.dumps({"TIME" : timenow(),
                                 "RESULT": body}),
                     status=200, mimetype=JSON_MIME)
 
@@ -81,7 +81,7 @@ def action_result(body):
 def th_das_error(err, msg):
     """ posts a DAS_ERROR formed with the arguments """
     dest = TH_URL + "/error"
-    error_contents = {"TIME" : timestr(),
+    error_contents = {"TIME" : timenow(),
                       "ERROR" : err.name,
                       "MESSAGE" : msg}
     try:
@@ -93,7 +93,7 @@ def log_das(error, msg):
     """ formats the arguments per the API and inserts them to the log """
     try:
         with open(LOG_FILE_PATH, 'a') as log_file:
-            error_contents = {"TIME" : timestr(),
+            error_contents = {"TIME" : timenow(),
                               "TYPE" : error.name,
                               "MESSAGE" : msg}
             data = json.dumps(error_contents)
@@ -104,7 +104,7 @@ def log_das(error, msg):
 def done_early(message, reason):
     """ POSTs action message to the TH that we're done early """
     dest = TH_URL + "/action/done"
-    contents = {"TIME" : timestr(),
+    contents = {"TIME" : timenow(),
                 "TARGET" : message,
                 "ARGUMENTS" : {"done" : reason.name}}
     log_das(LogError.INFO, "ending early: %s; %s" % (reason.name, message))
@@ -118,7 +118,7 @@ def done_early(message, reason):
 def das_ready():
     """ POSTs DAS_READY to the TH, or logs if failed"""
     dest = TH_URL + "/ready"
-    contents = {"TIME" : timestr()}
+    contents = {"TIME" : timenow()}
     try:
         requests.post(dest, data=json.dumps(contents))
     except Exception as e:
@@ -127,7 +127,7 @@ def das_ready():
 
 def das_status(status, message):
     dest = TH_URL + "/action/status"
-    contents = {"TIME" : timestr(),
+    contents = {"TIME" : timenow(),
                 "STATUS": status.name,
                 "MESSAGE": message}
     try:
@@ -182,9 +182,13 @@ def instruct(ext):
 
     return CP_GAZ + '/instructions/' + config.start_loc + '_to_' + config.target_loc + ext
 
-def timestr():
+def timestr(d):
+    """ format the argument time to MIT's spec """
+    return '%sZ' % d.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]
+
+def timenow():
     """ return the UTC now time, formatted to MIT's spec """
-    return '%sZ' % datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]
+    return timestr(datetime.datetime.utcnow())
 
 ### subroutines per endpoint URL in API wiki page order
 @app.route(QUERY_PATH.url, methods=QUERY_PATH.methods)
@@ -235,7 +239,7 @@ def action_start():
         # given in the json file
         with open(instruct('.json')) as config_file:
             data = json.load(config_file)
-            deadline = datetime.datetime.utcnow() + datetime.timedelta(seconds=data['time'])
+            deadline = timestr(datetime.datetime.utcnow() + datetime.timedelta(seconds=data['time']))
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR, "could not send the goal in %s: %s " % (START.url, e))
         return th_error()
