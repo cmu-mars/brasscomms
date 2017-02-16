@@ -8,6 +8,9 @@ CONFIG_FILE_PATH = '/test/data'
 LOG_FILE_PATH = '/test/log'
 CP_GAZ = '/home/vagrant/catkin_ws/src/cp_gazebo'
 JSON_MIME = 'application/json'
+
+## this is all of the time format EXCEPT the trailing Z, which needs to get
+## put on manually or else the truncation for %f down to three is brittle
 TIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
 
 class Status(Enum):

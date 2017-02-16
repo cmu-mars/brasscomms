@@ -20,6 +20,7 @@ def in_range_inclusive(low=None, high=None, kind=None):
     return _isvalid
 
 def time_string(instance, attribute, value):
+    """ tries to parse the given value according to MIT spec for time formats, errors otherwise """
     try:
         if isinstance(value,unicode):
             datetime.datetime.strptime(value,TIME_FORMAT + 'Z')
