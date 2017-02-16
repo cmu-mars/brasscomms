@@ -48,9 +48,8 @@ def active_cb():
 
 ### some globals
 app = Flask(__name__)
-deadline = datetime.datetime.now() ## this is a default value; the result
-                                   ## of observe will be well formed but
-                                   ## wrong unless they call start first
+deadline = None ## this is a default value; the result of observe will be
+                ## well formed but wrong unless they call start first
 
 ## shared_var_lock = Lock() ## todo :commented out until we have occasion to use it
 
@@ -222,8 +221,8 @@ def action_start():
     ## check to see if there's already an assigned goal, abort if so.
     global client
     if client.gh:
-        log_das(LogError.RUNTIME_ERROR,
-            "%s hit with an active goal" % START.url)
+        log_das(LogError.RUNTIME_ERROR, "%s hit with an already active goal" % START.url)
+        return th_error()
 
     log_das(LogError.INFO, "starting challenge problem")
     try:
@@ -257,7 +256,7 @@ def action_observe():
         observation = {"x" : x, "y" : y, "w" : w,
                        "v" : vel,
                        "voltage" : -1,  # todo: Need to work this out
-                       "deadline" : deadline.isoformat()
+                       "deadline" : str(deadline)
                       }
         return action_result(observation)
     except Exception as e:
