@@ -5,8 +5,9 @@ import math
 import attr
 import unicodedata
 from attr.validators import instance_of
+import datetime
 
-from constants import AdaptationLevels
+from constants import AdaptationLevels, TIME_FORMAT
 
 def in_range_inclusive(low=None, high=None, kind=None):
     """ produce range checkers approriate for attrs given lower and upper bounds"""
@@ -17,6 +18,15 @@ def in_range_inclusive(low=None, high=None, kind=None):
             raise ValueError('%s not in [%s,%s]' % (value , low, high))
 
     return _isvalid
+
+def time_string(instance, attribute, value):
+    try:
+        if isinstance(value,unicode):
+            datetime.datetime.strptime(value,TIME_FORMAT + 'Z')
+        else:
+            raise ValueError('%s not a unicode string, so cannot parse as datetime object' % value)
+    except ValueError as ve:
+        raise ValueError('string %s did not part as a datetime object under %s: %s' % (value,TIME_FORMAT,ve))
 
 ## uses of the above that appear more than once
 VALID_VOLT = in_range_inclusive(low=104, high=166, kind=int)
@@ -88,7 +98,8 @@ class Config(object):
 class TestAction(object):
     """ class with attributes for test actions, leaving arguments unparsed """
     ## todo: check that this is a valid time string
-    TIME = attr.ib(validator=instance_of(unicode))
+    # TIME = attr.ib(validator=instance_of(unicode))
+    TIME = attr.ib(validator=time_string)
     ARGUMENTS = attr.ib(validator=instance_of(dict))
 
 @attr.s

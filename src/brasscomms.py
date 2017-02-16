@@ -25,7 +25,8 @@ from constants import (TH_URL, CONFIG_FILE_PATH, LOG_FILE_PATH, CP_GAZ,
                        JSON_MIME, Error, LogError, QUERY_PATH, Status,
                        START, OBSERVE, SET_BATTERY, PLACE_OBSTACLE,
                        REMOVE_OBSTACLE, PERTURB_SENSOR, DoneEarly,
-                       AdaptationLevels, INTERNAL_STATUS, SubSystem)
+                       AdaptationLevels, INTERNAL_STATUS, SubSystem,
+                       TIME_FORMAT)
 from gazebo_interface import GazeboInterface
 from rainbow_interface import RainbowInterface
 from map_util import waypoint_to_coords
@@ -184,10 +185,14 @@ def instruct(ext):
 
 def timestr(d):
     """ format the argument time to MIT's spec """
-    return '%sZ' % d.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]
+
+    ## the spec wants exactly 3 decimal places worth of fractions of a
+    ## second. the ISO standard is 6, so we chop off the trailing 3 and
+    ## then glue on the Z that they want at the end.
+    return '%sZ' % d.strftime(TIME_FORMAT)[:-3]
 
 def timenow():
-    """ return the UTC now time, formatted to MIT's spec """
+    """ return the UTC now time, formatted to MIT's spec.  """
     return timestr(datetime.datetime.utcnow())
 
 ### subroutines per endpoint URL in API wiki page order
