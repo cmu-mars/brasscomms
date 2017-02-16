@@ -98,7 +98,6 @@ class Config(object):
 class TestAction(object):
     """ class with attributes for test actions, leaving arguments unparsed """
     ## todo: check that this is a valid time string
-    # TIME = attr.ib(validator=instance_of(unicode))
     TIME = attr.ib(validator=time_string)
     ARGUMENTS = attr.ib(validator=instance_of(dict))
 
@@ -117,4 +116,4 @@ class ObstacleID(object):
 class InternalStatus(object):
     STATUS = attr.ib(validator=instance_of(unicode))
     MESSAGE = attr.ib(validator=instance_of(unicode))
-    TIME = attr.ib(validator=instance_of(unicode))
+    TIME = attr.ib(validator=time_string)
