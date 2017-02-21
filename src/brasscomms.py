@@ -445,12 +445,15 @@ if __name__ == "__main__":
     try:
         gazebo = GazeboInterface()
     except Exception as e:
+        th_das_error(Error.DAS_OTHER_ERROR, "Fatal: gazebo did not start up: %s" % e)
         log_das(LogError.STARTUP_ERROR, "Fatal: gazebo did not start up: %s" % e)
+        raise
 
     # parse the config file
     try:
         config = parse_config_file()
     except Exception as e:
+        th_das_error(Error.DAS_OTHER_ERROR, "Fatal: config file doesn't parse: %s" % e)
         log_das(LogError.STARTUP_ERROR, "Fatal: config file doesn't parse: %s" % e)
         raise
 
@@ -463,17 +466,21 @@ if __name__ == "__main__":
         start_coords = waypoint_to_coords(config.start_loc)
         gazebo.set_turtlebot_position(start_coords['x'], start_coords['y'], config.start_yaw)
     except Exception as e:
+        th_das_error(Error.DAS_OTHER_ERROR, "Fatal: config file inconsistent with map: %s" % e)
         log_das(LogError.STARTUP_ERROR,
                 "Fatal: config file inconsistent with map: %s" % e)
         raise
 
     # start Rainbow
-    rainbow_log = open("/test/rainbow.log", 'w')
-    rainbow = RainbowInterface()
-    rainbow.launchRainbow(config.enable_adaptation, rainbow_log)
-    rainbow.startRainbow()
-
-    ## todo: this posts errors to the TH, but we should stop the world when that happens
+    try:
+        rainbow_log = open("/test/rainbow.log", 'w')
+        rainbow = RainbowInterface()
+        rainbow.launchRainbow(config.enable_adaptation, rainbow_log)
+        rainbow.startRainbow()
+    except Exception as e:
+        th_das_error(Error.DAS_OTHER_ERROR, "Fatal: rainbow failed to start: %s" % e)
+        log_das(LogError.STARTUP_ERROR, "Fatal: config file inconsistent with map: %s" % e)
+        raise
 
     ## todo: this may happen too early
     indicate_ready(SubSystem.BASE)
