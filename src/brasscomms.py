@@ -88,7 +88,7 @@ def th_das_error(err, msg):
     try:
         requests.post(dest, data=json.dumps(error_contents))
     except Exception as e:
-        log_das(LogError.STARTUP_ERROR, "Fatal: cannot connect to TH at %s: %s" % (dest, e))
+        log_das(LogError.RUNTIME_ERROR, "Fatal: cannot connect to TH at %s: %s" % (dest, e))
 
 def log_das(error, msg):
     """ formats the arguments per the API and inserts them to the log """
@@ -134,7 +134,7 @@ def das_status(status, message):
     try:
         requests.post(dest, data=json.dumps(contents))
     except Exception as e:
-        log_das(LogError.STARTUP_ERROR,
+        log_das(LogError.RUNTIME_ERROR,
                 "Fatal: couldn't connect to TH to send DAS_STATUS at %s: %s" % (dest, e))
 
 
