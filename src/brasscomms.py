@@ -139,7 +139,7 @@ def das_status(status, message):
 
 
 STATE_LOCK = Lock()
-READY_LIST =  []
+READY_LIST = []
 
 def indicate_ready(subsystem):
     ready = False
@@ -392,31 +392,31 @@ def internal_status():
         if params.STATUS == "RAINBOW_READY":
             # Rainbow is now ready to, so send das_ready()
             indicate_ready(SubSystem.DAS)
-        elif "PERTURBATION_DETECTED" == params.STATUS:
-            status = Status.PERTURBATION_DETECTED;
+        elif params.STATUS == "PERTURBATION_DETECTED":
+            status = Status.PERTURBATION_DETECTED
             das_status(status, params.MESSAGE)
-        elif "MISSION_SUSPENDED" == params.STATUS:
-            status = Status.MISSION_SUSPENDED;
+        elif params.STATUS == "MISSION_SUSPENDED":
+            status = Status.MISSION_SUSPENDED
             das_status(status, params.MESSAGE)
-        elif "MISSION_RESUMED" == params.STATUS:
-            status = Status.MISSION_RESUMED;
+        elif params.STATUS == "MISSION_RESUMED":
+            status = Status.MISSION_RESUMED
             das_status(status, params.MESSAGE)
-        elif "MISSION_HALTED" == params.STATUS:
-            status = Status.MISSION_HALTED;
+        elif params.STATUS == "MISSION_HALTED":
+            status = Status.MISSION_HALTED
             das_status(status, params.MESSAGE)
-        elif "MISSION_ABORTED" == params.STATUS:
-            status = Status.MISSION_ABORTED;
+        elif params.STATUS == "MISSION_ABORTED":
+            status = Status.MISSION_ABORTED
             das_status(status, params.MESSAGE)
-        elif "ADAPTATION_INITIATED" == params.STATUS:
-            status = Status.ADAPTATION_INITIATED;
+        elif params.STATUS == "ADAPTATION_INITIATED":
+            status = Status.ADAPTATION_INITIATED
             das_status(status, params.MESSAGE)
-        elif "ADAPTATION_COMPLETED" == params.STATUS:
-            status = Status.ADAPTATION_COMPLETED;
+        elif params.STATUS == "ADAPTATION_COMPLETED":
+            status = Status.ADAPTATION_COMPLETED
             das_status(status, params.MESSAGE)
-        elif "ADAPTATION_STOPPED" == params.STATUS:
-            status = Status.ADAPTATION_STOPPED;
+        elif params.STATUS == "ADAPTATION_STOPPED":
+            status = Status.ADAPTATION_STOPPED
             das_status(status, params.MESSAGE)
-        elif "ERROR" == params.STATUS:
+        elif params.STATUS == "ERROR":
             das_status(Status.ERROR, params.MESSAGE)
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
