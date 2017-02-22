@@ -397,7 +397,7 @@ def internal_status():
     except IndexError as e:
         log_das(LogError.RUNTIME_ERROR,
                 '%s got a POST with the unknown status name \'%s\', %s'
-                % (INTERNAL_STATUS.url, params.STATUS, e)
+                % (INTERNAL_STATUS.url, params.STATUS, e))
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
                 '%s got a malformed internal status: %s' %(INTERNAL_STATUS.url, e))
@@ -425,16 +425,16 @@ if __name__ == "__main__":
     try:
         gazebo = GazeboInterface()
     except Exception as e:
-        th_das_error(Error.DAS_OTHER_ERROR, "Fatal: gazebo did not start up: %s" % e)
         log_das(LogError.STARTUP_ERROR, "Fatal: gazebo did not start up: %s" % e)
+        th_das_error(Error.DAS_OTHER_ERROR, "Fatal: gazebo did not start up: %s" % e)
         raise
 
     # parse the config file
     try:
         config = parse_config_file()
     except Exception as e:
-        th_das_error(Error.DAS_OTHER_ERROR, "Fatal: config file doesn't parse: %s" % e)
         log_das(LogError.STARTUP_ERROR, "Fatal: config file doesn't parse: %s" % e)
+        th_das_error(Error.DAS_OTHER_ERROR, "Fatal: config file doesn't parse: %s" % e)
         raise
 
     # this should block until the navigation stack is ready to recieve goals
@@ -446,9 +446,9 @@ if __name__ == "__main__":
         start_coords = waypoint_to_coords(config.start_loc)
         gazebo.set_turtlebot_position(start_coords['x'], start_coords['y'], config.start_yaw)
     except Exception as e:
-        th_das_error(Error.DAS_OTHER_ERROR, "Fatal: config file inconsistent with map: %s" % e)
         log_das(LogError.STARTUP_ERROR,
                 "Fatal: config file inconsistent with map: %s" % e)
+        th_das_error(Error.DAS_OTHER_ERROR, "Fatal: config file inconsistent with map: %s" % e)
         raise
 
     # start Rainbow
@@ -458,8 +458,8 @@ if __name__ == "__main__":
         rainbow.launchRainbow(config.enable_adaptation, rainbow_log)
         rainbow.startRainbow()
     except Exception as e:
-        th_das_error(Error.DAS_OTHER_ERROR, "Fatal: rainbow failed to start: %s" % e)
         log_das(LogError.STARTUP_ERROR, "Fatal: config file inconsistent with map: %s" % e)
+        th_das_error(Error.DAS_OTHER_ERROR, "Fatal: rainbow failed to start: %s" % e)
         raise
 
     ## todo: this may happen too early
