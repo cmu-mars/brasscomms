@@ -388,36 +388,16 @@ def internal_status():
         j = request.get_json(silent=True)
         params = InternalStatus(**j)
 
-        ## todo: refactor this
         if params.STATUS == "RAINBOW_READY":
             # Rainbow is now ready to, so send das_ready()
             indicate_ready(SubSystem.DAS)
-        elif params.STATUS == "PERTURBATION_DETECTED":
-            status = Status.PERTURBATION_DETECTED
-            das_status(status, params.MESSAGE)
-        elif params.STATUS == "MISSION_SUSPENDED":
-            status = Status.MISSION_SUSPENDED
-            das_status(status, params.MESSAGE)
-        elif params.STATUS == "MISSION_RESUMED":
-            status = Status.MISSION_RESUMED
-            das_status(status, params.MESSAGE)
-        elif params.STATUS == "MISSION_HALTED":
-            status = Status.MISSION_HALTED
-            das_status(status, params.MESSAGE)
-        elif params.STATUS == "MISSION_ABORTED":
-            status = Status.MISSION_ABORTED
-            das_status(status, params.MESSAGE)
-        elif params.STATUS == "ADAPTATION_INITIATED":
-            status = Status.ADAPTATION_INITIATED
-            das_status(status, params.MESSAGE)
-        elif params.STATUS == "ADAPTATION_COMPLETED":
-            status = Status.ADAPTATION_COMPLETED
-            das_status(status, params.MESSAGE)
-        elif params.STATUS == "ADAPTATION_STOPPED":
-            status = Status.ADAPTATION_STOPPED
-            das_status(status, params.MESSAGE)
-        elif params.STATUS == "ERROR":
-            das_status(Status.ERROR, params.MESSAGE)
+        else:
+            das_status(filter(lambda x: x.name == params.STATUS, Status)[0],
+                       params.MESSAGE)
+    except IndexError as e:
+        log_das(LogError.RUNTIME_ERROR,
+                '%s got a POST with the unknown status name \'%s\', %s'
+                % (INTERNAL_STATUS.url, params.STATUS, e)
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
                 '%s got a malformed internal status: %s' %(INTERNAL_STATUS.url, e))
