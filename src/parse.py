@@ -2,10 +2,12 @@
 end points, with attributes to enforce invariants
 """
 import math
-import attr
 import unicodedata
-from attr.validators import instance_of
 import datetime
+
+from attr.validators import instance_of
+import attr
+
 
 from constants import AdaptationLevels, TIME_FORMAT
 
@@ -15,19 +17,19 @@ def in_range_inclusive(low=None, high=None, kind=None):
         if not isinstance(value, kind):
             raise ValueError('%s is not a %s' % (value, kind))
         if value < low or value > high:
-            raise ValueError('%s not in [%s,%s]' % (value , low, high))
+            raise ValueError('%s not in [%s,%s]' % (value, low, high))
 
     return _isvalid
 
 def time_string(instance, attribute, value):
     """ tries to parse the given value according to MIT spec for time formats, errors otherwise """
     try:
-        if isinstance(value,unicode):
-            datetime.datetime.strptime(value,TIME_FORMAT + 'Z')
+        if isinstance(value, unicode):
+            datetime.datetime.strptime(value, TIME_FORMAT + 'Z')
         else:
             raise ValueError('%s not a unicode string, so cannot parse as datetime object' % value)
     except ValueError as ve:
-        raise ValueError('string %s did not part as a datetime object under %s: %s' % (value,TIME_FORMAT,ve))
+        raise ValueError('string %s did not part as a datetime object under %s: %s' % (value, TIME_FORMAT, ve))
 
 ## uses of the above that appear more than once
 VALID_VOLT = in_range_inclusive(low=104, high=166, kind=int)
@@ -60,7 +62,7 @@ def ensure_enum(cl):
 
 def ensure_str():
     def converter(val):
-        return str(unicodedata.normalize('NFKD', val).encode('ascii','ignore'))
+        return str(unicodedata.normalize('NFKD', val).encode('ascii', 'ignore'))
     return converter
 
 @attr.s
@@ -111,7 +113,7 @@ class Voltage(object):
 class ObstacleID(object):
     """ class with attributes for obstacle ids """
     ## todo: also check here if it's a good name?
-    obstacleid = attr.ib(validator=instance_of(str),convert=ensure_str())
+    obstacleid = attr.ib(validator=instance_of(str), convert=ensure_str())
 
 @attr.s
 class InternalStatus(object):
