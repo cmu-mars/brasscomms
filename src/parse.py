@@ -29,7 +29,8 @@ def time_string(instance, attribute, value):
         else:
             raise ValueError('%s not a unicode string, so cannot parse as datetime object' % value)
     except ValueError as ve:
-        raise ValueError('string %s did not part as a datetime object under %s: %s' % (value, TIME_FORMAT, ve))
+        raise ValueError('string %s did not part as a datetime object under %s: %s'
+                         % (value, TIME_FORMAT, ve))
 
 ## uses of the above that appear more than once
 VALID_VOLT = in_range_inclusive(low=104, high=166, kind=int)
