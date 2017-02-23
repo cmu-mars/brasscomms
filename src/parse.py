@@ -61,13 +61,6 @@ def ensure_enum(cl):
 
     return converter
 
-def ensure_str():
-    """ a converter to (brutally) convert unicode to ascii """
-    def converter(val):
-        """ convert val to ascii """
-        return str(unicodedata.normalize('NFKD', val).encode('ascii', 'ignore'))
-    return converter
-
 @attr.s
 class Coords(object):
     """ class with attributes for inital position """
@@ -116,7 +109,7 @@ class Voltage(object):
 class ObstacleID(object):
     """ class with attributes for obstacle ids """
     ## todo: also check here if it's a good name?
-    obstacleid = attr.ib(validator=instance_of(str), convert=ensure_str())
+    obstacleid = attr.ib(validator=instance_of(unicode))
 
 @attr.s
 class InternalStatus(object):

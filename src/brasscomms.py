@@ -351,10 +351,8 @@ def action_remove_obstacle():
             return th_error()
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR, '%s raised an exception: %s' % (REMOVE_OBSTACLE.url, e))
-        #### todo: this is kind of a hack for RR2.1.
-        #### flip the comments here to pick the other hack, as discussed
-        ### return th_error()
-        return action_result({})
+        return th_error()
+
 
 
 @app.route(PERTURB_SENSOR.url, methods=PERTURB_SENSOR.methods)
