@@ -99,7 +99,7 @@ evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / stateme
 [BASIC]
 
 # Good variable names which should always be accepted, separated by a comma
-good-names=x,y,z,p,w,r,cl,e,app,move_base,config,gazebo,client,deadline,j
+good-names=x,y,z,p,w,r,cl,e,app,move_base,config,gazebo,client,deadline,j,d,ve
 
 # Bad variable names which should always be refused, separated by a comma
 bad-names=foo,bar,baz,toto,tutu,tata

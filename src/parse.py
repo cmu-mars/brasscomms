@@ -62,7 +62,9 @@ def ensure_enum(cl):
     return converter
 
 def ensure_str():
+    """ a converter to (brutally) convert unicode to ascii """
     def converter(val):
+        """ convert val to ascii """
         return str(unicodedata.normalize('NFKD', val).encode('ascii', 'ignore'))
     return converter
 
@@ -84,6 +86,7 @@ class Bump(object):
 
 @attr.s
 class SingleBumpName(object):
+    """ class with attributes for just a thing called bump that's a mapping """
     bump = attr.ib(validator=instance_of(dict))
 
 @attr.s
@@ -101,7 +104,6 @@ class Config(object):
 @attr.s
 class TestAction(object):
     """ class with attributes for test actions, leaving arguments unparsed """
-    ## todo: check that this is a valid time string
     TIME = attr.ib(validator=time_string)
     ARGUMENTS = attr.ib(validator=instance_of(dict))
 
@@ -118,6 +120,7 @@ class ObstacleID(object):
 
 @attr.s
 class InternalStatus(object):
+    """ class with attributes for internal status from rainbow """
     STATUS = attr.ib(validator=instance_of(unicode))
     MESSAGE = attr.ib(validator=instance_of(unicode))
     TIME = attr.ib(validator=time_string)
