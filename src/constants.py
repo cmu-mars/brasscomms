@@ -23,7 +23,7 @@ class Status(Enum):
     ADAPTATION_INITIATED = 6
     ADAPTATION_COMPLETED = 7
     ADAPTATION_STOPPED = 8
-    ERROR = 9
+    TEST_ERROR = 9
 
 class Error(Enum):
     """ errors for DAS_ERROR messages """

@@ -38,10 +38,17 @@ from parse import (Coords, Bump, Config, TestAction,
 
 def done_cb(terminal, result):
     """ callback for when the bot is at the target """
-    done_early("done_cb called by ros with terminal %d and result %s" % (terminal, result),
-               doneearly.AT_TARGET)
-    log_das(LogError.INFO,
-            "done_cb called by ros with terminal %d and result %s" % (terminal, result))
+    if result:
+        done_early("done_cb called with terminal %d and positive result %s" % (terminal, result),
+                   DoneEarly.AT_TARGET)
+        log_das(LogError.INFO,
+                "done_cb called by ros with terminal %d and positive result %s" % (terminal, result))
+    else:
+        das_status(Status.TEST_ERROR,
+                   "done_cb with terminal %d but with negative result %s; this is an error" % (terminal, result))
+
+    ## todo: when we have the battery model implemented, also check here to
+    ## see if the battery is empty and send that message instead
 
 def active_cb():
     """ callback for when the bot is made active """
