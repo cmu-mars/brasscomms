@@ -2,7 +2,6 @@
 end points, with attributes to enforce invariants
 """
 import math
-import unicodedata
 import datetime
 
 from attr.validators import instance_of

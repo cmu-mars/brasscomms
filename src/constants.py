@@ -39,6 +39,7 @@ class LogError(Enum):
     INFO = 3
 
 class DoneEarly(Enum):
+    """ enumeration of the reasons we might finish before timeout  """
     BATTERY = 1
     AT_TARGET = 2
 
