@@ -151,7 +151,7 @@ class GazeboInterface:
 		pose = Pose ()
 		pose.position.x = gx
 		pose.position.y = gy
-		pose.position.z = 0.75 # constant because obstacle is 1.5 meters tall
+		pose.position.z = 0.0 # constant because obstacle is 1.5 meters tall
 		pose.orientation.x = self.zero_q[0]
 		pose.orientation.y = self.zero_q[1]
 		pose.orientation.z = self.zero_q[2]
