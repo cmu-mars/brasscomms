@@ -7,6 +7,7 @@ TA_URL = "http://brass-ta"
 CONFIG_FILE_PATH = '/test/data'
 LOG_FILE_PATH = '/test/log'
 CP_GAZ = '/home/vagrant/catkin_ws/src/cp_gazebo'
+BINDIR = '/home/vagrant/bin'
 JSON_MIME = 'application/json'
 
 ## this is all of the time format EXCEPT the trailing Z, which needs to get

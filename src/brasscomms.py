@@ -11,6 +11,8 @@ from os import access, R_OK
 import json
 import datetime
 import requests
+import subprocess
+import math
 
 ### relevant third party imports
 from flask import Flask, Response, request
@@ -26,7 +28,7 @@ from constants import (TH_URL, CONFIG_FILE_PATH, LOG_FILE_PATH, CP_GAZ,
                        START, OBSERVE, SET_BATTERY, PLACE_OBSTACLE,
                        REMOVE_OBSTACLE, PERTURB_SENSOR, DoneEarly,
                        AdaptationLevels, INTERNAL_STATUS, SubSystem,
-                       TIME_FORMAT)
+                       TIME_FORMAT,BINDIR)
 from gazebo_interface import GazeboInterface
 from rainbow_interface import RainbowInterface
 from map_util import waypoint_to_coords
@@ -361,7 +363,6 @@ def action_remove_obstacle():
         return th_error()
 
 
-
 @app.route(PERTURB_SENSOR.url, methods=PERTURB_SENSOR.methods)
 def action_perturb_sensor():
     """ implements perturb_sensor end point """
@@ -377,6 +378,41 @@ def action_perturb_sensor():
         log_das(LogError.RUNTIME_ERROR,
                 '%s got a malformed test action POST: %s' % (PERTURB_SENSOR.url, e))
         return th_error()
+
+    ## rotate the joint, converting intervals of degrees to radians
+    try:
+        rot = subprocess.call([BINDIR + '/set_joint_rot',
+                               math.radians(params.ARGUMENTS.bump.p * 10.0),
+                               math.radians(params.ARGUMENTS.bump.w * 10.0),
+                               math.radians(params.ARGUMENTS.bump.r * 10.0)])
+        if rot > 0:
+            log_das(LogError.RUNTIME_ERROR,
+                    '%s had non-zero return %d from calling set_joint_rot'
+                    % (PERTURB_SENSOR.url, rot))
+            return th_error()
+    except Exception as e:
+        log_das(LogError.RUNTIME_ERROR,
+                '%s caught exception when calling set_joint_rot: %s'
+                % (PERTURB_SENSOR.url, e))
+        return th_error()
+
+    ## translate the joint, converting intervals of cm to m
+    try:
+        trans = subprocess.call([BINDIR + '/set_joint_trans',
+                                 params.ARGUMENTS.bump.x * 0.05,
+                                 params.ARGUMENTS.bump.y * 0.05 ,
+                                 params.ARGUMENTS.bump.z * 0.05])
+        if trans > 0:
+            log_das(LogError.RUNTIME_ERROR,
+                    '%s had non-zero return %d from calling set_joint_trans'
+                    % (PERTURB_SENSOR.url, rot))
+            return th_error()
+    except Exception as e:
+        log_das(LogError.RUNTIME_ERROR,
+                '%s caught exception when calling set_joint_trans: %s'
+                % (PERTURB_SENSOR.url, e))
+        return th_error()
+
 
     ## todo: currently we have no sensor to bump, so this doesn't do
     ## anything other than check the format of the request and reply with
