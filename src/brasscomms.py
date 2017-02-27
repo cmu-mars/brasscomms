@@ -28,7 +28,7 @@ from constants import (TH_URL, CONFIG_FILE_PATH, LOG_FILE_PATH, CP_GAZ,
                        START, OBSERVE, SET_BATTERY, PLACE_OBSTACLE,
                        REMOVE_OBSTACLE, PERTURB_SENSOR, DoneEarly,
                        AdaptationLevels, INTERNAL_STATUS, SubSystem,
-                       TIME_FORMAT,BINDIR)
+                       TIME_FORMAT, BINDIR)
 from gazebo_interface import GazeboInterface
 from rainbow_interface import RainbowInterface
 from map_util import waypoint_to_coords
@@ -400,7 +400,7 @@ def action_perturb_sensor():
     try:
         trans = subprocess.call([BINDIR + '/set_joint_trans',
                                  params.ARGUMENTS.bump.x * 0.05,
-                                 params.ARGUMENTS.bump.y * 0.05 ,
+                                 params.ARGUMENTS.bump.y * 0.05,
                                  params.ARGUMENTS.bump.z * 0.05])
         if trans > 0:
             log_das(LogError.RUNTIME_ERROR,
