@@ -60,11 +60,18 @@ def ensure_enum(cl):
 
     return converter
 
+def to_float():
+    """ a converter from int (and likely some other things) to float  """
+    def converter(val):
+        return float(val)
+
+    return converter
+
 @attr.s
 class Coords(object):
     """ class with attributes for inital position """
-    x = attr.ib(validator=in_range_inclusive(low=-1.0, high=100.0, kind=float))
-    y = attr.ib(validator=in_range_inclusive(low=-1.0, high=112.0, kind=float))
+    x = attr.ib(convert=to_float(), validator=in_range_inclusive(low=-1.0, high=100.0, kind=float))
+    y = attr.ib(convert=to_float(), validator=in_range_inclusive(low=-1.0, high=112.0, kind=float))
 
 @attr.s
 class Bump(object):
@@ -85,7 +92,7 @@ class SingleBumpName(object):
 class Config(object):
     """ class with attributes for the config file """
     start_loc = attr.ib(validator=instance_of(unicode))
-    start_yaw = attr.ib(validator=in_range_inclusive(low=0.0, high=2*math.pi, kind=float))
+    start_yaw = attr.ib(validator=in_range_inclusive(low=0.0, high=2*math.pi, kind=float), convert=to_float())
     target_loc = attr.ib(validator=instance_of(unicode))
     enable_adaptation = attr.ib(convert=ensure_enum(AdaptationLevels))
     initial_voltage = attr.ib(validator=VALID_VOLT)
