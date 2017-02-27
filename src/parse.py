@@ -70,8 +70,8 @@ def to_float():
 @attr.s
 class Coords(object):
     """ class with attributes for inital position """
-    x = attr.ib(convert=to_float(), validator=in_range_inclusive(low=-1.0, high=100.0, kind=float))
-    y = attr.ib(convert=to_float(), validator=in_range_inclusive(low=-1.0, high=112.0, kind=float))
+    x = attr.ib(convert=to_float(), validator=in_range_inclusive(low=-1.0, high=55.0, kind=float))
+    y = attr.ib(convert=to_float(), validator=in_range_inclusive(low=-1.0, high=77.0, kind=float))
 
 @attr.s
 class Bump(object):
