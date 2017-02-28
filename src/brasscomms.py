@@ -23,6 +23,7 @@ import actionlib
 import ig_action_msgs.msg
 from move_base_msgs.msg import MoveBaseAction
 from std_msgs.msg       import Int32
+from kobuki_msgs.msg    import MotorPower
 
 ### other brasscomms modules
 from constants import (TH_URL, CONFIG_FILE_PATH, LOG_FILE_PATH, CP_GAZ,
@@ -41,16 +42,20 @@ from parse import (Coords, Bump, Config, TestAction,
 ### some definitions and helper functions
 
 def energy_cb(msg):
+    """ call back to update the global battery state from the ros topic """
     global battery
     battery = msg.data
+
+def motor_power_cb(msg):
+    """ call back for when battery runs out of power. we assume this will be called at most once"""
+    if msg.data == MotorPower.OFF:
+        done_early("energy_monitor indicated that the battery is empty", DoneEarly.BATTERY)
 
 def done_cb(terminal, result):
     """ callback for when the bot is at the target """
     if result:
         done_early("done_cb called with terminal %d and positive result %s" % (terminal, result),
                    DoneEarly.AT_TARGET)
-        log_das(LogError.INFO,
-                "done_cb called by ros with terminal %d and positive result %s" % (terminal, result))
     else:
         das_status(Status.TEST_ERROR,
                    "done_cb with terminal %d but with negative result %s; this is an error" % (terminal, result))
@@ -304,13 +309,7 @@ def action_set_battery():
                 '%s got a malformed test action POST: %s' % (SET_BATTERY.url, e))
         return th_error()
 
-    ## todo : implement real stuff here when we have the battery
-    ## model. also need to check that the argument voltage is less than the
-    ## current voltage, not just a valid possible voltage?
-
-    ## todo: register a callback with the battery sim here to hit
-    ## done_early in case we run out. alt: we may need to subscribe to
-    ## the topic below.
+    ## write to /energy_monitor/set_voltage
 
     return action_result({})
 
@@ -514,8 +513,9 @@ if __name__ == "__main__":
         th_das_error(Error.DAS_OTHER_ERROR, "Fatal: rainbow failed to start: %s" % e)
         raise
 
-    ## subscribe to the energy_monitor topic
+    ## subscribe to the energy_monitor topics
     rospy.Subscriber("/energy_monitor/voltage", Int32, energy_cb)
+    rospy.Subscriber("/mobile_base/commands/motor_power", MotorPower, motor_power_cb)
 
     ## todo: this may happen too early
     indicate_ready(SubSystem.BASE)
