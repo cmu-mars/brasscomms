@@ -10,9 +10,10 @@ from os.path import exists, isfile
 from os import access, R_OK
 import json
 import datetime
-import requests
 import subprocess
 import math
+
+import requests
 
 ### relevant third party imports
 from flask import Flask, Response, request
@@ -368,7 +369,7 @@ def call_set_joint(name, args, trans):
         encountered, True otherwise.
     """
     try:
-        call = [BINDIR + name] + (map trans args)
+        call = [BINDIR + name] + (map(trans, args))
         print "calling %s as %s" % (name, call)
         ret = subprocess.call(call)
         print "%s returned" % name
@@ -376,7 +377,7 @@ def call_set_joint(name, args, trans):
         if ret > 0:
             log_das(LogError.RUNTIME_ERROR,
                     '%s had non-zero return %d from calling %s'
-                    % (PERTURB_SENSOR.url, ret , name))
+                    % (PERTURB_SENSOR.url, ret, name))
             return False
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
@@ -403,17 +404,17 @@ def action_perturb_sensor():
 
     ## rotate the joint, converting intervals of degrees to radians
     if not (call_set_joint("/set_joint_rot",
-                       [params.ARGUMENTS.bump.p,
-                        params.ARGUMENTS.bump.w,
-                        params.ARGUMENTS.bump.r],
-                       lambda x: str(math.radians(x) * 10.0))):
+                           [params.ARGUMENTS.bump.p,
+                            params.ARGUMENTS.bump.w,
+                            params.ARGUMENTS.bump.r],
+                           lambda x: str(math.radians(x) * 10.0))):
         return th_error()
 
     if not (call_set_joint("/set_joint_rot",
-                       [params.ARGUMENTS.bump.x,
-                        params.ARGUMENTS.bump.y,
-                        params.ARGUMENTS.bump.z],
-                       lambda x: str(x * 0.05))):
+                           [params.ARGUMENTS.bump.x,
+                            params.ARGUMENTS.bump.y,
+                            params.ARGUMENTS.bump.z],
+                           lambda x: str(x * 0.05))):
         return th_error()
 
 
