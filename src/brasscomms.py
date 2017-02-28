@@ -362,6 +362,28 @@ def action_remove_obstacle():
         log_das(LogError.RUNTIME_ERROR, '%s raised an exception: %s' % (REMOVE_OBSTACLE.url, e))
         return th_error()
 
+def call_set_joint(name, args, trans):
+    """given the name of a binary, arguments, and a transform on those args,
+        call it and look for errors. returns False if an error was
+        encountered, True otherwise.
+    """
+    try:
+        call = [BINDIR + name] + (map trans args)
+        print "calling %s as %s" % (name, call)
+        ret = subprocess.call(call)
+        print "%s returned" % name
+
+        if ret > 0:
+            log_das(LogError.RUNTIME_ERROR,
+                    '%s had non-zero return %d from calling %s'
+                    % (PERTURB_SENSOR.url, ret , name))
+            return False
+    except Exception as e:
+        log_das(LogError.RUNTIME_ERROR,
+                '%s caught exception when calling %s: %s'
+                % (PERTURB_SENSOR.url, name, e))
+        return False
+    return True
 
 @app.route(PERTURB_SENSOR.url, methods=PERTURB_SENSOR.methods)
 def action_perturb_sensor():
@@ -380,37 +402,18 @@ def action_perturb_sensor():
         return th_error()
 
     ## rotate the joint, converting intervals of degrees to radians
-    try:
-        rot = subprocess.call([BINDIR + '/set_joint_rot',
-                               str(math.radians(params.ARGUMENTS.bump.p * 10.0)),
-                               str(math.radians(params.ARGUMENTS.bump.w * 10.0)),
-                               str(math.radians(params.ARGUMENTS.bump.r * 10.0))])
-        if rot > 0:
-            log_das(LogError.RUNTIME_ERROR,
-                    '%s had non-zero return %d from calling set_joint_rot'
-                    % (PERTURB_SENSOR.url, rot))
-            return th_error()
-    except Exception as e:
-        log_das(LogError.RUNTIME_ERROR,
-                '%s caught exception when calling set_joint_rot: %s'
-                % (PERTURB_SENSOR.url, e))
+    if not (call_set_joint("/set_joint_rot",
+                       [params.ARGUMENTS.bump.p,
+                        params.ARGUMENTS.bump.w,
+                        params.ARGUMENTS.bump.r],
+                       lambda x: str(math.radians(x) * 10.0))):
         return th_error()
 
-    ## translate the joint, converting intervals of cm to m
-    try:
-        trans = subprocess.call([BINDIR + '/set_joint_trans',
-                                 str(params.ARGUMENTS.bump.x * 0.05),
-                                 str(params.ARGUMENTS.bump.y * 0.05),
-                                 str(params.ARGUMENTS.bump.z * 0.05)])
-        if trans > 0:
-            log_das(LogError.RUNTIME_ERROR,
-                    '%s had non-zero return %d from calling set_joint_trans'
-                    % (PERTURB_SENSOR.url, rot))
-            return th_error()
-    except Exception as e:
-        log_das(LogError.RUNTIME_ERROR,
-                '%s caught exception when calling set_joint_trans: %s'
-                % (PERTURB_SENSOR.url, e))
+    if not (call_set_joint("/set_joint_rot",
+                       [params.ARGUMENTS.bump.x,
+                        params.ARGUMENTS.bump.y,
+                        params.ARGUMENTS.bump.z],
+                       lambda x: str(x * 0.05))):
         return th_error()
 
 
