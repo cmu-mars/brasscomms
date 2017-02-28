@@ -419,8 +419,7 @@ def action_perturb_sensor():
         return th_error()
 
     global config
-    if (config.enable_adaptation == AdaptationLevels.CP1_NoAdaptation or
-        config.enable_adaptation == AdaptationLevels.CP1_Adaptation):
+    if config.enable_adaptation == AdaptationLevels.CP1_NoAdaptation or config.enable_adaptation == AdaptationLevels.CP1_Adaptation:
         log_das(LogError.RUNTIME_ERROR,
                 '%s hit in CP1, where the kinect is not active' % PERTURB_SENSOR.url)
         return th_error()
@@ -450,10 +449,6 @@ def action_perturb_sensor():
                            lambda x: str(x * 0.05))):
         return th_error()
 
-
-    ## todo: currently we have no sensor to bump, so this doesn't do
-    ## anything other than check the format of the request and reply with
-    ## something well-formatted if it gets something well-formatted
     return action_result({})
 
 @app.route(INTERNAL_STATUS.url, methods=INTERNAL_STATUS.methods)
