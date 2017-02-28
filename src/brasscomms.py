@@ -223,7 +223,7 @@ def in_cp1():
         return True
     return False
 
-def in_cp1():
+def in_cp2():
     """ return true iff we're in either CP2 mode """
     global config
     if config.enable_adaptation == AdaptationLevels.CP2_NoAdaptation:
@@ -271,12 +271,11 @@ def action_start():
         return th_error()
 
     global desired_volts
+    global pub_setvoltage
+    global pub_setcharging
     try:
-        pub_v = rospy.Publisher("/energy_monitor/set_voltage", Int32, queue_size=10)
-        pub_v.publish(Int32(desired_volts))
-
-        pub_d = rospy.Publisher("/energy_monitor/set_charging", Bool, queue_size=10)
-        pub_d.publish(Bool(False))
+        pub_setcharging.publish(Bool(False))        
+        pub_setvoltage.publish(Int32(desired_volts))
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
                 '%s got an error trying to publish to set_voltage and set_charging: %s' % (START.url, e))
@@ -343,9 +342,9 @@ def action_set_battery():
         return th_error()
 
     ## write to the relevant topic
+    global pub_setvoltage
     try:
-        pub = rospy.Publisher("/energy_monitor/set_voltage", Int32, queue_size=10)
-        pub.publish(Int32(params.ARGUMENTS.voltage))
+        pub_setvoltage.publish(Int32(params.ARGUMENTS.voltage))
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
                 '%s got an error trying to publish to set_voltage: %s' % (SET_BATTERY.url, e))
@@ -559,6 +558,8 @@ if __name__ == "__main__":
         raise
 
     # start Rainbow
+
+    ## todo: should this code not get executed in half the adaptation levels?
     try:
         rainbow_log = open("/test/rainbow.log", 'w')
         rainbow = RainbowInterface()
@@ -569,7 +570,10 @@ if __name__ == "__main__":
         th_das_error(Error.DAS_OTHER_ERROR, "Fatal: rainbow failed to start: %s" % e)
         raise
 
-    ## subscribe to the energy_monitor topics
+    ## subscribe to the energy_monitor topics and make publishers
+    pub_setcharging = rospy.Publisher("/energy_monitor/set_charging", Bool, queue_size=10)
+    pub_setvoltage = rospy.Publisher("/energy_monitor/set_voltage", Int32, queue_size=10)
+
     rospy.Subscriber("/energy_monitor/voltage", Int32, energy_cb)
     rospy.Subscriber("/mobile_base/commands/motor_power", MotorPower, motor_power_cb)
 
