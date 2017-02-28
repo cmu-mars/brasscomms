@@ -214,6 +214,24 @@ def timenow():
     """ return the UTC now time, formatted to MIT's spec.  """
     return timestr(datetime.datetime.utcnow())
 
+def in_cp1():
+    """ return true iff we're in either CP1 mode """
+    global config
+    if config.enable_adaptation == AdaptationLevels.CP1_NoAdaptation:
+        return True
+    if config.enable_adaptation == AdaptationLevels.CP1_Adaptation:
+        return True
+    return False
+
+def in_cp1():
+    """ return true iff we're in either CP2 mode """
+    global config
+    if config.enable_adaptation == AdaptationLevels.CP2_NoAdaptation:
+        return True
+    if config.enable_adaptation == AdaptationLevels.CP2_Adaptation:
+        return True
+    return False
+
 ### subroutines per endpoint URL in API wiki page order
 @app.route(QUERY_PATH.url, methods=QUERY_PATH.methods)
 def action_query_path():
@@ -310,6 +328,11 @@ def action_set_battery():
     if not check_action(request, SET_BATTERY.url, SET_BATTERY.methods):
         return th_error()
 
+    if in_cp2():
+        log_das(LogError.RUNTIME_ERROR,
+                '%s hit in CP2 when battery is not active' % SET_BATTERY.url)
+        return th_error()
+
     try:
         j = request.get_json(silent=True)
         params = TestAction(**j)
@@ -339,6 +362,11 @@ def action_place_obstacle():
     if not check_action(request, PLACE_OBSTACLE.url, PLACE_OBSTACLE.methods):
         return th_error()
 
+    if in_cp2():
+        log_das(LogError.RUNTIME_ERROR,
+                '%s hit in CP2 when obstacles are not active' % PLACE_OBSTACLE.url)
+        return th_error()
+
     try:
         j = request.get_json(silent=True)
         params = TestAction(**j)
@@ -365,6 +393,11 @@ def action_place_obstacle():
 def action_remove_obstacle():
     """ implements remove_obstacle end point """
     if not check_action(request, REMOVE_OBSTACLE.url, methods=REMOVE_OBSTACLE.methods):
+        return th_error()
+
+    if in_cp2():
+        log_das(LogError.RUNTIME_ERROR,
+                '%s hit in CP2 when obstacles are not active' % REMOVE_OBSTACLE.url)
         return th_error()
 
     try:
@@ -418,10 +451,9 @@ def action_perturb_sensor():
     if not check_action(request, PERTURB_SENSOR.url, methods=PERTURB_SENSOR.methods):
         return th_error()
 
-    global config
-    if config.enable_adaptation == AdaptationLevels.CP1_NoAdaptation or config.enable_adaptation == AdaptationLevels.CP1_Adaptation:
+    if in_cp1():
         log_das(LogError.RUNTIME_ERROR,
-                '%s hit in CP1, where the kinect is not active' % PERTURB_SENSOR.url)
+                '%s hit in CP1 when the kinect is not active' % PERTURB_SENSOR.url)
         return th_error()
 
     try:
