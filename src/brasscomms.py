@@ -309,7 +309,9 @@ def action_set_battery():
                 '%s got a malformed test action POST: %s' % (SET_BATTERY.url, e))
         return th_error()
 
-    ## write to /energy_monitor/set_voltage
+    ## write to
+    pub = rospy.Publisher("/energy_monitor/set_voltage", Int32, queue_size=1)
+    pub.publish(Int32(params.ARGUMENTS.voltage))
 
     return action_result({})
 
