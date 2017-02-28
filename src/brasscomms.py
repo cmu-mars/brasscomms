@@ -254,11 +254,11 @@ def action_start():
 
     global desired_volts
     try:
-        pub_v = rospy.Publisher("/energy_monitor/set_voltage", Int32, queue_size=1)
+        pub_v = rospy.Publisher("/energy_monitor/set_voltage", Int32, queue_size=10)
         pub_v.publish(Int32(desired_volts))
 
-        pub_d = rospy.Publisher("/energy_monitor/set_charging", Bool, queue_size=1)
-        pub_d.publish(Bool(false))
+        pub_d = rospy.Publisher("/energy_monitor/set_charging", Bool, queue_size=10)
+        pub_d.publish(Bool(False))
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
                 '%s got an error trying to publish to set_voltage and set_charging: %s' % (START.url, e))
@@ -321,7 +321,7 @@ def action_set_battery():
 
     ## write to the relevant topic
     try:
-        pub = rospy.Publisher("/energy_monitor/set_voltage", Int32, queue_size=1)
+        pub = rospy.Publisher("/energy_monitor/set_voltage", Int32, queue_size=10)
         pub.publish(Int32(params.ARGUMENTS.voltage))
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
