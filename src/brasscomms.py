@@ -310,8 +310,13 @@ def action_set_battery():
         return th_error()
 
     ## write to the relevant topic
-    pub = rospy.Publisher("/energy_monitor/set_voltage", Int32, queue_size=1)
-    pub.publish(Int32(params.ARGUMENTS.voltage))
+    try:
+        pub = rospy.Publisher("/energy_monitor/set_voltage", Int32, queue_size=1)
+        pub.publish(Int32(params.ARGUMENTS.voltage))
+    except Exception as e:
+        log_das(LogError.RUNTIME_ERROR,
+                '%s got an error trying to publish to set_voltage: %s' % (SET_BATTERY.url, e))
+        return th_error()
 
     return action_result({})
 
