@@ -22,6 +22,7 @@ import rospy
 import actionlib
 import ig_action_msgs.msg
 from move_base_msgs.msg import MoveBaseAction
+from std_msgs.msg       import Int32
 
 ### other brasscomms modules
 from constants import (TH_URL, CONFIG_FILE_PATH, LOG_FILE_PATH, CP_GAZ,
@@ -38,6 +39,10 @@ from parse import (Coords, Bump, Config, TestAction,
                    InternalStatus)
 
 ### some definitions and helper functions
+
+def energy_cb(msg):
+    global battery
+    battery = msg.data
 
 def done_cb(terminal, result):
     """ callback for when the bot is at the target """
@@ -59,6 +64,7 @@ def active_cb():
 
 ### some globals
 app = Flask(__name__)
+battery = None
 deadline = None ## this is a default value; the result of observe will be
                 ## well formed but wrong unless they call start first
 
@@ -269,12 +275,13 @@ def action_observe():
 
     global gazebo
     global deadline
+    global battery
 
     try:
         x, y, w, vel = gazebo.get_turtlebot_state()
         observation = {"x" : x, "y" : y, "w" : w,
                        "v" : vel,
-                       "voltage" : -1,  # todo: Need to work this out
+                       "voltage" : int(battery),
                        "deadline" : str(deadline)
                       }
         return action_result(observation)
@@ -506,6 +513,9 @@ if __name__ == "__main__":
         log_das(LogError.STARTUP_ERROR, "Fatal: config file inconsistent with map: %s" % e)
         th_das_error(Error.DAS_OTHER_ERROR, "Fatal: rainbow failed to start: %s" % e)
         raise
+
+    ## subscribe to the energy_monitor topic
+    rospy.Subscriber("/energy_monitor/voltage", Int32, energy_cb)
 
     ## todo: this may happen too early
     indicate_ready(SubSystem.BASE)
