@@ -405,6 +405,13 @@ def action_perturb_sensor():
     if not check_action(request, PERTURB_SENSOR.url, methods=PERTURB_SENSOR.methods):
         return th_error()
 
+    global config
+    if (config.enable_adaptation == AdaptationLevels.CP1_NoAdaptation or
+        config.enable_adaptation == AdaptationLevels.CP1_Adaptation):
+        log_das(LogError.RUNTIME_ERROR,
+                '%s hit in CP1, where the kinect is not active' % PERTURB_SENSOR.url)
+        return th_error()
+
     try:
         j = request.get_json(silent=True)
         params = TestAction(**j)
