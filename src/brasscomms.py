@@ -23,6 +23,7 @@ import actionlib
 import ig_action_msgs.msg
 from move_base_msgs.msg import MoveBaseAction
 from std_msgs.msg       import Int32
+from std_msgs.msg       import Bool
 from kobuki_msgs.msg    import MotorPower
 
 ### other brasscomms modules
@@ -48,7 +49,7 @@ def energy_cb(msg):
 
 def motor_power_cb(msg):
     """ call back for when battery runs out of power. we assume this will be called at most once"""
-    if msg.data == MotorPower.OFF:
+    if msg == MotorPower.OFF:
         done_early("energy_monitor indicated that the battery is empty", DoneEarly.BATTERY)
 
 def done_cb(terminal, result):
@@ -60,9 +61,6 @@ def done_cb(terminal, result):
         das_status(Status.TEST_ERROR,
                    "done_cb with terminal %d but with negative result %s; this is an error" % (terminal, result))
 
-    ## todo: when we have the battery model implemented, also check here to
-    ## see if the battery is empty and send that message instead
-
 def active_cb():
     """ callback for when the bot is made active """
     log_das(LogError.INFO, "brasscoms received notification that goal is active")
@@ -70,10 +68,8 @@ def active_cb():
 ### some globals
 app = Flask(__name__)
 battery = None
-deadline = None ## this is a default value; the result of observe will be
-                ## well formed but wrong unless they call start first
-
-## shared_var_lock = Lock() ## todo :commented out until we have occasion to use it
+desired_volts = None
+deadline = None
 
 def parse_config_file():
     """ checks the appropriate place for the config file, and loads into an object if possible """
@@ -83,10 +79,9 @@ def parse_config_file():
             conf = Config(**data)
             return conf
     else:
-        # todo: does sending this this sufficiently stop the world if
-        # the file doesn't parse?  todo: return something?
         th_das_error(Error.TEST_DATA_FILE_ERROR,
                      '%s does not exist, is not a file, or is not readable' % CONFIG_FILE_PATH)
+        raise ValueError("config file doesn't exist, isn't a file, or isn't readable")
 
 ### subroutines for forming API results
 def th_error():
@@ -136,6 +131,7 @@ def done_early(message, reason):
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
                 "Fatal: couldn't connect to TH to indicate early termination at %s: %s" % (dest, e))
+        ## todo: error / exn here?
 
 def das_ready():
     """ POSTs DAS_READY to the TH, or logs if failed"""
@@ -146,6 +142,7 @@ def das_ready():
     except Exception as e:
         log_das(LogError.STARTUP_ERROR,
                 "Fatal: couldn't connect to TH to send DAS_READY at %s: %s" % (dest, e))
+        ## todo: error / exn here?
 
 def das_status(status, message):
     dest = TH_URL + "/action/status"
@@ -157,12 +154,13 @@ def das_status(status, message):
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
                 "Fatal: couldn't connect to TH to send DAS_STATUS at %s: %s" % (dest, e))
-
+        ## todo: error / exn here?
 
 STATE_LOCK = Lock()
 READY_LIST = []
 
 def indicate_ready(subsystem):
+    """ asynchronously waites for both the DAS and base system to come up before posting DAS ready """
     ready = False
     global config
     with STATE_LOCK:
@@ -254,6 +252,18 @@ def action_start():
         log_das(LogError.RUNTIME_ERROR, "%s hit with an already active goal" % START.url)
         return th_error()
 
+    global desired_volts
+    try:
+        pub_v = rospy.Publisher("/energy_monitor/set_voltage", Int32, queue_size=1)
+        pub_v.publish(Int32(desired_volts))
+
+        pub_d = rospy.Publisher("/energy_monitor/set_charging", Bool, queue_size=1)
+        pub_d.publish(Bool(false))
+    except Exception as e:
+        log_das(LogError.RUNTIME_ERROR,
+                '%s got an error trying to publish to set_voltage and set_charging: %s' % (START.url, e))
+        return th_error()
+
     log_das(LogError.INFO, "starting challenge problem")
     try:
         with open(instruct('.ig')) as igfile:
@@ -317,6 +327,9 @@ def action_set_battery():
         log_das(LogError.RUNTIME_ERROR,
                 '%s got an error trying to publish to set_voltage: %s' % (SET_BATTERY.url, e))
         return th_error()
+
+    global desired_volts
+    desired_volts = params.ARGUMENTS.voltage
 
     return action_result({})
 
@@ -501,6 +514,8 @@ if __name__ == "__main__":
         log_das(LogError.STARTUP_ERROR, "Fatal: config file doesn't parse: %s" % e)
         th_das_error(Error.DAS_OTHER_ERROR, "Fatal: config file doesn't parse: %s" % e)
         raise
+
+    desired_volts = config.initial_voltage
 
     # this should block until the navigation stack is ready to recieve goals
     move_base = actionlib.SimpleActionClient("move_base", MoveBaseAction)
