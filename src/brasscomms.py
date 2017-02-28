@@ -382,9 +382,9 @@ def action_perturb_sensor():
     ## rotate the joint, converting intervals of degrees to radians
     try:
         rot = subprocess.call([BINDIR + '/set_joint_rot',
-                               math.radians(params.ARGUMENTS.bump.p * 10.0),
-                               math.radians(params.ARGUMENTS.bump.w * 10.0),
-                               math.radians(params.ARGUMENTS.bump.r * 10.0)])
+                               str(math.radians(params.ARGUMENTS.bump.p * 10.0)),
+                               str(math.radians(params.ARGUMENTS.bump.w * 10.0)),
+                               str(math.radians(params.ARGUMENTS.bump.r * 10.0))])
         if rot > 0:
             log_das(LogError.RUNTIME_ERROR,
                     '%s had non-zero return %d from calling set_joint_rot'
@@ -399,9 +399,9 @@ def action_perturb_sensor():
     ## translate the joint, converting intervals of cm to m
     try:
         trans = subprocess.call([BINDIR + '/set_joint_trans',
-                                 params.ARGUMENTS.bump.x * 0.05,
-                                 params.ARGUMENTS.bump.y * 0.05,
-                                 params.ARGUMENTS.bump.z * 0.05])
+                                 str(params.ARGUMENTS.bump.x * 0.05),
+                                 str(params.ARGUMENTS.bump.y * 0.05),
+                                 str(params.ARGUMENTS.bump.z * 0.05)])
         if trans > 0:
             log_das(LogError.RUNTIME_ERROR,
                     '%s had non-zero return %d from calling set_joint_trans'
