@@ -473,7 +473,7 @@ def action_perturb_sensor():
                            lambda x: str(math.radians(x * 10)))):
         return th_error()
 
-    if not (call_set_joint("/set_joint_rot",
+    if not (call_set_joint("/set_joint_trans",
                            [params.ARGUMENTS.bump.x,
                             params.ARGUMENTS.bump.y,
                             params.ARGUMENTS.bump.z],
