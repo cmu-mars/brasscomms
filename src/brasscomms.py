@@ -57,9 +57,9 @@ def done_cb(terminal, result):
     if result:
         done_early("done_cb called with terminal %d and positive result %s" % (terminal, result),
                    DoneEarly.AT_TARGET)
-    else:
-        das_status(Status.TEST_ERROR,
-                   "done_cb with terminal %d but with negative result %s; this is an error" % (terminal, result))
+    # else:
+    #     das_status(Status.TEST_ERROR,
+    #                "done_cb with terminal %d but with negative result %s; this is an error" % (terminal, result))
 
 def active_cb():
     """ callback for when the bot is made active """
@@ -274,7 +274,7 @@ def action_start():
     global pub_setvoltage
     global pub_setcharging
     try:
-        pub_setcharging.publish(Bool(False))        
+        pub_setcharging.publish(Bool(False))
         pub_setvoltage.publish(Int32(desired_volts))
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
