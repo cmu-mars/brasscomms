@@ -453,7 +453,7 @@ def bump_sensor(bump):
     """given a bump object, bumps the sensor accordingly. returns true if this
        goes well and false otherwise so that errors can be propagated as
        appropriate from the call site """
-    if not (call_set_joint("/set_joint_rot", [bump.p, bump.w, bump.r],
+    if not (call_set_joint("/set_joint_rot", [bump.r, bump.w, bump.z],
                            lambda x: str(math.radians(x * 10)))):
         return False
     if not (call_set_joint("/set_joint_trans", [bump.x, bump.y, bump.z],
