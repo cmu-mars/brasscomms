@@ -149,8 +149,8 @@ def das_status(status, message):
     dest = TH_URL + "/action/status"
     contents = {"TIME" : timenow(),
                 "STATUS": status.name,
-                "MESSAGE": { "msg" : message,
-                             "sim_time" : str(rospy.Time.now().secs)}
+                "MESSAGE": {"msg" : message,
+                            "sim_time" : str(rospy.Time.now().secs)}}
     try:
         requests.post(dest, data=json.dumps(contents))
     except Exception as e:
@@ -488,7 +488,7 @@ def action_perturb_sensor():
         return th_error()
 
     ## rotate the joint, converting intervals of degrees to radians
-    if not (bump_sensor(params.ARGUMENTS.bump)):
+    if not bump_sensor(params.ARGUMENTS.bump):
         return th_error()
     else:
         return action_result({"sim_time" : str(rospy.Time.now().secs)})
@@ -579,7 +579,7 @@ if __name__ == "__main__":
     except Exception as e:
         log_das(LogError.STARTUP_ERROR, "Fatal: config file inconsistent with map: %s" % e)
         th_das_error(Error.DAS_OTHER_ERROR, "Fatal: rainbow failed to start: %s" % e)
-        raise
+        raise Exception("start up error")
 
     ## subscribe to the energy_monitor topics and make publishers
     pub_setcharging = rospy.Publisher("/energy_monitor/set_charging", Bool, queue_size=10)
@@ -589,15 +589,14 @@ if __name__ == "__main__":
 
     ## todo: is this happening at the right time?
     if (in_cp1()
-        and config.initial_obstacle
-        and (not place_obstacle(config.initial_obstacle_location))):
+            and config.initial_obstacle
+            and (not place_obstacle(config.initial_obstacle_location))):
         log_das(LogError.STARTUP_ERROR, "Fatal: could not place inital obstacle")
-        raise
+        raise Exception("start up error")
 
-    if (in_cp2()
-        and (not bump_sensor(config.sensor_perturbation))):
+    if in_cp2() and (not bump_sensor(config.sensor_perturbation)):
         log_das(LogError.STARTUP_ERROR, "Fatal: could not set inital sensor pose")
-        raise
+        raise Exception("start up error")
 
     ## todo: this may happen too early
     indicate_ready(SubSystem.BASE)
