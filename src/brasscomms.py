@@ -355,6 +355,13 @@ def action_set_battery():
 
     return action_result({})
 
+def place_obstacle(loc):
+    """given a coodinate, places the obstacle there. returns true if this goes
+       well, false otherwise."""
+    global gazebo
+    obs_name = gazebo.place_new_obstacle(loc.x, loc.y)
+    return obs_name
+
 @app.route(PLACE_OBSTACLE.url, methods=PLACE_OBSTACLE.methods)
 def action_place_obstacle():
     """ implements place_obstacle end point """
@@ -375,9 +382,7 @@ def action_place_obstacle():
                 '%s got a malformed test action POST: %s' % (PLACE_OBSTACLE.url, e))
         return th_error()
 
-    global gazebo
-
-    obs_name = gazebo.place_new_obstacle(params.ARGUMENTS.x, params.ARGUMENTS.y)
+    obs_name = place_obstacle(params.ARGUMENTS)
     if obs_name is not None:
         return action_result({"obstacleid" : obs_name,
                               "topleft_x" :  params.ARGUMENTS.x - 1.2,
@@ -444,8 +449,21 @@ def call_set_joint(name, args, trans):
         return False
     return True
 
+def bump_sensor(bump):
+    """given a bump object, bumps the sensor accordingly. returns true if this
+       goes well and false otherwise so that errors can be propagated as
+       appropriate from the call site """
+    if not (call_set_joint("/set_joint_rot", [bump.p, bump.w, bump.r],
+                           lambda x: str(math.radians(x * 10)))):
+        return False
+    if not (call_set_joint("/set_joint_trans", [bump.x, bump.y, bump.z],
+                           lambda x: str(x * 0.05))):
+        return False
+    return True
+
 @app.route(PERTURB_SENSOR.url, methods=PERTURB_SENSOR.methods)
 def action_perturb_sensor():
+
     """ implements perturb_sensor end point """
     if not check_action(request, PERTURB_SENSOR.url, methods=PERTURB_SENSOR.methods):
         return th_error()
@@ -466,21 +484,10 @@ def action_perturb_sensor():
         return th_error()
 
     ## rotate the joint, converting intervals of degrees to radians
-    if not (call_set_joint("/set_joint_rot",
-                           [params.ARGUMENTS.bump.p,
-                            params.ARGUMENTS.bump.w,
-                            params.ARGUMENTS.bump.r],
-                           lambda x: str(math.radians(x * 10)))):
+    if not (bump_sensor(params.ARGUMENTS.bump)):
         return th_error()
-
-    if not (call_set_joint("/set_joint_trans",
-                           [params.ARGUMENTS.bump.x,
-                            params.ARGUMENTS.bump.y,
-                            params.ARGUMENTS.bump.z],
-                           lambda x: str(x * 0.05))):
-        return th_error()
-
-    return action_result({})
+    else:
+        return action_result({})
 
 @app.route(INTERNAL_STATUS.url, methods=INTERNAL_STATUS.methods)
 def internal_status():
@@ -573,9 +580,20 @@ if __name__ == "__main__":
     ## subscribe to the energy_monitor topics and make publishers
     pub_setcharging = rospy.Publisher("/energy_monitor/set_charging", Bool, queue_size=10)
     pub_setvoltage = rospy.Publisher("/energy_monitor/set_voltage", Int32, queue_size=10)
-
     rospy.Subscriber("/energy_monitor/voltage", Int32, energy_cb)
     rospy.Subscriber("/mobile_base/commands/motor_power", MotorPower, motor_power_cb)
+
+    ## todo: is this happening at the right time?
+    if (in_cp1()
+        and config.initial_obstacle
+        and (not place_obstacle(config.initial_obstacle_location))):
+        log_das(LogError.STARTUP_ERROR, "Fatal: could not place inital obstacle")
+        raise
+
+    if (in_cp2()
+        and (not bump_sensor(config.sensor_perturbation))):
+        log_das(LogError.STARTUP_ERROR, "Fatal: could not set inital sensor pose")
+        raise
 
     ## todo: this may happen too early
     indicate_ready(SubSystem.BASE)
