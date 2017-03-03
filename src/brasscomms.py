@@ -48,7 +48,7 @@ def energy_cb(msg):
     battery = msg.data
 
 def motor_power_cb(msg):
-    """ call back for when battery runs out of power. we assume this will be called at most once"""
+    """ call back for when battery runs out of power. we assume posting this to the TH will end the test soon"""
     if msg == MotorPower.OFF:
         done_early("energy_monitor indicated that the battery is empty", DoneEarly.BATTERY)
 
@@ -123,7 +123,8 @@ def done_early(message, reason):
     dest = TH_URL + "/action/done"
     contents = {"TIME" : timenow(),
                 "TARGET" : message,
-                "ARGUMENTS" : {"done" : reason.name}}
+                "ARGUMENTS" : {"done" : reason.name,
+                               "sim_time" : str(rospy.Time.now().secs)}}
     log_das(LogError.INFO, "ending early: %s; %s" % (reason.name, message))
 
     try:
@@ -148,7 +149,8 @@ def das_status(status, message):
     dest = TH_URL + "/action/status"
     contents = {"TIME" : timenow(),
                 "STATUS": status.name,
-                "MESSAGE": message}
+                "MESSAGE": { "msg" : message,
+                             "sim_time" : str(rospy.Time.now().secs)}
     try:
         requests.post(dest, data=json.dumps(contents))
     except Exception as e:
@@ -314,7 +316,8 @@ def action_observe():
         observation = {"x" : x, "y" : y, "w" : w,
                        "v" : vel,
                        "voltage" : int(battery),
-                       "deadline" : str(deadline)
+                       "deadline" : str(deadline),
+                       "sim_time" : str(rospy.Time.now().secs)
                       }
         return action_result(observation)
     except Exception as e:
@@ -353,7 +356,7 @@ def action_set_battery():
     global desired_volts
     desired_volts = params.ARGUMENTS.voltage
 
-    return action_result({})
+    return action_result({"sim_time" : str(rospy.Time.now().secs)})
 
 def place_obstacle(loc):
     """given a coodinate, places the obstacle there. returns true if this goes
@@ -388,7 +391,8 @@ def action_place_obstacle():
                               "topleft_x" :  params.ARGUMENTS.x - 1.2,
                               "topleft_y" :  params.ARGUMENTS.y - 1.2,
                               "botright_x" : params.ARGUMENTS.x + 1.2,
-                              "botright_y" : params.ARGUMENTS.y + 1.2})
+                              "botright_y" : params.ARGUMENTS.y + 1.2,
+                              "sim_time" : str(rospy.Time.now().secs)})
     else:
         log_das(LogError.RUNTIME_ERROR, 'gazebo cant place new obstacle at given x y')
         return th_error()
@@ -418,7 +422,7 @@ def action_remove_obstacle():
         ## todo: this breaks for slightly mysterious reasons
         success = gazebo.delete_obstacle(params.ARGUMENTS.obstacleid)
         if success:
-            return action_result({})
+            return action_result({"sim_time" : str(rospy.Time.now().secs)})
         else:
             log_das(LogError.RUNTIME_ERROR, '%s gazebo call failed' % REMOVE_OBSTACLE.url)
             return th_error()
@@ -487,7 +491,7 @@ def action_perturb_sensor():
     if not (bump_sensor(params.ARGUMENTS.bump)):
         return th_error()
     else:
-        return action_result({})
+        return action_result({"sim_time" : str(rospy.Time.now().secs)})
 
 @app.route(INTERNAL_STATUS.url, methods=INTERNAL_STATUS.methods)
 def internal_status():
