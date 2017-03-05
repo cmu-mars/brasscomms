@@ -498,7 +498,9 @@ def bump_sensor(bump):
                            lambda x: str(x * 0.05))):
         return False
 
-    ## todo: publish r p w x y z
+    global pub_perturb
+    pub_perturb.publish(Int32MultiArray([bump.r, bump.p, bump.w,
+                                         bump.x, bump.y, bump.z]))
     return True
 
 @app.route(PERTURB_SENSOR.url, methods=PERTURB_SENSOR.methods)
@@ -622,6 +624,7 @@ if __name__ == "__main__":
     pub_setcharging = rospy.Publisher("/energy_monitor/set_charging", Bool, queue_size=10)
     pub_setvoltage = rospy.Publisher("/energy_monitor/set_voltage", Int32, queue_size=10)
     pub_user_notify = rospy.Publisher("notify_user", UserNotification, queue_size=10)
+    pub_perturb = rospy.Publisher("/calibration/perturb", Int32MultiArray, queue_size=10)
 
     sub_voltage = rospy.Subscriber("/energy_monitor/voltage", Int32, energy_cb)
     sub_motorpow = rospy.Subscriber("/mobile_base/commands/motor_power", MotorPower, motor_power_cb)
