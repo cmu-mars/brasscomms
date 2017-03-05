@@ -24,7 +24,8 @@ import rospy
 import actionlib
 import ig_action_msgs.msg
 from move_base_msgs.msg import MoveBaseAction
-from std_msgs.msg       import Int32, Bool, Float32MultiArray, Int32MultiArray
+from std_msgs.msg       import (Int32, Bool, Float32MultiArray, Int32MultiArray,
+                                MultiArrayDimension)
 from kobuki_msgs.msg    import MotorPower
 from mars_notifications.msg import UserNotification
 
@@ -499,8 +500,10 @@ def bump_sensor(bump):
         return False
 
     global pub_perturb
-    pub_perturb.publish(Int32MultiArray([bump.r, bump.p, bump.w,
-                                         bump.x, bump.y, bump.z]))
+    pub_perturb.publish(
+        Int32MultiArray(layout=MultiArrayDimension(label="bump",size=0,stride=0),
+                        data=[bump.r, bump.p, bump.w,
+                              bump.x, bump.y, bump.z]))
     return True
 
 @app.route(PERTURB_SENSOR.url, methods=PERTURB_SENSOR.methods)
