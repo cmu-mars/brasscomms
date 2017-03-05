@@ -618,6 +618,9 @@ if __name__ == "__main__":
         cw_log = open("/test/calibration_watcher.log", "w")
         cw_child = pexpect.spawn(BINDIR + "/calibration_watcher", logfile=cw_log)
 
+        ## todo: if we figure out sigint stuff, we should call close and
+        ## termiante on the above, as as the other files
+
         while cal_error_counter <= CAL_ERROR_THRESH:
             print "waiting for calibration_watcher to post %d messages" % CAL_ERROR_THRESH
             time.sleep(1)
