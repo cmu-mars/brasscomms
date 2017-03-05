@@ -40,11 +40,22 @@ from rainbow_interface import RainbowInterface
 from map_util import waypoint_to_coords
 from parse import (Coords, Bump, Config, TestAction,
                    Voltage, ObstacleID, SingleBumpName,
-                   InternalStatus)
+                   InternalStatus, ISMessage)
 
 ### some definitions and helper functions
 
+def notify_cb(msg):
+    """ callback to respond to any other components publishing a new deadline """
+    global deadline
+    try:
+        deadline = int(msg.new_deadline)
+    except Exception as e:
+        log_das(LogError.RUNTIME_ERROR, "malformed deadline message: %s" % e)
+        th_das_error(Error.DAS_OTHER_ERROR, "internal fault: got a malformed deadline message: %s" % e)
+
 def cal_error_cb(msg):
+    """callback to respond to calibration errors getting published. it keeps
+       count up to 2 and then deregisters itself"""
     global cal_error_counter
     cal_error_counter += 1
     if cal_error_counter >= CAL_ERROR_THRESH:
@@ -52,12 +63,15 @@ def cal_error_cb(msg):
         sub_calerror.unregister()
 
 def energy_cb(msg):
-    """ call back to update the global battery state from the ros topic """
+    """call back to update the global battery state from the ros topic"""
     global battery
     battery = msg.data
 
 def motor_power_cb(msg):
-    """ call back for when battery runs out of power. we assume posting this to the TH will end the test soon"""
+    """call back for when battery runs out of power. we assume posting this to
+       the TH will end the test soon. unsubscribes itself after one OFF
+       message, to keep log size and message count down
+    """
     if msg == MotorPower.OFF:
         done_early("energy_monitor indicated that the battery is empty", DoneEarly.BATTERY)
         ## if we see the message we want, we only need to see it once, so
@@ -84,7 +98,7 @@ def active_cb():
 app = Flask(__name__)
 battery = None
 desired_volts = None
-deadline = None
+deadline = -1 ## sim time default value
 cal_error_counter = 0
 
 def parse_config_file():
@@ -281,6 +295,7 @@ def action_start():
         return th_error()
 
     global deadline
+    global pub_user_notify
 
     ## check to see if there's already an assigned goal, abort if so.
     global client
@@ -310,7 +325,10 @@ def action_start():
         # given in the json file
         with open(instruct('.json')) as config_file:
             data = json.load(config_file)
-            deadline = timestr(datetime.datetime.utcnow() + datetime.timedelta(seconds=data['time']))
+            deadline = int(data['time'])
+            pub_user_notify.publish(UserNotification(new_deadline=str(deadline),
+                                                     user_notification="initial deadline"))
+
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR, "could not send the goal in %s: %s " % (START.url, e))
         return th_error()
@@ -603,9 +621,12 @@ if __name__ == "__main__":
     ## subscribe to the energy_monitor topics and make publishers
     pub_setcharging = rospy.Publisher("/energy_monitor/set_charging", Bool, queue_size=10)
     pub_setvoltage = rospy.Publisher("/energy_monitor/set_voltage", Int32, queue_size=10)
+    pub_user_notify = rospy.Publisher("notify_user", UserNotification, queue_size=10)
+
     sub_voltage = rospy.Subscriber("/energy_monitor/voltage", Int32, energy_cb)
     sub_motorpow = rospy.Subscriber("/mobile_base/commands/motor_power", MotorPower, motor_power_cb)
     sub_calerror = rospy.Subscriber("/calibration/calibration_error", Float32MultiArray, cal_error_cb)
+    sub_user_notify = rospy.Subscriber("notify_user", UserNotification, notify_cb)
 
     ## todo: is this happening at the right time?
     if (in_cp1()
