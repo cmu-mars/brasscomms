@@ -519,13 +519,14 @@ def internal_status():
     try:
         j = request.get_json(silent=True)
         params = InternalStatus(**j)
+        params.MESSAGE = ISMessage(**params.MESSAGE)
 
         if params.STATUS == "RAINBOW_READY":
             # Rainbow is now ready to, so send das_ready()
             indicate_ready(SubSystem.DAS)
         else:
             das_status(filter(lambda x: x.name == params.STATUS, Status)[0],
-                       params.MESSAGE)
+                       params.MESSAGE.msg)
     except IndexError as e:
         log_das(LogError.RUNTIME_ERROR,
                 '%s got a POST with the unknown status name \'%s\', %s'
