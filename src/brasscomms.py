@@ -12,6 +12,8 @@ import json
 import datetime
 import subprocess
 import math
+import time
+import pexpect
 
 import requests
 
@@ -22,8 +24,7 @@ import rospy
 import actionlib
 import ig_action_msgs.msg
 from move_base_msgs.msg import MoveBaseAction
-from std_msgs.msg       import Int32
-from std_msgs.msg       import Bool
+from std_msgs.msg       import Int32, Bool, Float32MultiArray
 from kobuki_msgs.msg    import MotorPower
 
 ### other brasscomms modules
@@ -32,7 +33,7 @@ from constants import (TH_URL, CONFIG_FILE_PATH, LOG_FILE_PATH, CP_GAZ,
                        START, OBSERVE, SET_BATTERY, PLACE_OBSTACLE,
                        REMOVE_OBSTACLE, PERTURB_SENSOR, DoneEarly,
                        AdaptationLevels, INTERNAL_STATUS, SubSystem,
-                       TIME_FORMAT, BINDIR)
+                       TIME_FORMAT, BINDIR, CAL_ERROR_THRESH)
 from gazebo_interface import GazeboInterface
 from rainbow_interface import RainbowInterface
 from map_util import waypoint_to_coords
@@ -41,6 +42,13 @@ from parse import (Coords, Bump, Config, TestAction,
                    InternalStatus)
 
 ### some definitions and helper functions
+
+def cal_error_cb(msg):
+    global cal_error_counter
+    cal_error_counter += 1
+    if cal_error_counter >= CAL_ERROR_THRESH:
+        global sub_calerror
+        sub_calerror.unregister()
 
 def energy_cb(msg):
     """ call back to update the global battery state from the ros topic """
@@ -51,6 +59,10 @@ def motor_power_cb(msg):
     """ call back for when battery runs out of power. we assume posting this to the TH will end the test soon"""
     if msg == MotorPower.OFF:
         done_early("energy_monitor indicated that the battery is empty", DoneEarly.BATTERY)
+        ## if we see the message we want, we only need to see it once, so
+        ## we unsubscribe
+        global sub_motorpow
+        sub_motorpow.unregister()
 
 def done_cb(terminal, result):
     """ callback for when the bot is at the target """
@@ -60,6 +72,8 @@ def done_cb(terminal, result):
     # else:
     #     das_status(Status.TEST_ERROR,
     #                "done_cb with terminal %d but with negative result %s; this is an error" % (terminal, result))
+    #
+    #  todo: also log here?
 
 def active_cb():
     """ callback for when the bot is made active """
@@ -70,6 +84,7 @@ app = Flask(__name__)
 battery = None
 desired_volts = None
 deadline = None
+cal_error_counter = 0
 
 def parse_config_file():
     """ checks the appropriate place for the config file, and loads into an object if possible """
@@ -584,8 +599,9 @@ if __name__ == "__main__":
     ## subscribe to the energy_monitor topics and make publishers
     pub_setcharging = rospy.Publisher("/energy_monitor/set_charging", Bool, queue_size=10)
     pub_setvoltage = rospy.Publisher("/energy_monitor/set_voltage", Int32, queue_size=10)
-    rospy.Subscriber("/energy_monitor/voltage", Int32, energy_cb)
-    rospy.Subscriber("/mobile_base/commands/motor_power", MotorPower, motor_power_cb)
+    sub_voltage = rospy.Subscriber("/energy_monitor/voltage", Int32, energy_cb)
+    sub_motorpow = rospy.Subscriber("/mobile_base/commands/motor_power", MotorPower, motor_power_cb)
+    sub_calerror = rospy.Subscriber("/calibration/calibration_error", Float32MultiArray, cal_error_cb)
 
     ## todo: is this happening at the right time?
     if (in_cp1()
@@ -597,6 +613,14 @@ if __name__ == "__main__":
     if in_cp2() and (not bump_sensor(config.sensor_perturbation)):
         log_das(LogError.STARTUP_ERROR, "Fatal: could not set inital sensor pose")
         raise Exception("start up error")
+
+    if config.enable_adaptation == AdaptationLevels.CP2_Adaptation:
+        cw_log = open("/test/calibration_watcher.log", "w")
+        cw_child = pexpect.spawn(BINDIR + "/calibration_watcher", logfile=cw_log)
+
+        while cal_error_counter <= CAL_ERROR_THRESH:
+            print "waiting for calibration_watcher to post %d messages" % CAL_ERROR_THRESH
+            time.sleep(1)
 
     ## todo: this may happen too early
     indicate_ready(SubSystem.BASE)
