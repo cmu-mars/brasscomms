@@ -24,7 +24,7 @@ import rospy
 import actionlib
 import ig_action_msgs.msg
 from move_base_msgs.msg import MoveBaseAction
-from std_msgs.msg       import Int32, Bool, Float32MultiArray
+from std_msgs.msg       import Int32, Bool, Float32MultiArray, Int32MultiArray
 from kobuki_msgs.msg    import MotorPower
 
 ### other brasscomms modules
@@ -472,12 +472,14 @@ def bump_sensor(bump):
     """given a bump object, bumps the sensor accordingly. returns true if this
        goes well and false otherwise so that errors can be propagated as
        appropriate from the call site """
-    if not (call_set_joint("/set_joint_rot", [bump.r, bump.w, bump.z],
+    if not (call_set_joint("/set_joint_rot", [bump.r, bump.p, bump.w],
                            lambda x: str(math.radians(x * 10)))):
         return False
     if not (call_set_joint("/set_joint_trans", [bump.x, bump.y, bump.z],
                            lambda x: str(x * 0.05))):
         return False
+
+    ## publish r p w x y z
     return True
 
 @app.route(PERTURB_SENSOR.url, methods=PERTURB_SENSOR.methods)

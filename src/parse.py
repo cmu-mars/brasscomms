@@ -118,6 +118,9 @@ class ObstacleID(object):
     obstacleid = attr.ib(validator=instance_of(unicode))
 
 @attr.s
+class ISMessage(object):
+
+@attr.s
 class InternalStatus(object):
     """ class with attributes for internal status from rainbow """
     STATUS = attr.ib(validator=instance_of(unicode))
