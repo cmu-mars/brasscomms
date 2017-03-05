@@ -26,6 +26,7 @@ import ig_action_msgs.msg
 from move_base_msgs.msg import MoveBaseAction
 from std_msgs.msg       import Int32, Bool, Float32MultiArray, Int32MultiArray
 from kobuki_msgs.msg    import MotorPower
+from mars_notifications.msg import UserNotification
 
 ### other brasscomms modules
 from constants import (TH_URL, CONFIG_FILE_PATH, LOG_FILE_PATH, CP_GAZ,
@@ -479,7 +480,7 @@ def bump_sensor(bump):
                            lambda x: str(x * 0.05))):
         return False
 
-    ## publish r p w x y z
+    ## todo: publish r p w x y z
     return True
 
 @app.route(PERTURB_SENSOR.url, methods=PERTURB_SENSOR.methods)
