@@ -99,8 +99,8 @@ def active_cb():
 
 ### some globals
 app = Flask(__name__)
-battery = None
-desired_volts = None
+battery = -1
+desired_volts = -1
 deadline = -1 ## sim time default value
 cal_error_counter = 0
 
