@@ -35,7 +35,7 @@ from constants import (TH_URL, CONFIG_FILE_PATH, LOG_FILE_PATH, CP_GAZ,
                        START, OBSERVE, SET_BATTERY, PLACE_OBSTACLE,
                        REMOVE_OBSTACLE, PERTURB_SENSOR, DoneEarly,
                        AdaptationLevels, INTERNAL_STATUS, SubSystem,
-                       TIME_FORMAT, BINDIR, CAL_ERROR_THRESH)
+                       TIME_FORMAT, BINDIR, CAL_ERROR_THRESH, JSON_HEADER)
 from gazebo_interface import GazeboInterface
 from rainbow_interface import RainbowInterface
 from map_util import waypoint_to_coords
@@ -133,7 +133,7 @@ def th_das_error(err, msg):
                       "ERROR" : err.name,
                       "MESSAGE" : msg}
     try:
-        requests.post(dest, data=json.dumps(error_contents), headers=JSON_MIME)
+        requests.post(dest, data=json.dumps(error_contents), headers=JSON_HEADER)
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR, "Fatal: cannot connect to TH at %s: %s" % (dest, e))
 
@@ -159,7 +159,7 @@ def done_early(message, reason):
     log_das(LogError.INFO, "ending early: %s; %s" % (reason.name, message))
 
     try:
-        requests.post(dest, data=json.dumps(contents), headers=JSON_MIME)
+        requests.post(dest, data=json.dumps(contents), headers=JSON_HEADER)
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
                 "Fatal: couldn't connect to TH to indicate early termination at %s: %s" % (dest, e))
@@ -170,7 +170,7 @@ def das_ready():
     dest = TH_URL + "/ready"
     contents = {"TIME" : timenow()}
     try:
-        requests.post(dest, data=json.dumps(contents), headers=JSON_MIME)
+        requests.post(dest, data=json.dumps(contents), headers=JSON_HEADER)
     except Exception as e:
         log_das(LogError.STARTUP_ERROR,
                 "Fatal: couldn't connect to TH to send DAS_READY at %s: %s" % (dest, e))
@@ -183,7 +183,7 @@ def das_status(status, message):
                 "MESSAGE": {"msg" : message,
                             "sim_time" : str(rospy.Time.now().secs)}}
     try:
-        requests.post(dest, data=json.dumps(contents), headers=JSON_MIME)
+        requests.post(dest, data=json.dumps(contents), headers=JSON_HEADER)
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
                 "Fatal: couldn't connect to TH to send DAS_STATUS at %s: %s" % (dest, e))
