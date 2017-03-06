@@ -165,7 +165,6 @@ def done_early(message, reason):
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
                 "Fatal: couldn't connect to TH to indicate early termination at %s: %s" % (dest, e))
-        ## todo: error / exn here?
 
 def das_ready():
     """ POSTs DAS_READY to the TH, or logs if failed"""
@@ -176,7 +175,6 @@ def das_ready():
     except Exception as e:
         log_das(LogError.STARTUP_ERROR,
                 "Fatal: couldn't connect to TH to send DAS_READY at %s: %s" % (dest, e))
-        ## todo: error / exn here?
 
 def das_status(status, message):
     dest = TH_URL + "/action/status"
@@ -189,7 +187,6 @@ def das_status(status, message):
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
                 "Fatal: couldn't connect to TH to send DAS_STATUS at %s: %s" % (dest, e))
-        ## todo: error / exn here?
 
 STATE_LOCK = Lock()
 READY_LIST = []
@@ -456,7 +453,6 @@ def action_remove_obstacle():
 
     try:
         global gazebo
-        ## todo: this breaks for slightly mysterious reasons
         success = gazebo.delete_obstacle(params.ARGUMENTS.obstacleid)
         if success:
             return action_result({"sim_time" : str(rospy.Time.now().secs)})
@@ -618,7 +614,6 @@ if __name__ == "__main__":
 
     # start Rainbow
 
-    ## todo: should this code not get executed in half the adaptation levels?
     try:
         rainbow_log = open("/test/rainbow.log", 'w')
         rainbow = RainbowInterface()
