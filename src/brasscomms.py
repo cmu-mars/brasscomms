@@ -50,6 +50,8 @@ def notify_cb(msg):
     global deadline
     try:
         deadline = int(msg.new_deadline)
+    except ValueError:
+        deadline = int(float(msg.new_deadline))
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR, "malformed deadline message: %s" % e)
         th_das_error(Error.DAS_OTHER_ERROR, "internal fault: got a malformed deadline message: %s" % e)
