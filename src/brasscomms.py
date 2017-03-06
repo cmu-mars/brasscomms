@@ -25,7 +25,7 @@ import actionlib
 import ig_action_msgs.msg
 from move_base_msgs.msg import MoveBaseAction
 from std_msgs.msg       import (Int32, Bool, Float32MultiArray, Int32MultiArray,
-                                MultiArrayDimension)
+                                MultiArrayLayout, MultiArrayDimension)
 from kobuki_msgs.msg    import MotorPower
 from mars_notifications.msg import UserNotification
 
@@ -503,7 +503,11 @@ def bump_sensor(bump):
 
     global pub_perturb
     pub_perturb.publish(
-        Int32MultiArray(layout=MultiArrayDimension(label="bump",size=0,stride=0),
+        Int32MultiArray(layout=
+                        MultiArrayLayout(dim=MultiArrayDimension(label="bump",
+                                                                 size=0,
+                                                                 stride=0),
+                                         data_offset=0),
                         data=[bump.r, bump.p, bump.w,
                               bump.x, bump.y, bump.z]))
     return True
