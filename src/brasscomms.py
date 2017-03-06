@@ -504,9 +504,9 @@ def bump_sensor(bump):
     global pub_perturb
     pub_perturb.publish(
         Int32MultiArray(layout=
-                        MultiArrayLayout(dim=MultiArrayDimension(label="bump",
+                        MultiArrayLayout(dim=[MultiArrayDimension(label="bump",
                                                                  size=0,
-                                                                 stride=0),
+                                                                 stride=0)],
                                          data_offset=0),
                         data=[bump.r, bump.p, bump.w,
                               bump.x, bump.y, bump.z]))
