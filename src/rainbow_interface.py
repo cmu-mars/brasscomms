@@ -33,7 +33,7 @@ class RainbowInterface:
 		if (self.target is None):
 			return True
 		rospy.loginfo("Starting Rainbow (DAS)...")
-		ret = subprocess.call ([RAINBOW_PATH+"/brass.sh", "-w", RAINBOW_PATH, "-s", self.target, "/test/rainbow.log"])
+		ret = subprocess.call ([RAINBOW_PATH+"/brass.sh", "-w", RAINBOW_PATH, "-s", self.target, "/test/rainbow-start.log"])
 		rospy.loginfo("Rainbow started, exit=%s"%str(ret))
 		return ret == 0
 
