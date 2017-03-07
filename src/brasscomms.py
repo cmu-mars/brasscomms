@@ -28,6 +28,7 @@ from std_msgs.msg       import (Int32, Bool, Float32MultiArray, Int32MultiArray,
                                 MultiArrayLayout, MultiArrayDimension)
 from kobuki_msgs.msg    import MotorPower
 from mars_notifications.msg import UserNotification
+from actionlib_msgs.msg import GoalStatus
 
 ### other brasscomms modules
 from constants import (TH_URL, CONFIG_FILE_PATH, LOG_FILE_PATH, CP_GAZ,
@@ -75,14 +76,13 @@ def motor_power_cb(msg):
 
 def done_cb(terminal, result):
     """ callback for when the bot is at the target """
-    if result:
-        done_early("done_cb called with terminal %d and positive result %s" % (terminal, result),
-                   DoneEarly.AT_TARGET)
-    # else:
-    #     das_status(Status.TEST_ERROR,
-    #                "done_cb with terminal %d but with negative result %s; this is an error" % (terminal, result))
-    #
-    #  todo: also log here?
+    global client
+    print "--------- result"
+    print str(result)
+    print
+    if not_adapting() and result and client.get_state () == GoalStatus.SUCCEEDED:
+        done_early("done_cb called with terminal %d and result %s" % (terminal, result),
+                    DoneEarly.AT_TARGET)
 
 def active_cb():
     """ callback for when the bot is made active """
@@ -252,6 +252,14 @@ def in_cp2():
     if config.enable_adaptation == AdaptationLevels.CP2_NoAdaptation:
         return True
     if config.enable_adaptation == AdaptationLevels.CP2_Adaptation:
+        return True
+    return False
+
+def not_adapting():
+    global config
+    if config.enable_adaptation == AdaptationLevels.CP2_NoAdaptation:
+        return True
+    if config.enable_adaptation == AdaptationLevels.CP1_NoAdaptation:
         return True
     return False
 
