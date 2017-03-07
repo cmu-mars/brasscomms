@@ -334,7 +334,7 @@ def action_start():
         # given in the json file
         with open(instruct('.json')) as config_file:
             data = json.load(config_file)
-            deadline = int(data['time'])
+            deadline = int(data['time']) + rospy.Time().now().secs
             pub_user_notify.publish(UserNotification(new_deadline=str(deadline),
                                                      user_notification="initial deadline"))
 
