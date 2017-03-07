@@ -13,8 +13,6 @@ import datetime
 import subprocess
 import math
 import time
-import pexpect
-
 import requests
 
 ### relevant third party imports
@@ -308,7 +306,10 @@ def action_start():
 
     if config.enable_adaptation == AdaptationLevels.CP2_Adaptation:
         cw_log = open("/test/calibration_watcher.log", "w")
-        cw_child = pexpect.spawn(BINDIR + "/calibration_watcher", logfile=cw_log, cwd="/home/vagrant/")
+        cw_child = subprocess.Popen([BINDIR + "/calibration_watcher"],
+                                    stdout=cw_log,
+                                    stderr=cw_log,
+                                    cwd="/home/vagrant/")
 
     if in_cp2() and (not bump_sensor(desired_bump)):
         log_das(LogError.RUNTIME_ERROR, "Fatal: could not set inital sensor pose in %s" % START.url)
