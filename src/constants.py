@@ -10,7 +10,6 @@ CP_GAZ = '/home/vagrant/catkin_ws/src/cp_gazebo'
 BINDIR = '/home/vagrant/bin'
 JSON_MIME = 'application/json'
 JSON_HEADER = {'content-type': JSON_MIME}
-CAL_ERROR_THRESH = 3
 
 ## this is all of the time format EXCEPT the trailing Z, which needs to get
 ## put on manually or else the truncation for %f down to three is brittle

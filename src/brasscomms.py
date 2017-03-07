@@ -35,7 +35,7 @@ from constants import (TH_URL, CONFIG_FILE_PATH, LOG_FILE_PATH, CP_GAZ,
                        START, OBSERVE, SET_BATTERY, PLACE_OBSTACLE,
                        REMOVE_OBSTACLE, PERTURB_SENSOR, DoneEarly,
                        AdaptationLevels, INTERNAL_STATUS, SubSystem,
-                       TIME_FORMAT, BINDIR, CAL_ERROR_THRESH, JSON_HEADER)
+                       TIME_FORMAT, BINDIR, JSON_HEADER)
 from gazebo_interface import GazeboInterface
 from rainbow_interface import RainbowInterface
 from map_util import waypoint_to_coords
@@ -55,15 +55,6 @@ def notify_cb(msg):
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR, "malformed deadline message: %s" % e)
         th_das_error(Error.DAS_OTHER_ERROR, "internal fault: got a malformed deadline message: %s" % e)
-
-def cal_error_cb(msg):
-    """callback to respond to calibration errors getting published. it keeps
-       count up to 2 and then deregisters itself"""
-    global cal_error_counter
-    cal_error_counter += 1
-    if cal_error_counter >= CAL_ERROR_THRESH:
-        global sub_calerror
-        sub_calerror.unregister()
 
 def energy_cb(msg):
     """call back to update the global battery state from the ros topic"""
@@ -101,8 +92,8 @@ def active_cb():
 app = Flask(__name__)
 battery = -1
 desired_volts = -1
+desired_bump = None
 deadline = -1 ## sim time default value
-cal_error_counter = 0
 
 def parse_config_file():
     """ checks the appropriate place for the config file, and loads into an object if possible """
@@ -294,18 +285,27 @@ def action_start():
                 '%s got a malformed test action POST: %s' % (START.url, e))
         return th_error()
 
-    global deadline
-    global pub_user_notify
-
     ## check to see if there's already an assigned goal, abort if so.
     global client
     if client.gh:
         log_das(LogError.RUNTIME_ERROR, "%s hit with an already active goal" % START.url)
         return th_error()
 
+    global deadline
+    global pub_user_notify
     global desired_volts
+    global desired_bump
     global pub_setvoltage
     global pub_setcharging
+
+    if in_cp2() and (not bump_sensor(desired_bump)):
+        log_das(LogError.STARTUP_ERROR, "Fatal: could not set inital sensor pose")
+        raise Exception("start up error")
+
+    if config.enable_adaptation == AdaptationLevels.CP2_Adaptation:
+        cw_log = open("/test/calibration_watcher.log", "w")
+        cw_child = pexpect.spawn(BINDIR + "/calibration_watcher", logfile=cw_log, cwd="/home/vagrant/")
+
     try:
         pub_setcharging.publish(Bool(False))
         pub_setvoltage.publish(Int32(desired_volts))
@@ -530,6 +530,9 @@ def action_perturb_sensor():
                 '%s got a malformed test action POST: %s' % (PERTURB_SENSOR.url, e))
         return th_error()
 
+    global desired_bump
+    desired_bump = params.ARGUMENTS.bump
+
     ## rotate the joint, converting intervals of degrees to radians
     if not bump_sensor(params.ARGUMENTS.bump):
         return th_error()
@@ -597,6 +600,7 @@ if __name__ == "__main__":
         raise
 
     desired_volts = config.initial_voltage
+    desired_bump = config.sensor_perturbation
 
     # this should block until the navigation stack is ready to recieve goals
     move_base = actionlib.SimpleActionClient("move_base", MoveBaseAction)
@@ -632,7 +636,6 @@ if __name__ == "__main__":
 
     sub_voltage = rospy.Subscriber("/energy_monitor/voltage", Int32, energy_cb)
     sub_motorpow = rospy.Subscriber("/mobile_base/commands/motor_power", MotorPower, motor_power_cb)
-    sub_calerror = rospy.Subscriber("/calibration/calibration_error", Float32MultiArray, cal_error_cb)
     sub_user_notify = rospy.Subscriber("notify_user", UserNotification, notify_cb)
 
     ## todo: is this happening at the right time?
@@ -641,21 +644,6 @@ if __name__ == "__main__":
             and (not place_obstacle(config.initial_obstacle_location))):
         log_das(LogError.STARTUP_ERROR, "Fatal: could not place inital obstacle")
         raise Exception("start up error")
-
-    if in_cp2() and (not bump_sensor(config.sensor_perturbation)):
-        log_das(LogError.STARTUP_ERROR, "Fatal: could not set inital sensor pose")
-        raise Exception("start up error")
-
-    if config.enable_adaptation == AdaptationLevels.CP2_Adaptation:
-        cw_log = open("/test/calibration_watcher.log", "w")
-        cw_child = pexpect.spawn(BINDIR + "/calibration_watcher", logfile=cw_log, cwd="/home/vagrant/")
-
-        ## todo: if we figure out sigint stuff, we should call close and
-        ## termiante on the above, as as the other files
-
-        while cal_error_counter <= CAL_ERROR_THRESH:
-            print "waiting for calibration_watcher to post %d messages" % CAL_ERROR_THRESH
-            time.sleep(1)
 
     ## todo: this may happen too early
     indicate_ready(SubSystem.BASE)
