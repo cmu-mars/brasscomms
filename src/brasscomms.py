@@ -298,13 +298,13 @@ def action_start():
     global pub_setvoltage
     global pub_setcharging
 
-    if in_cp2() and (not bump_sensor(desired_bump)):
-        log_das(LogError.STARTUP_ERROR, "Fatal: could not set inital sensor pose")
-        raise Exception("start up error")
-
     if config.enable_adaptation == AdaptationLevels.CP2_Adaptation:
         cw_log = open("/test/calibration_watcher.log", "w")
         cw_child = pexpect.spawn(BINDIR + "/calibration_watcher", logfile=cw_log, cwd="/home/vagrant/")
+
+    if in_cp2() and (not bump_sensor(desired_bump)):
+        log_das(LogError.RUNTIME_ERROR, "Fatal: could not set inital sensor pose in %s" % START.url)
+        return th_error()
 
     try:
         pub_setcharging.publish(Bool(False))
