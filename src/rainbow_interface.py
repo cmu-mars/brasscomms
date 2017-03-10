@@ -33,7 +33,7 @@ class RainbowInterface:
 		if (self.target is None):
 			return True
 		rospy.loginfo("Starting Rainbow (DAS)...")
-		ret = subprocess.call ([RAINBOW_PATH+"/brass.sh", "-w", RAINBOW_PATH, "-s", self.target, "/test/rainbow.log"])
+		ret = subprocess.call ([RAINBOW_PATH+"/brass.sh", "-w", RAINBOW_PATH, "-s", self.target, "/test/rainbow-start.log"])
 		rospy.loginfo("Rainbow started, exit=%s"%str(ret))
 		return ret == 0
 
@@ -45,9 +45,10 @@ class RainbowInterface:
 		print ("Configuring rainbow for %s"%challenge_problem)
 		self.target = self.getTarget(challenge_problem)
 		if (self.target is not None):
+			time.sleep(10)
 			print("Starting %s/run-oracle.sh %s"%(RAINBOW_PATH,self.target))
 			subprocess.Popen([RAINBOW_PATH+"/run-oracle.sh", "-h", "-w", RAINBOW_PATH, self.target], stdout=log)
-			time.sleep(10)
+			time.sleep(40)
 
 
 	def stopRainbow(self):

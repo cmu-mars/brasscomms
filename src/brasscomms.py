@@ -13,8 +13,6 @@ import datetime
 import subprocess
 import math
 import time
-import pexpect
-
 import requests
 
 ### relevant third party imports
@@ -28,6 +26,7 @@ from std_msgs.msg       import (Int32, Bool, Float32MultiArray, Int32MultiArray,
                                 MultiArrayLayout, MultiArrayDimension)
 from kobuki_msgs.msg    import MotorPower
 from mars_notifications.msg import UserNotification
+from actionlib_msgs.msg import GoalStatus
 
 ### other brasscomms modules
 from constants import (TH_URL, CONFIG_FILE_PATH, LOG_FILE_PATH, CP_GAZ,
@@ -75,14 +74,13 @@ def motor_power_cb(msg):
 
 def done_cb(terminal, result):
     """ callback for when the bot is at the target """
-    if result:
-        done_early("done_cb called with terminal %d and positive result %s" % (terminal, result),
-                   DoneEarly.AT_TARGET)
-    # else:
-    #     das_status(Status.TEST_ERROR,
-    #                "done_cb with terminal %d but with negative result %s; this is an error" % (terminal, result))
-    #
-    #  todo: also log here?
+    global client
+    print "--------- result"
+    print str(result)
+    print
+    if not_adapting() and result and client.get_state () == GoalStatus.SUCCEEDED:
+        done_early("done_cb called with terminal %d and result %s" % (terminal, result),
+                    DoneEarly.AT_TARGET)
 
 def active_cb():
     """ callback for when the bot is made active """
@@ -255,6 +253,14 @@ def in_cp2():
         return True
     return False
 
+def not_adapting():
+    global config
+    if config.enable_adaptation == AdaptationLevels.CP2_NoAdaptation:
+        return True
+    if config.enable_adaptation == AdaptationLevels.CP1_NoAdaptation:
+        return True
+    return False
+
 ### subroutines per endpoint URL in API wiki page order
 @app.route(QUERY_PATH.url, methods=QUERY_PATH.methods)
 def action_query_path():
@@ -300,7 +306,10 @@ def action_start():
 
     if config.enable_adaptation == AdaptationLevels.CP2_Adaptation:
         cw_log = open("/test/calibration_watcher.log", "w")
-        cw_child = pexpect.spawn(BINDIR + "/calibration_watcher", logfile=cw_log, cwd="/home/vagrant/")
+        cw_child = subprocess.Popen([BINDIR + "/calibration_watcher"],
+                                    stdout=cw_log,
+                                    stderr=cw_log,
+                                    cwd="/home/vagrant/")
 
     if in_cp2() and (not bump_sensor(desired_bump)):
         log_das(LogError.RUNTIME_ERROR, "Fatal: could not set inital sensor pose in %s" % START.url)
@@ -325,7 +334,7 @@ def action_start():
         # given in the json file
         with open(instruct('.json')) as config_file:
             data = json.load(config_file)
-            deadline = int(data['time'])
+            deadline = int(data['time']) + rospy.Time.now().secs
             pub_user_notify.publish(UserNotification(new_deadline=str(deadline),
                                                      user_notification="initial deadline"))
 
@@ -381,6 +390,7 @@ def action_set_battery():
     ## write to the relevant topic
     global pub_setvoltage
     try:
+        rospy.loginfo('Setting voltage to %s' %params.ARGUMENTS.voltage)
         pub_setvoltage.publish(Int32(params.ARGUMENTS.voltage))
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
@@ -553,6 +563,8 @@ def internal_status():
         if params.STATUS == "RAINBOW_READY":
             # Rainbow is now ready to, so send das_ready()
             indicate_ready(SubSystem.DAS)
+        elif params.STATUS == "MISSION_COMPLETED":
+	    done_early(params.MESSAGE.msg, DoneEarly.AT_TARGET)
         else:
             das_status(filter(lambda x: x.name == params.STATUS, Status)[0],
                        params.MESSAGE.msg)
