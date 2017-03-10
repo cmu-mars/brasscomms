@@ -45,9 +45,10 @@ class RainbowInterface:
 		print ("Configuring rainbow for %s"%challenge_problem)
 		self.target = self.getTarget(challenge_problem)
 		if (self.target is not None):
+			time.sleep(10)
 			print("Starting %s/run-oracle.sh %s"%(RAINBOW_PATH,self.target))
 			subprocess.Popen([RAINBOW_PATH+"/run-oracle.sh", "-h", "-w", RAINBOW_PATH, self.target], stdout=log)
-			time.sleep(10)
+			time.sleep(40)
 
 
 	def stopRainbow(self):

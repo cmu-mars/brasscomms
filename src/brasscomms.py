@@ -334,7 +334,7 @@ def action_start():
         # given in the json file
         with open(instruct('.json')) as config_file:
             data = json.load(config_file)
-            deadline = int(data['time']) + rospy.Time().now().secs
+            deadline = int(data['time']) + rospy.Time.now().secs
             pub_user_notify.publish(UserNotification(new_deadline=str(deadline),
                                                      user_notification="initial deadline"))
 
@@ -390,6 +390,7 @@ def action_set_battery():
     ## write to the relevant topic
     global pub_setvoltage
     try:
+        rospy.loginfo('Setting voltage to %s' %params.ARGUMENTS.voltage)
         pub_setvoltage.publish(Int32(params.ARGUMENTS.voltage))
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
@@ -562,6 +563,8 @@ def internal_status():
         if params.STATUS == "RAINBOW_READY":
             # Rainbow is now ready to, so send das_ready()
             indicate_ready(SubSystem.DAS)
+        elif params.STATUS == "MISSION_COMPLETED":
+	    done_early(params.MESSAGE.msg, DoneEarly.AT_TARGET)
         else:
             das_status(filter(lambda x: x.name == params.STATUS, Status)[0],
                        params.MESSAGE.msg)
