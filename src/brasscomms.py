@@ -26,7 +26,7 @@ from std_msgs.msg       import (Int32, Bool, Float32MultiArray, Int32MultiArray,
                                 MultiArrayLayout, MultiArrayDimension)
 from kobuki_msgs.msg    import MotorPower
 from mars_notifications.msg import UserNotification
-from actionlib_msgs.msg import GoalStatus
+from ig_action_msgs.msg import InstructionGraphResult
 
 ### other brasscomms modules
 from constants import (TH_URL, CONFIG_FILE_PATH, LOG_FILE_PATH, CP_GAZ,
@@ -79,7 +79,7 @@ def done_cb(terminal, result):
     print "--------- result"
     print str(result)
     print
-    if not_adapting() and result and client.get_state () == GoalStatus.SUCCEEDED:
+    if not_adapting() and 'successfully' in result.sequence:
         done_early("done_cb called with terminal %d and result %s" % (terminal, result),
                     DoneEarly.AT_TARGET)
 
