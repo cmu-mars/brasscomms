@@ -65,7 +65,8 @@ def motor_power_cb(msg):
        the TH will end the test soon. unsubscribes itself after one OFF
        message, to keep log size and message count down
     """
-    if msg == MotorPower.OFF:
+    rospy.loginfo("Received message from motor power: %s" %msg)
+    if msg.state == MotorPower.OFF:
         done_early("energy_monitor indicated that the battery is empty", DoneEarly.BATTERY)
         ## if we see the message we want, we only need to see it once, so
         ## we unsubscribe
