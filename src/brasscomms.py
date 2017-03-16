@@ -124,6 +124,8 @@ def th_das_error(err, msg):
     error_contents = {"TIME" : timenow(),
                       "ERROR" : err.name,
                       "MESSAGE" : msg}
+
+    log_das(LogError.INFO, "posting error %s with message %s" % (err.name, msg))
     try:
         requests.post(dest, data=json.dumps(error_contents), headers=JSON_HEADER)
     except Exception as e:
@@ -160,6 +162,8 @@ def das_ready():
     """ POSTs DAS_READY to the TH, or logs if failed"""
     dest = TH_URL + "/ready"
     contents = {"TIME" : timenow()}
+
+    log_das(LogError.INFO, "posting das_ready")
     try:
         requests.post(dest, data=json.dumps(contents), headers=JSON_HEADER)
     except Exception as e:
@@ -172,6 +176,8 @@ def das_status(status, message):
                 "STATUS": status.name,
                 "MESSAGE": {"msg" : message,
                             "sim_time" : str(rospy.Time.now().secs)}}
+
+    log_das(LogError.INFO, "posting status %s with message %s" % (status.name, message))
     try:
         requests.post(dest, data=json.dumps(contents), headers=JSON_HEADER)
     except Exception as e:
@@ -183,6 +189,8 @@ READY_LIST = []
 
 def indicate_ready(subsystem):
     """ asynchronously waites for both the DAS and base system to come up before posting DAS ready """
+
+    log_das(LogError.INFO, "indicate_ready called with %s" % subsystem.name)
     ready = False
     global config
     with STATE_LOCK:
@@ -269,10 +277,14 @@ def action_query_path():
     if not check_action(request, QUERY_PATH.url, QUERY_PATH.methods):
         return th_error()
 
+    log_das(LogError.INFO, "%s hit" % QUERY_PATH.url)
+
     try:
         with open(instruct('.json')) as path_file:
             data = json.load(path_file)
-            return action_result({'path' : data['path'], 'time' : data['time']})
+            res = action_result({'path' : data['path'], 'time' : data['time']})
+            log_das(LogError.INFO, "%s returning %s" % (QUERY_PATH.url, res))
+            return res
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
                 "error in reading the files for %s: %s " % (QUERY_PATH.url, e))
@@ -283,6 +295,8 @@ def action_start():
     """ implements start end point """
     if not check_action(request, START.url, START.methods):
         return th_error()
+
+    log_das(LogError.INFO, "%s hit with %s" % (START.url,request.get_json(silent=True)))
 
     try:
         j = request.get_json(silent=True)
@@ -343,13 +357,17 @@ def action_start():
         log_das(LogError.RUNTIME_ERROR, "could not send the goal in %s: %s " % (START.url, e))
         return th_error()
 
-    return action_result({})
+    res = action_result({})
+    log_das(LogError.INFO, "%s returning %s" % (START.url, res))
+    return res
 
 @app.route(OBSERVE.url, methods=OBSERVE.methods)
 def action_observe():
     """ implements observe end point """
     if not check_action(request, OBSERVE.url, OBSERVE.methods):
         return th_error()
+
+    log_das(LogError.INFO, "%s hit" % OBSERVE.url)
 
     global gazebo
     global deadline
@@ -363,6 +381,8 @@ def action_observe():
                        "deadline" : str(deadline),
                        "sim_time" : str(rospy.Time.now().secs)
                       }
+        res = action_result(observation)
+        log_das(LogError.INFO, "%s returning %s" % (OBSERVE.url, res))
         return action_result(observation)
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR, "error in %s: %s " % (OBSERVE.url, e))
@@ -373,6 +393,8 @@ def action_set_battery():
     """ implements set_battery end point """
     if not check_action(request, SET_BATTERY.url, SET_BATTERY.methods):
         return th_error()
+
+    log_das(LogError.INFO, "%s hit with %s" % (SET_BATTERY.url, request.get_json(silent=True)))
 
     if in_cp2():
         log_das(LogError.RUNTIME_ERROR,
@@ -401,7 +423,9 @@ def action_set_battery():
     global desired_volts
     desired_volts = params.ARGUMENTS.voltage
 
-    return action_result({"sim_time" : str(rospy.Time.now().secs)})
+    res = action_result({"sim_time" : str(rospy.Time.now().secs)})
+    log_das(LogError.INFO, "%s returning %s" % (SET_BATTERY.url, res))
+    return res
 
 def place_obstacle(loc):
     """given a coodinate, places the obstacle there. returns true if this goes
@@ -415,6 +439,8 @@ def action_place_obstacle():
     """ implements place_obstacle end point """
     if not check_action(request, PLACE_OBSTACLE.url, PLACE_OBSTACLE.methods):
         return th_error()
+
+    log_das(LogError.INFO, "%s hit with %s" % (PLACE_OBSTACLE.url, request.get_json(silent=True)))
 
     if in_cp2():
         log_das(LogError.RUNTIME_ERROR,
@@ -432,12 +458,14 @@ def action_place_obstacle():
 
     obs_name = place_obstacle(params.ARGUMENTS)
     if obs_name is not None:
-        return action_result({"obstacleid" : obs_name,
+        res = action_result({"obstacleid" : obs_name,
                               "topleft_x" :  params.ARGUMENTS.x - 1.2,
                               "topleft_y" :  params.ARGUMENTS.y - 1.2,
                               "botright_x" : params.ARGUMENTS.x + 1.2,
                               "botright_y" : params.ARGUMENTS.y + 1.2,
                               "sim_time" : str(rospy.Time.now().secs)})
+        log_das(LogError.INFO, "%s returning %s" % (PLACE_OBSTACLE.url, res))
+        return res
     else:
         log_das(LogError.RUNTIME_ERROR, 'gazebo cant place new obstacle at given x y')
         return th_error()
@@ -447,6 +475,8 @@ def action_remove_obstacle():
     """ implements remove_obstacle end point """
     if not check_action(request, REMOVE_OBSTACLE.url, methods=REMOVE_OBSTACLE.methods):
         return th_error()
+
+    log_das(LogError.INFO, "%s hit with %s" % (REMOVE_OBSTACLE.url, request.get_json(silent=True)))
 
     if in_cp2():
         log_das(LogError.RUNTIME_ERROR,
@@ -466,7 +496,9 @@ def action_remove_obstacle():
         global gazebo
         success = gazebo.delete_obstacle(params.ARGUMENTS.obstacleid)
         if success:
-            return action_result({"sim_time" : str(rospy.Time.now().secs)})
+            res = action_result({"sim_time" : str(rospy.Time.now().secs)})
+            log_das(LogError.INFO, "%s hit with %s" % (REMOVE_OBSTACLE.url, res))
+            return res
         else:
             log_das(LogError.RUNTIME_ERROR, '%s gazebo call failed' % REMOVE_OBSTACLE.url)
             return th_error()
@@ -521,10 +553,11 @@ def bump_sensor(bump):
 
 @app.route(PERTURB_SENSOR.url, methods=PERTURB_SENSOR.methods)
 def action_perturb_sensor():
-
     """ implements perturb_sensor end point """
     if not check_action(request, PERTURB_SENSOR.url, methods=PERTURB_SENSOR.methods):
         return th_error()
+
+    log_das(LogError.INFO, "%s hit with %s" % (PERTURB_SENSOR.url, request.get_json(silent=True)))
 
     if in_cp1():
         log_das(LogError.RUNTIME_ERROR,
@@ -548,13 +581,17 @@ def action_perturb_sensor():
     if not bump_sensor(params.ARGUMENTS.bump):
         return th_error()
     else:
-        return action_result({"sim_time" : str(rospy.Time.now().secs)})
+        res = action_result({"sim_time" : str(rospy.Time.now().secs)})
+        log_das(LogError.INFO, "%s returning %s" % (PERTURB_SENSOR.url, res))
+        return res
 
 @app.route(INTERNAL_STATUS.url, methods=INTERNAL_STATUS.methods)
 def internal_status():
     """ implements the internal status, for communication from Rainbow """
     if not check_action(request, INTERNAL_STATUS.url, methods=INTERNAL_STATUS.methods):
         return th_error()
+
+    log_das(LogError.INFO, "%s hit with %s" % (INTERNAL_STATUS.url, request.get_json(silent=True)))
 
     try:
         j = request.get_json(silent=True)
@@ -576,8 +613,10 @@ def internal_status():
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
                 '%s got a malformed internal status: %s' %(INTERNAL_STATUS.url, e))
-    return action_result({})
 
+    res = action_result({})
+    log_das(LogError.INFO, "%s returning %s" % (INTERNAL_STATUS.url, res))
+    return res
 
 
 # if you run this script from the command line directly, this causes it to
