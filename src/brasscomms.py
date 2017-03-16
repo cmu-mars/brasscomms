@@ -232,6 +232,10 @@ def instruct(ext):
 
     return CP_GAZ + '/instructions/' + config.start_loc + '_to_' + config.target_loc + ext
 
+def resp2str(r):
+    """given a Response object, produce a helpful string"""
+    return "response %s; status %s; headers %s; data %s" % (r, r.status, r.headers, r.get_data())
+
 def timestr(d):
     """ format the argument time to MIT's spec """
 
@@ -283,7 +287,7 @@ def action_query_path():
         with open(instruct('.json')) as path_file:
             data = json.load(path_file)
             res = action_result({'path' : data['path'], 'time' : data['time']})
-            log_das(LogError.INFO, "%s returning %s" % (QUERY_PATH.url, res))
+            log_das(LogError.INFO, "%s returning %s" % (QUERY_PATH.url, resp2str(res)))
             return res
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR,
@@ -358,7 +362,7 @@ def action_start():
         return th_error()
 
     res = action_result({})
-    log_das(LogError.INFO, "%s returning %s" % (START.url, res))
+    log_das(LogError.INFO, "%s returning %s" % (START.url, resp2str(res)))
     return res
 
 @app.route(OBSERVE.url, methods=OBSERVE.methods)
@@ -382,8 +386,8 @@ def action_observe():
                        "sim_time" : str(rospy.Time.now().secs)
                       }
         res = action_result(observation)
-        log_das(LogError.INFO, "%s returning %s" % (OBSERVE.url, res))
-        return action_result(observation)
+        log_das(LogError.INFO, "%s returning %s" % (OBSERVE.url, resp2str(res)))
+        return res
     except Exception as e:
         log_das(LogError.RUNTIME_ERROR, "error in %s: %s " % (OBSERVE.url, e))
         return th_error()
@@ -424,7 +428,7 @@ def action_set_battery():
     desired_volts = params.ARGUMENTS.voltage
 
     res = action_result({"sim_time" : str(rospy.Time.now().secs)})
-    log_das(LogError.INFO, "%s returning %s" % (SET_BATTERY.url, res))
+    log_das(LogError.INFO, "%s returning %s" % (SET_BATTERY.url, resp2str(res)))
     return res
 
 def place_obstacle(loc):
@@ -464,7 +468,7 @@ def action_place_obstacle():
                               "botright_x" : params.ARGUMENTS.x + 1.2,
                               "botright_y" : params.ARGUMENTS.y + 1.2,
                               "sim_time" : str(rospy.Time.now().secs)})
-        log_das(LogError.INFO, "%s returning %s" % (PLACE_OBSTACLE.url, res))
+        log_das(LogError.INFO, "%s returning %s" % (PLACE_OBSTACLE.url, resp2str(res)))
         return res
     else:
         log_das(LogError.RUNTIME_ERROR, 'gazebo cant place new obstacle at given x y')
@@ -582,7 +586,7 @@ def action_perturb_sensor():
         return th_error()
     else:
         res = action_result({"sim_time" : str(rospy.Time.now().secs)})
-        log_das(LogError.INFO, "%s returning %s" % (PERTURB_SENSOR.url, res))
+        log_das(LogError.INFO, "%s returning %s" % (PERTURB_SENSOR.url, resp2str(res)))
         return res
 
 @app.route(INTERNAL_STATUS.url, methods=INTERNAL_STATUS.methods)
@@ -615,7 +619,7 @@ def internal_status():
                 '%s got a malformed internal status: %s' %(INTERNAL_STATUS.url, e))
 
     res = action_result({})
-    log_das(LogError.INFO, "%s returning %s" % (INTERNAL_STATUS.url, res))
+    log_das(LogError.INFO, "%s returning %s" % (INTERNAL_STATUS.url, resp2str(res)))
     return res
 
 
