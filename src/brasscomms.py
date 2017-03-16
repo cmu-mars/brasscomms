@@ -213,7 +213,7 @@ def check_action(req, path, methods):
         return False
 
     # check that it's being called in a way it's designed for
-    if not request.method in methods:
+    if not req.method in methods:
         log_das(LogError.RUNTIME_ERROR,
                 '%s called with bad HTTP request: %s not in %s' % (path, req.method, methods))
         return False
