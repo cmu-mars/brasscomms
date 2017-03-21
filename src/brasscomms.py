@@ -678,9 +678,11 @@ if __name__ == "__main__":
         rainbow_log = open("/test/rainbow.log", 'w')
         rainbow = RainbowInterface()
         rainbow.launchRainbow(config.enable_adaptation, rainbow_log)
-        rainbow.startRainbow()
+	ok = rainbow.startRainbow()
+        if not ok:
+            raise Exception("Did not connect to Rainbow in a timely fashion")
     except Exception as e:
-        log_das(LogError.STARTUP_ERROR, "Fatal: config file inconsistent with map: %s" % e)
+        log_das(LogError.STARTUP_ERROR, "Fatal: Rainbow failed to start: %s" % e)
         th_das_error(Error.DAS_OTHER_ERROR, "Fatal: rainbow failed to start: %s" % e)
         raise Exception("start up error")
 

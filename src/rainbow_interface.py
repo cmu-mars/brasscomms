@@ -5,8 +5,30 @@ import time
 import os
 import rospy
 from constants import AdaptationLevels
+import threading
 
 RAINBOW_PATH = os.path.expanduser('~/das/rainbow-brass')
+
+class Command(object):
+    def __init__(self, cmd):
+        self.cmd = cmd
+        self.process = None
+
+    def run(self, timeout):
+        def target():
+            print self.cmd
+            self.process = subprocess.Popen(self.cmd)
+            self.process.communicate()
+
+        thread = threading.Thread(target=target)
+        thread.start()
+
+        thread.join(timeout)
+        if thread.is_alive():
+            self.process.terminate()
+            thread.join()
+        return self.process.returncode
+
 
 class RainbowInterface:
 	# Class to manage interaction with Rainbow
@@ -33,7 +55,9 @@ class RainbowInterface:
 		if (self.target is None):
 			return True
 		rospy.loginfo("Starting Rainbow (DAS)...")
-		ret = subprocess.call ([RAINBOW_PATH+"/brass.sh", "-w", RAINBOW_PATH, "-s", self.target, "/test/rainbow-start.log"])
+                command = Command([RAINBOW_PATH+"/brass.sh", "-w", RAINBOW_PATH, "-s", self.target, "/test/rainbow-start.log"])
+		ret = command.run(timeout=60)
+#		ret = subprocess.call ([RAINBOW_PATH+"/brass.sh", "-w", RAINBOW_PATH, "-s", self.target, "/test/rainbow-start.log"], timeout=60)
 		rospy.loginfo("Rainbow started, exit=%s"%str(ret))
 		return ret == 0
 
