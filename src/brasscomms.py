@@ -657,11 +657,21 @@ if __name__ == "__main__":
 
     desired_volts = config.initial_voltage
     desired_bump = config.sensor_perturbation
+    
+    if config.target_loc == config.start_loc:
+    	log_das(LogError.STARTUP_ERROR, "Fatal: config file has same start and end locations")
+    	th_das_error(Error.DAS_OTHER_ERROR, "Fatal: config file has same start and end locations")
+    	raise Exception("Failed to start")
 
     # this should block until the navigation stack is ready to recieve goals
     move_base = actionlib.SimpleActionClient("move_base", MoveBaseAction)
-    move_base.wait_for_server()
-
+    move_base_started = move_base.wait_for_server()
+    if not move_base_started:
+    	log_das(LogError.STARTUP_ERROR,
+    	        "Fatal: Navigation stack failed to start")
+    	th_das_error(Error.DAS_OTHER_ERROR, "Fatal: could not connect to move_base")
+    	raise Exception("Failed to start")
+    
     # arrange the bot in the location specified by the config
     try:
         start_coords = waypoint_to_coords(config.start_loc)
