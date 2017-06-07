@@ -1,13 +1,14 @@
 """ defines enums and string constants used throughout brasscomms """
 import collections
+import os
 from enum import Enum
 
 TH_URL = "http://brass-th"
 TA_URL = "http://brass-ta"
 CONFIG_FILE_PATH = '/test/data'
 LOG_FILE_PATH = '/test/log'
-CP_GAZ = '/home/vagrant/catkin_ws/src/cp_gazebo'
-BINDIR = '/home/vagrant/bin'
+CP_GAZ = os.path.expanduser('~/catkin_ws/src/cp_gazebo')
+BINDIR = os.path.expanduser('~/bin')
 JSON_MIME = 'application/json'
 JSON_HEADER = {'content-type': JSON_MIME}
 

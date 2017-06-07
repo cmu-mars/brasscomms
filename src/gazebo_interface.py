@@ -43,7 +43,7 @@ class GazeboInterface:
 		self.delete_model = rospy.ServiceProxy('/gazebo/delete_model', DeleteModel)
 		try:
 			rospy.wait_for_service('/gazebo/get_model_state', timeout=30)
-			rospy.wait_for_service('/gazebo/spawn_gazebo_model')
+			#rospy.wait_for_service('/gazebo/spawn_gazebo_model')
 		except rospy.ROSException, e:
 			raise GazeboExcpetion("Could not connect to gazebo", e)
 
