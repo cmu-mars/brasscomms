@@ -1,5 +1,10 @@
 FROM cmu-mars/base
 
+# install Gazebo
+RUN sudo apt-get install -y ros-kinetic-gazebo-ros-pkgs \
+                            ros-kinetic-gazebo-ros-control \
+                            ros-kinetic-kobuki-gazebo
+
 # add the source code for the shared "notifications" module
 RUN git clone https://github.com/cmu-mars/notifications-p15 \
       --depth 1 \
@@ -14,6 +19,8 @@ RUN wget -q "https://github.com/ros-planning/navigation_msgs/archive/${ROS_NAVIG
     rm navigation_msgs/README.md && \
     mv navigation_msgs/* src && \
     rm -rf navigation_msgs
+
+# TODO: install gazebo_msgs
 
 # TODO: install ig_action.msgs
 ENV IG_ACTION_SERVER_REVISION b1f70a8
