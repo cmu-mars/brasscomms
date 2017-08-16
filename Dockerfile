@@ -38,3 +38,10 @@ RUN sudo apt-get install -y python-requests \
                             python-flask
 
 # CMD ["python src/brasscomms/src/brasscomms.py"]
+
+# TODO: tidy this up; use volume sharing!
+# create a log and data file
+RUN sudo mkdir /test && \
+    sudo touch /test/log && \
+    sudo touch /test/data && \
+    sudo chown -R $USER:$USER /test
