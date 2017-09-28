@@ -635,9 +635,12 @@ def internal_status():
 if __name__ == "__main__":
     ## start up the ros node and make an action server
     rospy.init_node("brasscomms")
+
     client = actionlib.SimpleActionClient("ig_action_server",
                                           ig_action_msgs.msg.InstructionGraphAction)
+    print("waiting for 'ig_action_server'...")
     client.wait_for_server()
+    print("connected to 'ig_action_server'")
 
     # make an interface into Gazebo
     try:
