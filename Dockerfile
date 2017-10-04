@@ -10,6 +10,13 @@ RUN git clone https://github.com/cmu-mars/notifications-p15 \
       --depth 1 \
       src/notifications
 
+# install shared "models" module
+ENV MARS_MODELS_REVISION 5dd3542
+RUN git clone https://github.com/cmu-mars/cp-models-p15 \
+              src/cp-models-p15 && \
+    cd src/cp-models-p15 && \
+    git checkout "${MARS_MODELS_REVISION}"
+
 # install the navigation_msgs
 ENV ROS_NAVIGATION_MSGS_VERSION 1.13.0
 RUN wget -q "https://github.com/ros-planning/navigation_msgs/archive/${ROS_NAVIGATION_MSGS_VERSION}.tar.gz" && \
@@ -24,7 +31,7 @@ RUN wget -q "https://github.com/ros-planning/navigation_msgs/archive/${ROS_NAVIG
 
 # TODO: install ig_action.msgs
 ENV IG_ACTION_SERVER_REVISION b1f70a8
-RUN git clone https://github.com/ChrisTimperley/ig-action-server-p15 \
+RUN git clone https://github.com/cmu-mars/ig-action-server-p15 \
               src/ig-action-server && \
     cd src/ig-action-server && \
     git checkout "${IG_ACTION_SERVER_REVISION}"
@@ -39,7 +46,7 @@ RUN sudo apt-get install -y python-requests \
 
 # CMD ["python src/brasscomms/src/brasscomms.py"]
 ENV CP_GAZEBO_REVISION 421fade
-RUN git clone https://github.com/ChrisTimperley/cp-gazebo-p15 \
+RUN git clone https://github.com/cmu-mars/cp-gazebo-p15 \
               src/cp-gazebo && \
     cd src/cp-gazebo && \
     git checkout "${CP_GAZEBO_REVISION}"
@@ -48,9 +55,8 @@ RUN git clone https://github.com/ChrisTimperley/cp-gazebo-p15 \
 # TODO: add config file (from LLStaging/installation/mockup.sh)
 # create a log and data file
 RUN sudo mkdir /test && \
-    sudo touch /test/log && \
-    sudo mkdir /test/data
-ADD ex_config.json /test/data/ex_config.json
+    sudo touch /test/log
+ADD ex_config.json /test/data
 RUN sudo chown -R $(whoami):$(whoami) /test
 
 RUN rosdep update
