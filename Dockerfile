@@ -55,9 +55,8 @@ RUN git clone https://github.com/cmu-mars/cp-gazebo-p15 \
 # TODO: add config file (from LLStaging/installation/mockup.sh)
 # create a log and data file
 RUN sudo mkdir /test && \
-    sudo touch /test/log && \
-    sudo mkdir /test/data
-ADD ex_config.json /test/data/ex_config.json
+    sudo touch /test/log
+ADD ex_config.json /test/data
 RUN sudo chown -R $(whoami):$(whoami) /test
 
 RUN rosdep update
