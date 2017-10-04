@@ -643,20 +643,24 @@ if __name__ == "__main__":
     print("connected to 'ig_action_server'")
 
     # make an interface into Gazebo
+    print("starting up Gazebo interface...")
     try:
         gazebo = GazeboInterface()
     except Exception as e:
         log_das(LogError.STARTUP_ERROR, "Fatal: gazebo did not start up: %s" % e)
         th_das_error(Error.DAS_OTHER_ERROR, "Fatal: gazebo did not start up: %s" % e)
         raise
+    print("started up Gazebo interface")
 
     # parse the config file
+    print("parsing config file...")
     try:
         config = parse_config_file()
     except Exception as e:
         log_das(LogError.STARTUP_ERROR, "Fatal: config file doesn't parse: %s" % e)
         th_das_error(Error.DAS_OTHER_ERROR, "Fatal: config file doesn't parse: %s" % e)
         raise
+    print("parsed config file")
 
     desired_volts = config.initial_voltage
     desired_bump = config.sensor_perturbation
@@ -666,7 +670,8 @@ if __name__ == "__main__":
     	th_das_error(Error.DAS_OTHER_ERROR, "Fatal: config file has same start and end locations")
     	raise Exception("Failed to start")
 
-    # this should block until the navigation stack is ready to recieve goals
+    # this should block until the navigation stack is ready to receive goals
+    print("waiting for 'move_base'...")
     move_base = actionlib.SimpleActionClient("move_base", MoveBaseAction)
     move_base_started = move_base.wait_for_server()
     if not move_base_started:
@@ -674,6 +679,7 @@ if __name__ == "__main__":
     	        "Fatal: Navigation stack failed to start")
     	th_das_error(Error.DAS_OTHER_ERROR, "Fatal: could not connect to move_base")
     	raise Exception("Failed to start")
+    print("connected to 'move_base'")
     
     # arrange the bot in the location specified by the config
     try:
