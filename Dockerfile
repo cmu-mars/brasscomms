@@ -38,10 +38,19 @@ RUN sudo apt-get install -y python-requests \
                             python-flask
 
 # CMD ["python src/brasscomms/src/brasscomms.py"]
+ENV CP_GAZEBO_REVISION 421fade
+RUN git clone https://github.com/ChrisTimperley/cp-gazebo-p15 \
+              src/cp-gazebo && \
+    cd src/cp-gazebo && \
+    git checkout "${CP_GAZEBO_REVISION}"
 
 # TODO: tidy this up; use volume sharing!
+# TODO: add config file (from LLStaging/installation/mockup.sh)
 # create a log and data file
 RUN sudo mkdir /test && \
     sudo touch /test/log && \
-    sudo touch /test/data && \
-    sudo chown -R $USER:$USER /test
+    sudo mkdir /test/data
+ADD ex_config.json /test/data/ex_config.json
+RUN sudo chown -R $(whoami):$(whoami) /test
+
+RUN rosdep update
