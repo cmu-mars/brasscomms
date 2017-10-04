@@ -1,4 +1,3 @@
-
 from __future__ import with_statement
 from threading import Lock
 import os.path
@@ -10,7 +9,7 @@ import rospy
 import math
 
 # This is the model for the obstacle
-OBS_MODEL = os.path.expanduser('~/catkin_ws/src/cp_gazebo/models/box.sdf')
+OBS_MODEL = os.path.expanduser('~/catkin_ws/src/cp_models/models/box.sdf')
 
 # These are translation coordinates between the map and gazebo
 # The two things should really be syncrhonized
