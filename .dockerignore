@@ -1,1 +1,4 @@
 Dockerfile
+.git
+*.swp
+*.swo
