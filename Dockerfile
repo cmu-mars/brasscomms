@@ -1,9 +1,11 @@
 FROM cmu-mars/base
 
 # install Gazebo
-RUN sudo apt-get install -y ros-kinetic-gazebo-ros-pkgs \
+RUN sudo apt-get update && \
+    sudo apt-get install -y ros-kinetic-gazebo-ros-pkgs \
                             ros-kinetic-gazebo-ros-control \
-                            ros-kinetic-kobuki-gazebo
+                            ros-kinetic-kobuki-gazebo \
+                            apt-utils
 
 # add the source code for the shared "notifications" module
 RUN git clone https://github.com/cmu-mars/notifications-p15 \
