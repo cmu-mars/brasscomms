@@ -61,4 +61,4 @@ RUN sudo mkdir /test && \
 ADD ex_config.json /test/data
 RUN sudo chown -R $(whoami):$(whoami) /test
 
-RUN rosdep update
+#RUN rosdep update
