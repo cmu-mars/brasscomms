@@ -727,4 +727,5 @@ if __name__ == "__main__":
 
     ## actually start up the flask service. this never returns, so it must
     ## be the last thing in the file
+    print('TA server started')
     app.run(host="0.0.0.0")
