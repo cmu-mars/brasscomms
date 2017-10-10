@@ -38,6 +38,8 @@ RUN git clone https://github.com/cmu-mars/ig-action-server-p15 \
     cd src/ig-action-server && \
     git checkout "${IG_ACTION_SERVER_REVISION}"
 
+RUN git clone https://github.com/cmu-mars/cp-maps-p15 maps
+
 ADD . src/brasscomms
 
 RUN . "/opt/ros/${ROS_DISTRO}/setup.sh" && \
